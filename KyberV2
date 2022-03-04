@@ -1,0 +1,29 @@
+1.1 Hacer historico de mensajes al lado de los participantes
+
+1.2 Representar el estado del participante
+
+1.5 Usar condiciones para generar pk, sk, k y ciph
+
+2. Mirar objetos de Maude para representar Alice y Bob. Con ello
+hacer una primera versión de Kyber donde estos objetos se envian mensajes
+con origen y denstino, guardando información local para luego comprobar que coincide con la enviada por el otro.
+
+2.1 En maudeNPA hay variables frescas
+
+
+ME GUARDO ESTA PARTE POR SI HACE FALTA MÁS ADELANTE
+---Equations representing the tuple of functions
+    ---KeyGen() -> (sk,pk)
+    vars pk sk : Key .
+    op KG : -> Instr .
+    eq [KeyGen] <Alice(KG[emptyK]emptyM)|P1|P2> = <Alice(emptyI[pk|sk]{(Alice,Bob)[sent]})|P1|P2> .
+    
+    ---Encaps(pk) -> (k,c)
+    var k : Key .
+    var c : Ciphertext .
+    op ENC : Key -> Instr .
+    eq [Encaps] ENC(pk) = (k,c) .
+
+    ---Decaps(sk,c) -> k
+    op DEC : Ciphertext Key -> Instr .
+    eq [Decaps] DEC(c,sk) = k .

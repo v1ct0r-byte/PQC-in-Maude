@@ -1,0 +1,85 @@
+---Specification of CRYSTALS-KYBER
+mod KYBERV2 is
+    
+    ---Sorts
+    sorts Identifier Principal Content Principals .
+    sorts MsgState Msg Msgs .
+    subsort Msg < Msgs . 
+    subsort Principal < Principals .
+
+    sort Instr .
+
+    sorts Key Keys .
+    subsort Key < Keys .
+    subsort Key < Content .
+    
+    sort Ciphertext .
+    subsort Ciphertext < Content .
+
+    sort GlobalState .
+    
+    ---Operators
+
+    ---Empty group of keys
+    op emptyK : -> Keys .
+    ---Group of keys
+    op _|_ : Keys Keys -> Keys [assoc id: emptyK comm] .
+
+    ---Posible states for a message
+    ops sent replied intercepted : -> MsgState .
+
+    ---Empty content
+    op emptyC : -> Content .
+    ---Group of contents
+    op __ : Content Content -> Content [assoc id: emptyC comm] .
+
+    ---Structure of a message
+    ---Sender, Receiver, State, Content
+    op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
+    op emptyM : -> Msgs .
+    op __ : Msgs Msgs -> Msgs [id: emptyM] .
+
+    ops Alice Eve Bob : ->  Identifier .
+    ---Definition of the components of a Principal
+    ---Identifier(instruction[keys]messages)
+    op (_[_]_) : Identifier Keys Content -> Principal .
+
+    ---Group of principals
+    op __ : Principal Principal -> Principals [assoc comm] .
+
+    ---Global state composed by Principals and a network with messages
+    op <_>net(_) : Principals Msgs -> GlobalState .
+    op True : -> GlobalState .
+
+    ---Rules
+    vars P1 P2 : Principal .
+    var MSGS : Msgs .
+    ---vars pk sk k : Key .
+    ops pk sk k : -> Key .
+    var ks : Keys .
+    op Ciph : -> Ciphertext .
+    var Cont Cont2 : Content .
+
+    ---(Eve[emptyK]emptyC)
+    ---(Bob[emptyK]emptyC)
+
+    rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[sk | pk]emptyC) P1 P2 >net(emptyM) .
+
+    rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
+
+    rl [RecievePK] : < (Bob[ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[ks | pk]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) .
+    
+    rl [Enc] : < (Bob[ks | pk]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) => < (Alice[ks | k | pk]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}).
+    ---No se si Bob debería mantener Ciph
+    rl [SendCiph] : < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]pk}) => < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]pk} msg{(Alice,Bob)[sent]Ciph}) .
+
+    rl [RecieveCiph] : < (Alice[ks]Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks]Cont Ciph) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) .
+
+    rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) => < (Alice[sk | ks | k]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) .
+
+    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => True .
+
+    ---Initial state
+    op init : -> GlobalState .
+    eq init = < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+endm
