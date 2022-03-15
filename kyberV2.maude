@@ -63,21 +63,21 @@ mod KYBERV2 is
     ---(Eve[emptyK]emptyC)
     ---(Bob[emptyK]emptyC)
 
-    rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[sk | pk]emptyC) P1 P2 >net(emptyM) .
+    rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 
-    rl [RecievePK] : < (Bob[ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[ks | pk]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) .
+    rl [RecievePK] : < (Bob[ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) .
     
-    rl [Enc] : < (Bob[ks | pk]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) => < (Bob[ks | k | pk]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}).
-    ---No se si Bob debería mantener Ciph
-    rl [SendCiph] : < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]pk}) => < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]pk} msg{(Bob,Alice)[sent]Ciph}) .
+    rl [Enc] : < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) => < (Bob[k | pk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}).
+
+    rl [SendCiph] : < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]pk} msg{(Bob,Alice)[sent]Ciph}) .
 
     rl [RecieveCiph] : < (Alice[ks]Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks]Cont Ciph) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) .
 
-    rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) => < (Alice[sk | ks | k]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) .
+    rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) => < (Alice[sk | k | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]Ciph}) .
 
-    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => True .
+    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => true .
 
     ---Initial state
     op init : -> GlobalState .
