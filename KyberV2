@@ -24,7 +24,7 @@ con origen y denstino, guardando información local para luego comprobar que coi
 
 3.3 Fijarse en las lineas 301 y 329 de kyber.maude. Pueden ser útiles para especificar el churro de las matrices
 
-3.4 Se puede utilizar una función f que sea la que cumple lo de diffie helman de Santiago y Damián
+3.4 Se puede utilizar una función f que sea la que cumple lo de Diffie Hellman de Santiago y Damián
 
 ------------------------------------------------------------------------------------------------------------------------
 

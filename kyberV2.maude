@@ -60,9 +60,6 @@ mod KYBERV2 is
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    ---(Eve[emptyK]emptyC)
-    ---(Bob[emptyK]emptyC)
-
     rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
