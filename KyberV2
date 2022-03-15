@@ -26,6 +26,8 @@ con origen y denstino, guardando información local para luego comprobar que coi
 
 3.4 Se puede utilizar una función f que sea la que cumple lo de Diffie Hellman de Santiago y Damián
 
+Lo que podemos hacer es especificar las funciones y operaciones que generan los componentes necesarios. Por ejemplo, para el caso de KeyGen podemos especificar la operación || sobre 
+vectores para así obtener pk.
 ------------------------------------------------------------------------------------------------------------------------
 
 ME GUARDO ESTA PARTE POR SI HACE FALTA MÁS ADELANTE
