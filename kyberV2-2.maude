@@ -1,6 +1,16 @@
+---Modulo funcional para modelar las matrices y sus operaciones
+fmod MATRIX is
+    sort Matrix .
+
+    op G : 
+    op _||_ : Matrix  -> Vector .
+endfm
+
 ---Specification of CRYSTALS-KYBER
 mod KYBERV2 is
-    
+    ---Mirar de implementar la generación de numeros aleatorios, aunque no creo que valga de mucho pues las matrices no las podemos representar.
+    pr RANDOM .
+
     ---Sorts-------------------------------------------------------------------------------------------------------------
     sorts Identifier Principal Content Principals .
     sorts MsgState Msg Msgs .
@@ -17,7 +27,7 @@ mod KYBERV2 is
     subsort Ciphertext < Content .
 
     sort GlobalState .
-    
+
     ---Operators-------------------------------------------------------------------------------------------------------------
 
     ---Empty group of keys
@@ -51,6 +61,9 @@ mod KYBERV2 is
     op <_>net(_) : Principals Msgs -> GlobalState .
     op True : -> GlobalState .
 
+    ---Operation that retunrs a pair RhoSig
+    op G : Poly -> Pair .
+
     ---Rules-------------------------------------------------------------------------------------------------------------
     vars P1 P2 : Principal .
     var MSGS : Msgs .
@@ -60,7 +73,9 @@ mod KYBERV2 is
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
+    crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) 
+        ---Use of matching equations to model where do the values came from
+        if pk :=  .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 
