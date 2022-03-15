@@ -1,7 +1,7 @@
 ---Specification of CRYSTALS-KYBER
 mod KYBERV2 is
     
-    ---Sorts
+    ---Sorts-------------------------------------------------------------------------------------------------------------
     sorts Identifier Principal Content Principals .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs . 
@@ -18,7 +18,7 @@ mod KYBERV2 is
 
     sort GlobalState .
     
-    ---Operators
+    ---Operators-------------------------------------------------------------------------------------------------------------
 
     ---Empty group of keys
     op emptyK : -> Keys .
@@ -51,7 +51,7 @@ mod KYBERV2 is
     op <_>net(_) : Principals Msgs -> GlobalState .
     op True : -> GlobalState .
 
-    ---Rules
+    ---Rules-------------------------------------------------------------------------------------------------------------
     vars P1 P2 : Principal .
     var MSGS : Msgs .
     ---vars pk sk k : Key .
@@ -76,7 +76,7 @@ mod KYBERV2 is
 
     rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => true .
 
-    ---Initial state
+    ---Initial state-------------------------------------------------------------------------------------------------------------
     op init : -> GlobalState .
     eq init = < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 endm
