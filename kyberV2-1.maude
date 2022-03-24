@@ -1,4 +1,4 @@
----Specification of CRYSTALS-KYBER
+---Specification of CRYSTALS-KYBER hasta el punto 2
 mod KYBERV2 is
     
     ---Sorts-------------------------------------------------------------------------------------------------------------

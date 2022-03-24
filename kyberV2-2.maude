@@ -1,7 +1,7 @@
 ---Modulo funcional para modelar las matrices y sus operaciones
 fmod MATRIX is
     sort Matrix .
-
+    
     op G : 
     op _||_ : Matrix  -> Vector .
 endfm

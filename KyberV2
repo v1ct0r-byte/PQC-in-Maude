@@ -1,6 +1,8 @@
 ANOTACIONES SOBRE EL PROTOCOLO KYBER
 
 ------------------------------------------------------------------------------------------------------------------------
+NOTACIONES REUNION 1
+
 
 1.1 Hacer historico de mensajes al lado de los participantes
 
@@ -9,6 +11,7 @@ ANOTACIONES SOBRE EL PROTOCOLO KYBER
 1.5 Usar condiciones para generar pk, sk, k y ciph
 
 ------------------------------------------------------------------------------------------------------------------------
+NOTACIONES REUNION 2
 
 2. Mirar objetos de Maude para representar Alice y Bob. Con ello
 hacer una primera versión de Kyber donde estos objetos se envian mensajes
@@ -17,10 +20,11 @@ con origen y denstino, guardando información local para luego comprobar que coi
 2.1 En maudeNPA hay variables frescas
 
 ------------------------------------------------------------------------------------------------------------------------
+NOTACIONES REUNION 3
 
 3.1 Para hacer lo de las matrices usaremos symbolos de tipo Matriz
 
-3.2 Se puede uno fijar en las la especificación del protocolo de usar las funciones compress y decompress para generar lo que necesitemos
+3.2 Se puede uno fijar en la especificación del protocolo de usar las funciones compress y decompress para generar lo que necesitemos
 
 3.3 Fijarse en las lineas 301 y 329 de kyber.maude. Pueden ser útiles para especificar el churro de las matrices
 
@@ -29,7 +33,31 @@ con origen y denstino, guardando información local para luego comprobar que coi
 Lo que podemos hacer es especificar las funciones y operaciones que generan los componentes necesarios. Por ejemplo, para el caso de KeyGen podemos especificar la operación || sobre 
 vectores para así obtener pk.
 ------------------------------------------------------------------------------------------------------------------------
+NOTACIONES MATEMÁTICAS IMPORTANTES
 
+-> Beta es un conjunto de números enteros que abarca de 0 a 255.
+-> Beta^k es el conjunto de cadenas de bytes con longitud k.
+-> Beta^* es el conjunto de cadenas de bytes con longitud arbitraria.
+-> Dadas dos cadenas de bytes a y b, (a||b) representa la concatenación de a y b.
+-> El anillo de enteros mod q es Zq, donde los enteros se encuentran en el rango [0,q).
+-> R es el anillo de polinomios (algo muy profundo).
+-> En KYBER los valores de n = 7681 y q = 256.
+
+-> Existen dos funciones hash:
+    H : B^* -> B^32, es una función que recibe enteros de longitud arbitraria y devuelve un entero de longitud 32 (o un vector de dicha longitud).
+    G : B^* -> B^32 x B^3, es una función que recibe también enteros de longitud arbitraria pero devuelve una matriz de tamaño 32x32.
+-> KDF (key derivation function) : B^* -> B^32.
+-> Q son los números racionales (son aquellos números que pueden representarse como el cociente de dos números enteros).
+-> [x] indica la aproximación al entero mas cercano (por techo o suelo) cuando x pertence a Q.
+-> Siendo x un número del anillo de enteros hasta q = 256, y sea d < [log2q]:
+    La función de compresión sobre q recibe la x y un d
+    La función de decpmpresión sobre q recibe la x y un d
+------------------------------------------------------------------------------------------------------------------------
+FUNCIONAMIENTO DEL PROTOCOLO USANDO NOTACIONES MATEMÁTICAS
+
+
+
+------------------------------------------------------------------------------------------------------------------------
 ME GUARDO ESTA PARTE POR SI HACE FALTA MÁS ADELANTE
 ---Equations representing the tuple of functions
     ---KeyGen() -> (sk,pk)
