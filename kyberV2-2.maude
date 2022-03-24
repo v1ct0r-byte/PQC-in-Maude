@@ -1,15 +1,46 @@
----Modulo funcional para modelar las matrices y sus operaciones
-fmod MATRIX is
-    sort Matrix .
-    
-    op G : 
-    op _||_ : Matrix  -> Vector .
+---Module with all operations needed to represent Vectors
+fmod OPERATIONS-VECTOR is
+    ---Here we are subsuming all sizes of vectors
+    ---Posible sizes are (* -> arbitrary,32 -> 32 byte array)
+    sort Vector .
+    vars v1 v2 v3 : -> Vector .
+    op _||_ : Vector Vector -> Vector .
+    eq v1 || v2 = v3 .
+
+    ---Tuple
+    sort Tuple .
+    op (_,_) : Vector Vector -> Tuple .
+    ---First element of a tuple
+    op first : Tuple -> Vector .
+    eq first(v1,v2) = v1 .
+    ---Second element of a tuple
+    op second : Tuple -> Vector .
+    eq second(v1,v2) = v2 .
 endfm
 
+---Module with all operations needed to represent Matrices
+fmod MATRIX is
+    ---A matrix is the product of two vectors of the same size
+    sort Matrix .
+    op _*_ : Vector Vector -> Matrix .
+endfm
+
+---Module with all operations needed to represent how Enc and Dec work
+fmod ENCRYPT-DECRYPT-OPERATIONS is
+    ---
+    ---Hash functions
+    op G : Vector -> Vector .
+    op H : Vector -> Vector .
+
+    ---Variables to represent the output of operations
+    vars pk, sk : Vector .
+
+    ---CPAPKE.KEYGEN
+    op CPA : -> Tuple .
+    eq CPA = (pk,sk) .
+endfm
 ---Specification of CRYSTALS-KYBER
 mod KYBERV2 is
-    ---Mirar de implementar la generación de numeros aleatorios, aunque no creo que valga de mucho pues las matrices no las podemos representar.
-    pr RANDOM .
 
     ---Sorts-------------------------------------------------------------------------------------------------------------
     sorts Identifier Principal Content Principals .
@@ -61,9 +92,6 @@ mod KYBERV2 is
     op <_>net(_) : Principals Msgs -> GlobalState .
     op True : -> GlobalState .
 
-    ---Operation that retunrs a pair RhoSig
-    op G : Poly -> Pair .
-
     ---Rules-------------------------------------------------------------------------------------------------------------
     vars P1 P2 : Principal .
     var MSGS : Msgs .
@@ -75,7 +103,9 @@ mod KYBERV2 is
 
     crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) 
         ---Use of matching equations to model where do the values came from
-        if pk :=  .
+        if  t := 
+            p := 
+            pk := (t || p) .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 

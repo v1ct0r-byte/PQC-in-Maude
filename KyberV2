@@ -3,7 +3,6 @@ ANOTACIONES SOBRE EL PROTOCOLO KYBER
 ------------------------------------------------------------------------------------------------------------------------
 NOTACIONES REUNION 1
 
-
 1.1 Hacer historico de mensajes al lado de los participantes
 
 1.2 Representar el estado del participante
@@ -32,6 +31,12 @@ NOTACIONES REUNION 3
 
 Lo que podemos hacer es especificar las funciones y operaciones que generan los componentes necesarios. Por ejemplo, para el caso de KeyGen podemos especificar la operación || sobre 
 vectores para así obtener pk.
+
+------------------------------------------------------------------------------------------------------------------------
+NOTACIONES REUNION 4
+
+
+
 ------------------------------------------------------------------------------------------------------------------------
 NOTACIONES MATEMÁTICAS IMPORTANTES
 
