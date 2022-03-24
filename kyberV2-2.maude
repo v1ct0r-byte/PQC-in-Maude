@@ -1,5 +1,5 @@
 ---Module with all operations needed to represent Vectors
-fmod OPERATIONS-VECTOR is
+fmod VECTOR is
     ---Here we are subsuming all sizes of vectors
     ---Posible sizes are (* -> arbitrary,32 -> 32 byte array)
     sort Vector .
