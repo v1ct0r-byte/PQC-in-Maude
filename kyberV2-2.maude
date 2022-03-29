@@ -19,10 +19,12 @@ fmod VECTOR is
 endfm
 
 ---Module with all operations needed to represent Matrices
+---Only square matrices are considered
 fmod MATRIX is
-    ---A matrix is the product of two vectors of the same size
     sort Matrix .
-    op _*_ : Vector Vector -> Matrix .
+    ---A vector is a matrix?
+    subsort Vector < Matrix .
+    op _*_ : Vector Vector -> Vector .
 endfm
 
 ---Module with all operations needed to represent how Enc and Dec work
