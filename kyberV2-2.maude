@@ -1,5 +1,5 @@
 ---Module with all operations needed to represent Vectors
-fmod VECTOR is
+***(fmod VECTOR is
     ---Here we are subsuming all sizes of vectors
     ---Posible sizes are (* -> arbitrary,32 -> 32 byte array)
     sort Vector .
@@ -41,22 +41,24 @@ fmod ENCRYPT-DECRYPT-OPERATIONS is
     ---CPAPKE.KEYGEN
     op CPA : -> Tuple .
     eq CPA = (pk,sk) .
-endfm
+endfm)
 
 ---Specification of CRYSTALS-KYBER
 mod KYBERV2 is
 
     ---Sorts-------------------------------------------------------------------------------------------------------------
+    
     sorts Identifier Principal Content Principals .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs . 
     subsort Principal < Principals .
 
-    sort Instr .
-
     sorts Key Keys .
     subsort Key < Keys .
     subsort Key < Content .
+
+    ---A key can be a vector of bytes
+    ---subsort Vector < Key .
     
     sort Ciphertext .
     subsort Ciphertext < Content .
@@ -86,7 +88,7 @@ mod KYBERV2 is
 
     ops Alice Eve Bob : ->  Identifier .
     ---Definition of the components of a Principal
-    ---Identifier(instruction[keys]messages)
+    ---(idenifier that can be Alice, Bob or Eve [keysrecieved or generated] content that the principal stores)
     op (_[_]_) : Identifier Keys Content -> Principal .
 
     ---Group of principals
@@ -97,19 +99,19 @@ mod KYBERV2 is
     op True : -> GlobalState .
 
     ---Rules-------------------------------------------------------------------------------------------------------------
+    
     vars P1 P2 : Principal .
     var MSGS : Msgs .
-    ---vars pk sk k : Key .
     ops pk sk k : -> Key .
     var ks : Keys .
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) 
+    ---ops t p : -> Vector .
+
+    crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
         ---Use of matching equations to model where do the values came from
-        if  t := 
-            p := 
-            pk := (t || p) .
+        ---if  pk := (t || p) .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 
@@ -117,15 +119,16 @@ mod KYBERV2 is
     
     rl [Enc] : < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[replied]pk}) => < (Bob[k | pk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}).
 
-    rl [SendCiph] : < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]pk} msg{(Bob,Alice)[sent]Ciph}) .
+    rl [SendCiph] : < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent]Ciph}) .
 
     rl [RecieveCiph] : < (Alice[ks]Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks]Cont Ciph) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) .
 
     rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) => < (Alice[sk | k | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]Ciph}) .
 
-    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => true .
+    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => True .
 
     ---Initial state-------------------------------------------------------------------------------------------------------------
+    
     op init : -> GlobalState .
     eq init = < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 endm
