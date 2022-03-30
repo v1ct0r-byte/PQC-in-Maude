@@ -4,8 +4,9 @@ fmod VECTOR is
     ---Posible sizes are (* -> arbitrary,32 -> 32 byte array)
     sort Vector .
     vars v1 v2 v3 : -> Vector .
+    ---Concatenation of vectors result in s new vector
     op _||_ : Vector Vector -> Vector .
-    eq v1 || v2 = v3 .
+    eq v1 || v2 = v1 v2 .
 
     ---Tuple
     sort Tuple .
@@ -41,6 +42,7 @@ fmod ENCRYPT-DECRYPT-OPERATIONS is
     op CPA : -> Tuple .
     eq CPA = (pk,sk) .
 endfm
+
 ---Specification of CRYSTALS-KYBER
 mod KYBERV2 is
 

@@ -41,7 +41,7 @@ mod KYBERV2 is
 
     ops Alice Eve Bob : ->  Identifier .
     ---Definition of the components of a Principal
-    ---Identifier(instruction[keys]messages)
+    ---(idenifier that can be Alice, Bob or Eve [keysrecieved or generated] content that the principal stores)
     op (_[_]_) : Identifier Keys Content -> Principal .
 
     ---Group of principals
@@ -54,7 +54,6 @@ mod KYBERV2 is
     ---Rules-------------------------------------------------------------------------------------------------------------
     vars P1 P2 : Principal .
     var MSGS : Msgs .
-    ---vars pk sk k : Key .
     ops pk sk k : -> Key .
     var ks : Keys .
     op Ciph : -> Ciphertext .
@@ -74,7 +73,7 @@ mod KYBERV2 is
 
     rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[replied]Ciph}) => < (Alice[sk | k | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]Ciph}) .
 
-    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => true .
+    rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P2 >net(MSGS) => True .
 
     ---Initial state-------------------------------------------------------------------------------------------------------------
     op init : -> GlobalState .
