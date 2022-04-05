@@ -37,10 +37,12 @@ NOTACIONES REUNION 4
 
 4.1 la t se encuentra en el envío del mensaje al hacer KeyGen
 
+4.2 Abstraer la implementación a símbolos con sus operaciones
+
 ------------------------------------------------------------------------------------------------------------------------
 NOTACIONES MATEMÁTICAS IMPORTANTES
 
--> Beta es un conjunto de números enteros que abarca de 0 a 255.
+-> Beta es un conjunto de números enteros que abarca de 0 a 255, por ejemplo el conjunto de enteros de 8-bit sin signo.
 -> Beta^k es el conjunto de cadenas de bytes con longitud k.
 -> Beta^* es el conjunto de cadenas de bytes con longitud arbitraria.
 -> Dadas dos cadenas de bytes a y b, (a||b) representa la concatenación de a y b.
