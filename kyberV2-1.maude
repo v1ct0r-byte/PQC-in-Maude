@@ -1,4 +1,4 @@
----Specification of CRYSTALS-KYBER hasta el punto 2
+---Specification of CRYSTALS-KYBER till step 2
 mod KYBERV2 is
     
     ---Sorts-------------------------------------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ mod KYBERV2 is
     ---Group of keys
     op _|_ : Keys Keys -> Keys [assoc id: emptyK comm] .
 
-    ---Posible states for a message
+    ---Possible states for a message
     ops sent replied consumed intercepted : -> MsgState .
 
     ---Empty content
