@@ -1,14 +1,19 @@
 ---Specification of CRYSTALS-KYBER till step 3
 
----Module with all operations needed to represent Vectors
-fmod VECTOR is
+---Module specifying basic datatypes used in KYBER
+fmod DATA-TYPES is
     protecting INT .
-    ---Here we are subsuming all sizes of vectors
+    ---Here we are subsuming all sizes of vectors (and abstract that all vectors are column vectors)
     ---Posible sizes are (* -> arbitrary,32 -> 32 byte array)
-    sort Vector .
+    ---We also define type for matrices and polynomials
+    sorts Vector Matrix Polynomial .
 
     ---We consider integers as vectors of bytes
     subsort Int < Vector .
+    ---A Vector is a also a Matrix with one row or one column
+    ---Only square matrices are considered
+    ---And can also be seen as a representation of a Polynomial
+    subsort Vector < Matrix Polynomial .
 
     vars v1 v2 : Vector .
     ---Concatenation of vectors result in a new vector
@@ -17,14 +22,14 @@ fmod VECTOR is
     ---Operator for the sum of vectors
     op _v+_ : Vector Vector -> vector .
 
-    ---Tuple
-    sort Tuple .
-    op (_,_) : Vector Vector -> Tuple .
-    ---First element of a tuple
-    op first : Tuple -> Vector .
+    ---Pair
+    sort Pair .
+    op (_,_) : Vector Vector -> Pair .
+    ---First element of Pair
+    op first : Pair -> Vector .
     eq first((v1,v2)) = v1 .
-    ---Second element of a tuple
-    op second : Tuple -> Vector .
+    ---Second element of Pair
+    op second : Pair -> Vector .
     eq second((v1,v2)) = v2 .
 endfm
 
@@ -35,26 +40,23 @@ endfm
     ---A vector is a matrix?
     subsort Vector < Matrix .
     op _*_ : Vector Vector -> Vector .
-endfm
+endfm)
 
 ---Module with all operations needed to represent how Enc and Dec work
 fmod ENCRYPT-DECRYPT-OPERATIONS is
-    ---
+    pr DATA-TYPES .
+    
     ---Hash functions
-    op G : Vector -> Vector .
+    op G : Vector -> Pair .
     op H : Vector -> Vector .
-
-    ---Variables to represent the output of operations
-    vars pk, sk : Vector .
-
-    ---CPAPKE.KEYGEN
-    op CPA : -> Tuple .
-    eq CPA = (pk,sk) .
-endfm)
+endfm
 
 ---CRYSTALS-KYBER
 mod KYBERV2 is
-    
+    ---Imports-----------------------------------------------------------------------------------------------------------
+
+
+
     ---Sorts-------------------------------------------------------------------------------------------------------------
     
     sorts Identifier Principal Content Principals .
@@ -71,7 +73,7 @@ mod KYBERV2 is
 
     sort GlobalState .
     
-    ---Operators-------------------------------------------------------------------------------------------------------------
+    ---Operators---------------------------------------------------------------------------------------------------------
 
     ---Empty group of keys
     op emptyK : -> Keys .
