@@ -20,7 +20,7 @@ fmod DATA-TYPES is
     op _||_ : Vector Vector -> Vector .
 
     ---Operator for the sum of vectors
-    op _v+_ : Vector Vector -> vector .
+    op _v+_ : Vector Vector -> Vector .
 
     ---Pair
     sort Pair .
@@ -47,8 +47,11 @@ fmod ENCRYPT-DECRYPT-OPERATIONS is
     pr DATA-TYPES .
     
     ---Hash functions
+    ---G recieves a random number from the ring R and returns a pair of values
     op G : Vector -> Pair .
+    ---H recieves a random
     op H : Vector -> Vector .
+
 endfm
 
 ---CRYSTALS-KYBER
