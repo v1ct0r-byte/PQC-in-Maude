@@ -12,9 +12,8 @@ fmod DATA-TYPES is
     ---A Vector is a also a Matrix with one row or one column
     ---Only square matrices are considered
     ---And can also be seen as a representation of a Polynomial
-    subsort Vector < Matrix Polynomial .
+    subsorts Polynomial < Vector < Matrix .
 
-    vars v1 v2 v3 : Vector .
     ---Concatenation of vectors result in a new vector
     op _||_ : Vector Vector -> Vector .
 
@@ -24,6 +23,13 @@ fmod DATA-TYPES is
     vars m1 m2 m3 : Matrix .
     ---Operator multiplication of a matrix and a vector
     op _m*_ : Matrix Vector -> Vector .
+endfm
+
+---Module with all operations needed to represent how Enc and Dec work
+fmod ENCRYPT-DECRYPT-OPERATIONS is
+    pr DATA-TYPES .
+    
+    vars v1 v2 v3 : Vector .
 
     ---Pair
     sort Pair .
@@ -34,19 +40,51 @@ fmod DATA-TYPES is
     ---Second element of Pair
     op second : Pair -> Vector .
     eq second((v1,v2)) = v2 .
-endfm
 
----Module with all operations needed to represent how Enc and Dec work
-fmod ENCRYPT-DECRYPT-OPERATIONS is
-    pr DATA-TYPES .
-    
-    ---Hash functions
-    ---G recieves a random number from the polynomial ring R and returns a pair of values
+    ***HASH FUNCTIONS***
+    ---G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
     op G : Vector -> Pair .
     ---eq G(v1) = (v2,v3) .
 
-    ---H recieves a random vector and returns a hash of it
+    ---H recieves a random vector and returns a hash of it (which is also a vector)
     op H : Vector -> Vector .
+endfm
+
+---Module to represent the operations and data handled during step 2
+fmod KYBER-CPA-KEYGEN is
+    pr ENCRYPT-DECRYPT-OPERATIONS .
+
+    ---Sample values taken from the set of byte-arrays of length 32
+    op d : -> Vector .
+    var d1 : Vector .
+
+    ---Constant values to represent Matrices
+    op A : -> Matrix .
+    var A1 : Matrix .
+
+    ---Operator to generate a matrix from the first vector given by G(d)
+    op generateA : Vector -> Matrix .
+    eq generateA(first(G(d))) = A .
+
+    ---Constant values to represent s and e
+    ops s e : -> Vector .
+    vars s1 e1 : Vector .
+
+    ---Operators to sample vectors s and e from the second vector given by G(d)
+    ops sampleS sampleE : Vector -> Vector .
+    eq sampleS(second(G(d))) = s .
+    eq sampleE(second(G(d))) = e .
+
+    ---Constant values to represent the tranformated vector through NTT
+    ops st et : Vector .
+
+    ---NTT (Number Theoretic Transformation)
+    op NTT : Vector -> Vector .
+    eq NTT(s) = st .
+    eq NTT(e) = et .
+
+    ---Operations encode and decode wich return the true pk and sk
+    op encode : 
 endfm
 
 ---CRYSTALS-KYBER
@@ -64,8 +102,8 @@ mod KYBERV2 is
     sorts Key Keys .
     subsort Key < Keys .
 
-    ***We define keys as a type of content and can aslo be vectors
-    subsort Key < Content Vector .
+    ***We define keys as a type of content
+    subsorts Key < Content .
     
     sort Ciphertext .
     subsort Ciphertext < Content .
@@ -77,7 +115,7 @@ mod KYBERV2 is
     ---Empty group of keys
     op emptyK : -> Keys .
     ---Group of keys
-    op _|_ : Keys Keys -> Keys [assoc id: emptyK comm prec 22] .
+    op _|_ : Keys Keys -> Keys [assoc id: emptyK comm] .
 
     ---Posible states for a message
     ops sent replied consumed intercepted : -> MsgState .
@@ -107,9 +145,9 @@ mod KYBERV2 is
 
     ***DATA OPERATORS***
     ---Represent public Matrix A
-    op A : -> Matrix .
+    ---op A : -> Matrix .
     ---Represent public vector s
-    op s : -> Vector .
+    ---op s : -> Vector .
 
     ---Rules-------------------------------------------------------------------------------------------------------------
     
@@ -120,7 +158,7 @@ mod KYBERV2 is
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
+    rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
         ---if pk := first(pk,sk) .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
