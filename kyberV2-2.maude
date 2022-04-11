@@ -84,7 +84,7 @@ fmod KYBER-CPA-KEYGEN is
     eq NTT(e) = et .
 
     ---Operations encode and decode wich return the true pk and sk
-    op encode : 
+    
 endfm
 
 ---CRYSTALS-KYBER
