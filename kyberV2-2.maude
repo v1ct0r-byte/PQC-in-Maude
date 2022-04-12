@@ -76,7 +76,7 @@ fmod KYBER-CPA-KEYGEN is
     eq sampleE(second(G(d))) = e .
 
     ---Constant values to represent the tranformated vector through NTT
-    ops st et : Vector .
+    ops st et : -> Vector .
 
     ---NTT (Number Theoretic Transformation)
     op NTT : Vector -> Vector .
