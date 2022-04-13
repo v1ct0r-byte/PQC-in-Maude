@@ -7,8 +7,9 @@ fmod DATA-TYPES is
     ---We also define type for matrices and polynomials
     sorts Vector Matrix Polynomial .
 
-    ---We consider integers as vectors of bytes
-    subsort Int < Vector .
+    ---We consider vectors as representations of integers
+    ---¿We consider integers as vectors of bytes?
+    subsort Vector < Int .
     ---A Vector is a also a Matrix with one row or one column
     ---Only square matrices are considered
     ---And can also be seen as a representation of a Polynomial
@@ -25,8 +26,8 @@ fmod DATA-TYPES is
     op _m*_ : Matrix Vector -> Vector .
 endfm
 
----Module with all operations needed to represent how Enc and Dec work
-fmod ENCRYPT-DECRYPT-OPERATIONS is
+---Module to represent the operations and data handled during step 2
+fmod KYBER-CPA-KEYGEN is
     pr DATA-TYPES .
     
     vars v1 v2 v3 : Vector .
@@ -41,30 +42,28 @@ fmod ENCRYPT-DECRYPT-OPERATIONS is
     op second : Pair -> Vector .
     eq second((v1,v2)) = v2 .
 
-    ***HASH FUNCTIONS***
-    ---G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
-    op G : Vector -> Pair .
-    ---eq G(v1) = (v2,v3) .
-
-    ---H recieves a random vector and returns a hash of it (which is also a vector)
-    op H : Vector -> Vector .
-endfm
-
----Module to represent the operations and data handled during step 2
-fmod KYBER-CPA-KEYGEN is
-    pr ENCRYPT-DECRYPT-OPERATIONS .
+    ---Rho and Sigma
+    ops Rho Sig : -> Vector .
 
     ---Sample values taken from the set of byte-arrays of length 32
     op d : -> Vector .
     var d1 : Vector .
 
+    ---HASH FUNCTIONS----------------------------------------------------------------
+    ---G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
+    op G : Vector -> Pair .
+    eq G(d) = (Rho,Sig) .
+
+    ---H recieves a random vector and returns a hash of it (which is also a vector)
+    op H : Vector -> Vector .
+    ----------------------------------------------------------------------------------
+
     ---Constant values to represent Matrices
-    op A : -> Matrix .
+    var A : Matrix .
     var A1 : Matrix .
 
     ---Operator to generate a matrix from the first vector given by G(d)
     op generateA : Vector -> Matrix .
-    eq generateA(first(G(d))) = A .
 
     ---Constant values to represent s and e
     ops s e : -> Vector .
@@ -77,22 +76,14 @@ fmod KYBER-CPA-KEYGEN is
 
     ---Constant values to represent the tranformated vector through NTT
     ops st et : -> Vector .
-
-    ---NTT (Number Theoretic Transformation)
-    op NTT : Vector -> Vector .
-    eq NTT(s) = st .
-    eq NTT(e) = et .
-
-    ---Operations encode and decode wich return the true pk and sk
-    
 endfm
 
 ---CRYSTALS-KYBER
 mod KYBERV2 is
-    ---Imports-----------------------------------------------------------------------------------------------------------
-    pr ENCRYPT-DECRYPT-OPERATIONS .
+    ---IMPORTS-------------------------------
+    pr KYBER-CPA-KEYGEN .
 
-    ---Sorts-------------------------------------------------------------------------------------------------------------
+    ---SORTS---------------------------------
     
     sorts Identifier Principal Content Principals .
     sorts MsgState Msg Msgs .
@@ -110,8 +101,7 @@ mod KYBERV2 is
 
     sort GlobalState .
     
-    ---Operators---------------------------------------------------------------------------------------------------------
-
+    ---OPERATORS----------------------------
     ---Empty group of keys
     op emptyK : -> Keys .
     ---Group of keys
@@ -143,23 +133,22 @@ mod KYBERV2 is
     op <_>net(_) : Principals Msgs -> GlobalState .
     op True : -> GlobalState .
 
-    ***DATA OPERATORS***
-    ---Represent public Matrix A
-    ---op A : -> Matrix .
-    ---Represent public vector s
-    ---op s : -> Vector .
-
-    ---Rules-------------------------------------------------------------------------------------------------------------
+    ---RULES-------------------------------------------------------------------------------------------------------------
     
     vars P1 P2 : Principal .
     var MSGS : Msgs .
-    ops pk sk k : -> Key .
+    ---ops pk sk k : -> Key .
+    op k : -> Key .
+    vars pk sk : Key .
     var ks : Keys .
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    rl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM) .
-        ---if pk := first(pk,sk) .
+    var A : Matrix .
+    ---eq A = generateA(first(G(d))) . 
+
+    crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM)
+        if pk := (A m* s) v+ e /\ sk := s .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 
