@@ -8,8 +8,9 @@ fmod DATA-TYPES is
     sorts Vector Matrix Polynomial .
 
     ---We consider vectors as representations of integers
-    ---¿We consider integers as vectors of bytes?
-    subsort Vector < Int .
+    ---¿Should we consider integers as vectors of bytes?
+    ---subsort Vector < Int .
+
     ---A Vector is a also a Matrix with one row or one column
     ---Only square matrices are considered
     ---And can also be seen as a representation of a Polynomial
@@ -58,10 +59,6 @@ fmod KYBER-CPA-KEYGEN is
     op H : Vector -> Vector .
     ----------------------------------------------------------------------------------
 
-    ---Constant values to represent Matrices
-    var A : Matrix .
-    var A1 : Matrix .
-
     ---Operator to generate a matrix from the first vector given by G(d)
     op generateA : Vector -> Matrix .
 
@@ -94,7 +91,7 @@ mod KYBERV2 is
     subsort Key < Keys .
 
     ***We define keys as a type of content
-    subsorts Key < Content .
+    subsorts Key < Content Vector .
     
     sort Ciphertext .
     subsort Ciphertext < Content .
@@ -144,11 +141,12 @@ mod KYBERV2 is
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    var A : Matrix .
-    ---eq A = generateA(first(G(d))) . 
+    ---Constant values to represent Matrices
+    op A : -> Matrix .
+    var A1 : Matrix .
 
     crl [KeyGen] : < (Alice[emptyK]emptyC) P1 P2 >net(emptyM) => < (Alice[pk | sk]emptyC) P1 P2 >net(emptyM)
-        if pk := (A m* s) v+ e /\ sk := s .
+        if pk := (A m* s v+ e) /\ sk := s .
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 
