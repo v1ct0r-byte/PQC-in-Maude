@@ -25,7 +25,7 @@ mod KYBERV2 is
     op _|_ : Keys Keys -> Keys [assoc id: emptyK comm] .
 
     ---Possible states for a message
-    ops sent recieved consumed intercepted : -> MsgState .
+    ops sent received consumed intercepted : -> MsgState .
 
     ---Empty content
     op emptyC : -> Content .
@@ -40,7 +40,7 @@ mod KYBERV2 is
 
     ops Alice Eve Bob : ->  Identifier .
     ---Definition of the components of a Principal
-    ---(idenifier that can be Alice, Bob or Eve [keysrecieved or generated] content that the principal stores)
+    ---(idenifier that can be Alice, Bob or Eve [keys received or generated] content that the principal stores)
     op (_[_]_) : Identifier Keys Content -> Principal .
 
     ---Group of principals
@@ -63,15 +63,15 @@ mod KYBERV2 is
 
     rl [SendPK] : < (Alice[pk | ks]Cont) P1 P2 >net(emptyM) => < (Alice[pk | ks]Cont) P1 P2 >net(msg{(Alice,Bob)[sent]pk}) .
 
-    rl [RecievePK] : < (Bob[ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[recieved]pk}) .
+    rl [RecievePK] : < (Bob[ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[received]pk}) .
     
-    rl [Enc] : < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[recieved]pk}) => < (Bob[k | pk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}).
+    rl [Enc] : < (Bob[pk | ks]Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}).
 
     rl [SendCiph] : < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont) P1 P2 >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent]Ciph}) .
 
-    rl [RecieveCiph] : < (Alice[ks]Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks]Cont Ciph) P1 P2 >net(MSGS msg{(Bob,Alice)[recieved]Ciph}) .
+    rl [RecieveCiph] : < (Alice[ks]Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks]Cont Ciph) P1 P2 >net(MSGS msg{(Bob,Alice)[received]Ciph}) .
 
-    rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[recieved]Ciph}) => < (Alice[sk | k | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]Ciph}) .
+    rl [Dec] : < (Alice[sk | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[received]Ciph}) => < (Alice[sk | k | ks]Ciph Cont) P1 P2 >net(MSGS msg{(Bob,Alice)[consumed]Ciph}) .
 
     rl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P1 >net(MSGS) => True .
 
