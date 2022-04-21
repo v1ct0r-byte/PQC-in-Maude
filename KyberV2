@@ -59,6 +59,7 @@ NOTACIONES MATEMÁTICAS IMPORTANTES
 -> Siendo x un número del anillo de enteros hasta q = 256, y sea d < [log2q]:
     La función de compresión sobre q recibe la x y un d
     La función de decpmpresión sobre q recibe la x y un d
+-> CBD significa Centered binomial distribution. Representa el dominio de donde son sacadas las muestras de forma pseudoaleatorias para los vectores/arrays de bytes u y v.
 ------------------------------------------------------------------------------------------------------------------------
 FUNCIONAMIENTO DEL PROTOCOLO USANDO NOTACIONES MATEMÁTICAS
 

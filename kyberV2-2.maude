@@ -80,8 +80,15 @@ endfm
 ---Module to represent the operations and data handled during ENC
 fmod KYBER-CPA-ENC is
 
-op compress : -> Vector .
-op decompress : -> Vector .
+    op sampleR : Vector -> Vector .
+
+    ops u v : -> Vector .
+
+    op sampleEfromCBN : Vector -> Vector .
+
+    op compress : Vector Vector -> Vector .
+    
+    op decompress : Vector Vector -> Vector .
 
 endfm
 
