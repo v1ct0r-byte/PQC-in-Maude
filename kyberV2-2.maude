@@ -79,6 +79,7 @@ endfm
 
 ---Module to represent the operations and data handled during ENC
 fmod KYBER-CPA-ENC is
+    protecting DATA-TYPES .
 
     op sampleR : Vector -> Vector .
 
