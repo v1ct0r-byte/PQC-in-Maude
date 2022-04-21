@@ -27,7 +27,7 @@ fmod DATA-TYPES is
     op _m*_ : Matrix Vector -> Vector .
 endfm
 
----Module to represent the operations and data handled during step 2
+---Module to represent the operations and data handled during KEYGEN
 fmod KYBER-CPA-KEYGEN is
     pr DATA-TYPES .
     
@@ -75,6 +75,14 @@ fmod KYBER-CPA-KEYGEN is
 
     ---Constant values to represent the tranformated vector through NTT
     ops st et : -> Vector .
+endfm
+
+---Module to represent the operations and data handled during ENC
+fmod KYBER-CPA-ENC is
+
+op compress : -> Vector .
+op decompress : -> Vector .
+
 endfm
 
 ---CRYSTALS-KYBER
