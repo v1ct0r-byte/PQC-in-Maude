@@ -61,10 +61,12 @@ fmod KYBER-CPAPKE-KEYGEN is
     op H : Vector -> Vector .
     ----------------------------------------------------------------------------------
 
-    op A : -> Matrix .
+    op A1 : -> Matrix .
+    op A2 : -> Matrix .
     ---Operator to generate a matrix from the first vector given by G(d)
     op generateA : Vector -> Matrix .
-    eq generateA(first(Rho,Sig)) = A .
+    eq generateA(first(Rho,Sig)) = A1 .
+    eq generateA(first(Rho,Sig)) = A2 .
 
     ---Constant values to represent s and e
     ops s e : -> Vector .
@@ -74,9 +76,6 @@ fmod KYBER-CPAPKE-KEYGEN is
     ops sampleS sampleE : Vector -> Vector .
     eq sampleS(second(G(d))) = s .
     eq sampleE(second(G(d))) = e .
-
-    ---Constant values to represent the tranformated vector through NTT
-    ops st et : -> Vector .
 endfm
 
 ---Module to represent the operations and data handled during ENC
@@ -90,6 +89,7 @@ fmod KYBER-CPAPKE-ENC is
     op sampleEfromCBN : Vector -> Vector .
 
     op compress : Vector Vector -> Vector .
+    eq compress(u,du) = CU .
     
     op decompress : Vector Vector -> Vector .
 
@@ -164,40 +164,36 @@ mod KYBERV2 is
     op Ciph : -> Ciphertext .
     var Cont Cont2 : Content .
 
-    ---Constant values to represent Matrices
-    op A : -> Matrix .
-    var A1 : Matrix .
-
     crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[pk | sk]emptyC) PS >net(emptyM)
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     crl [SendPK] : < (Alice[pk | ks]Cont) PS >net(emptyM) => < (Alice[pk | ks]Cont) PS >net(msg{(Alice,Bob)[sent]pk})
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     crl [RecievePK] : < (Bob[ks]Cont) PS >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont) PS >net(MSGS msg{(Alice,Bob)[received]pk})
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
     
     crl [Enc] : < (Bob[pk | ks]Cont) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks](Ciph Cont)) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     crl [SendCiph] : < (Bob[ks](Ciph Cont)) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks](Ciph Cont)) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](Ciph)})
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     crl [RecieveCiph] : < (Alice[ks]Cont) PS >net(MSGS msg{(Bob,Alice)[sent](Ciph)}) => < (Alice[ks]Cont (Ciph)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)})
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     crl [Dec] : < (Alice[sk | ks](Ciph Cont)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)}) => < (Alice[sk | k | ks](Ciph Cont)) PS >net(MSGS msg{(Bob,Alice)[consumed](Ciph)})
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     crl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P1 >net(MSGS) => True
-        if pk := ((A m* s) v+ e) /\ 
+        if pk := ((A1 m* s) v+ e) /\ 
         sk := s .
 
     ---Initial state-------------------------------------------------------------------------------------------------------------
