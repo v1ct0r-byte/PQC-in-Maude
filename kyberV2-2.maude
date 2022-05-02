@@ -25,12 +25,7 @@ fmod DATA-TYPES is
     vars m1 m2 m3 : Matrix .
     ---Operator multiplication of a matrix and a vector
     op _m*_ : Matrix Vector -> Vector .
-endfm
 
----Module to represent the operations and data handled during KEYGEN
-fmod KYBER-CPA-KEYGEN is
-    pr DATA-TYPES .
-    
     vars v1 v2 v3 : Vector .
 
     ---Pair
@@ -42,6 +37,13 @@ fmod KYBER-CPA-KEYGEN is
     ---Second element of Pair
     op second : Pair -> Vector .
     eq second((v1,v2)) = v2 .
+endfm
+
+---Module to represent the operations and data handled during KEYGEN
+fmod KYBER-CPAPKE-KEYGEN is
+    pr DATA-TYPES .
+    
+    vars v1 v2 v3 : Vector .
 
     ---Rho and Sigma
     ops Rho Sig : -> Vector .
@@ -78,7 +80,7 @@ fmod KYBER-CPA-KEYGEN is
 endfm
 
 ---Module to represent the operations and data handled during ENC
-fmod KYBER-CPA-ENC is
+fmod KYBER-CPAPKE-ENC is
     protecting DATA-TYPES .
 
     op sampleR : Vector -> Vector .
@@ -96,7 +98,8 @@ endfm
 ---CRYSTALS-KYBER
 mod KYBERV2 is
     ---IMPORTS-------------------------------
-    pr KYBER-CPA-KEYGEN .
+    pr KYBER-CPAPKE-KEYGEN .
+    pr KYBER-CPAPKE-ENC .
 
     ---SORTS---------------------------------
     
