@@ -37,11 +37,22 @@ fmod DATA-TYPES is
     ---Second element of Pair
     op second : Pair -> Vector .
     eq second((v1,v2)) = v2 .
+
+    ---Constant and values necessary on modules for operations
+    
+    --- u and v are constants that represent obtained values
+    ops u v : -> Vector .
+
+    ---du and dv are integer parameters of CPAPKE in ENC and DEC
+    ops du dv : -> NzNat .
+
+    ---Operation used over basic data types to encode and decode it
+    ops encode decode : Vector -> Vector .
 endfm
 
 ---Module to represent the operations and data handled during KEYGEN
 fmod KYBER-CPAPKE-KEYGEN is
-    pr DATA-TYPES .
+    protecting DATA-TYPES .
 
     ---Rho and Sigma
     ops Rho Sig : -> Vector .
@@ -76,11 +87,6 @@ endfm
 fmod KYBER-CPAPKE-ENC is
     protecting DATA-TYPES .
 
-    ---du and dv are integer parameters of CPAPKE
-    ops du dv : -> NzNat .
-
-    ops u v : -> Vector .
-
     ---Cu and CV are the compressed vectors u and v
     ops CU CV : -> Vector . 
 
@@ -89,11 +95,25 @@ fmod KYBER-CPAPKE-ENC is
     eq compress(v,dv) = CV .
 endfm
 
+---Module to represent the operations and data handled during DEC
+---Its main purpouse is to demonstrate that the computed key is
+---the one that originated c in Bob side using pk
+fmod KYBER-CPAPKE-DEC is
+    protecting DATA-TYPES .
+
+    var ciphertext : Vector .
+
+   ---Operator that represents the operation Decompress to substract from c the values u and v
+   op decompress : Vector NzNat -> Vector .
+   eq decompress(decode(ciphertext),du) =  u .
+   ---eq decompress(decode(c v+ du m* k *n/8), dv) = v .
+endfm
+
 ---CRYSTALS-KYBER
 mod KYBERV2 is
     ---IMPORTS-------------------------------
-    pr KYBER-CPAPKE-KEYGEN .
-    pr KYBER-CPAPKE-ENC .
+    protecting KYBER-CPAPKE-KEYGEN .
+    protecting KYBER-CPAPKE-ENC .
 
     ---SORTS---------------------------------
     
@@ -108,8 +128,8 @@ mod KYBERV2 is
     ***We define keys as a type of content
     subsorts Vector < Key < Content .
     
-    sort Ciphertext .
-    subsort Ciphertext < Vector < Content .
+    ---sort Ciphertext .
+    ---subsort Ciphertext < Vector < Content .
 
     sort GlobalState .
     
