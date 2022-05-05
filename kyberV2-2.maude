@@ -169,47 +169,46 @@ mod KYBERV2 is
     
     vars P1 P2 : Principal .
     var PS : Principals .
-    var MSGS : Msgs .
-    ---ops pk sk k : -> Key .
+    var MSGS : Msgs . 
     op k : -> Key .
     vars pk sk : Key .
     var ks : Keys .
     var Ciph : Vector .
-    var Cont Cont2 : Content .
+    var Cont1 Cont2 : Content .
 
     crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[pk | sk]emptyC) PS >net(emptyM)
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) .
 
-    crl [SendPK] : < (Alice[pk | ks]Cont) PS >net(emptyM) => < (Alice[pk | ks]Cont) PS >net(msg{(Alice,Bob)[sent]pk})
+    crl [SendPK] : < (Alice[pk | ks]Cont1) PS >net(emptyM) => < (Alice[pk | ks]Cont1) PS >net(msg{(Alice,Bob)[sent]pk})
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) .
 
-    crl [RecievePK] : < (Bob[ks]Cont) PS >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont) PS >net(MSGS msg{(Alice,Bob)[received]pk})
+    crl [RecievePK] : < (Bob[ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk})
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) .
     
-    crl [Enc] : < (Bob[pk | ks]Cont) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]Ciph Cont) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
+    crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) /\
         Ciph := compress(u,du) || compress(v,dv) .
 
-    crl [SendCiph] : < (Bob[ks]Ciph Cont) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](Ciph)})
+    crl [SendCiph] : < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](Ciph)})
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) /\
         Ciph := compress(u,du) || compress(v,dv) .
 
-    crl [RecieveCiph] : < (Alice[ks]Cont) PS >net(MSGS msg{(Bob,Alice)[sent](Ciph)}) => < (Alice[ks]Cont (Ciph)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)})
+    crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](Ciph)}) => < (Alice[ks]Cont1 (Ciph)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)})
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) /\
         Ciph := compress(u,du) || compress(v,dv) .
 
-    crl [Dec] : < (Alice[sk | ks](Ciph Cont)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)}) => < (Alice[sk | k | ks](Ciph Cont)) PS >net(MSGS msg{(Bob,Alice)[consumed](Ciph)})
+    crl [Dec] : < (Alice[sk | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)}) => < (Alice[sk | k | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](Ciph)})
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) /\
         Ciph := compress(u,du) || compress(v,dv) .
 
-    crl [Comp] : < (Alice[k | ks]Cont) (Bob[k | ks]Cont2) P1 >net(MSGS) => True
+    crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
         if pk := ((generateA(first(G(d))) m* sampleS(second(G(d)))) v+ sampleE(second(G(d)))) /\ 
         sk := sampleS(second(G(d))) /\
         Ciph := compress(u,du) || compress(v,dv) .
