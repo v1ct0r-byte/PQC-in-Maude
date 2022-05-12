@@ -90,12 +90,7 @@ endfm
 fmod KYBER-CPAPKE-ENC is
     protecting DATA-TYPES .
 
-    ---Cu and CV are the compressed vectors u and v
-    ops CU CV : -> Vector . 
-
     op compress : Vector NzNat -> Vector .
-    eq compress(u,du) = CU .
-    eq compress(v,dv) = CV .
 endfm
 
 ---Module to represent the operations and data handled during DEC
