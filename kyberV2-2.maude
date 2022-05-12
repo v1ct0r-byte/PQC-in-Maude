@@ -37,9 +37,6 @@ fmod DATA-TYPES is
     ---du and dv are integer parameters of CPAPKE in ENC and DEC
     ops du dv : -> NzNat .
 
-    ---Operation used over basic data types to encode and decode it
-    ops encode decode : Vector -> Vector .
-    
     ---Sample values taken from the set of byte-arrays of length 32
     op d : -> Vector .
 
@@ -72,6 +69,23 @@ fmod KYBER-HASH-OPERATIONS is
     ---eq KDF() = key1 .
 endfm
 
+---Module to specifiy basic operations and 
+fmod ENCRYPTION is
+    protecting DATA-TYPES .
+
+    ---Operators to encode and decode data
+    ops encode decode : Vector -> Vector .
+
+    ---Operators to compress and decompress
+    ops compress decompress : Vector NzNat -> Vector .
+
+    ---Definition of Decompress
+    ---eq decompress(decode(ciphertext),du) =  u .
+    ---eq decompress(decode(c v+ du m* k *n/8), dv) = v .
+
+    ---Property of interest
+endfm
+
 ---Module to represent the operations and data handled during KEYGEN
 fmod KYBER-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
@@ -90,7 +104,7 @@ endfm
 fmod KYBER-CPAPKE-ENC is
     protecting DATA-TYPES .
 
-    op compress : Vector NzNat -> Vector .
+    
 endfm
 
 ---Module to represent the operations and data handled during DEC
@@ -102,15 +116,14 @@ fmod KYBER-CPAPKE-DEC is
     var ciphertext : Vector .
 
    ---Operator that represents the operation Decompress to substract from c the values u and v
-   op decompress : Vector NzNat -> Vector .
-   eq decompress(decode(ciphertext),du) =  u .
-   ---eq decompress(decode(c v+ du m* k *n/8), dv) = v .
+   ---op decompress : Vector NzNat -> Vector .
 endfm
 
 ---CRYSTALS-KYBER
 mod KYBERV2 is
     ---IMPORTS-------------------------------
     protecting KYBER-HASH-OPERATIONS .
+    protecting ENCRYPTION .
     protecting KYBER-CPAPKE-KEYGEN .
     protecting KYBER-CPAPKE-ENC .
 
@@ -172,7 +185,7 @@ mod KYBERV2 is
     op k : -> Key .
     vars pk sk : Key .
     var ks : Keys .
-    var Ciph : Vector .
+    vars Ciph c1 c2 : Vector .
     var Cont1 Cont2 : Content .
 
     crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[pk | sk]emptyC) PS >net(emptyM)
@@ -190,27 +203,37 @@ mod KYBERV2 is
     crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        Ciph := compress(u,du) || compress(v,dv) .
+        c1 := encode(compress(u,du)) /\
+        c2 := encode(compress(v,dv)) /\
+        Ciph := c1 || c2 .
 
     crl [SendCiph] : < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](Ciph)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        Ciph := compress(u,du) || compress(v,dv) .
+        c1 := encode(compress(u,du)) /\
+        c2 := encode(compress(v,dv)) /\
+        Ciph := c1 || c2 .
 
     crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](Ciph)}) => < (Alice[ks]Cont1 (Ciph)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        Ciph := compress(u,du) || compress(v,dv) .
+        c1 := encode(compress(u,du)) /\
+        c2 := encode(compress(v,dv)) /\
+        Ciph := c1 || c2 .
 
     crl [Dec] : < (Alice[sk | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)}) => < (Alice[sk | k | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](Ciph)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        Ciph := compress(u,du) || compress(v,dv) .
+        c1 := encode(compress(u,du)) /\
+        c2 := encode(compress(v,dv)) /\
+        Ciph := c1 || c2 .
 
     crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        Ciph := compress(u,du) || compress(v,dv) .
+        c1 := encode(compress(u,du)) /\
+        c2 := encode(compress(v,dv)) /\
+        Ciph := c1 || c2 .
 
     ---Initial state-------------------------------------------------------------------------------------------------------------
     
