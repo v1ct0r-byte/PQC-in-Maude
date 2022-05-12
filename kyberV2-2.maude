@@ -5,16 +5,7 @@ fmod DATA-TYPES is
     protecting INT .
     ---Here we are subsuming all sizes of vectors (and abstract that all vectors are column vectors)
     ---We also define type for matrices and polynomials
-    sorts Vector Matrix Polynomial .
-
-    ---We consider vectors as representations of integers
-    ---¿Should we consider integers as vectors of bytes?
-    ---subsort Vector < Int .
-
-    ---A Vector is a also a Matrix with one row or one column
-    ---Only square matrices are considered
-    ---And can also be seen as a representation of a Polynomial
-    subsorts Polynomial < Vector < Matrix .
+    sorts Vector Matrix .
 
     ---Concatenation of vectors result in a new vector
     op _||_ : Vector Vector -> Vector .
@@ -48,34 +39,46 @@ fmod DATA-TYPES is
 
     ---Operation used over basic data types to encode and decode it
     ops encode decode : Vector -> Vector .
+    
+    ---Sample values taken from the set of byte-arrays of length 32
+    op d : -> Vector .
+
+    ---Public Square matrix A
+    op A : -> Matrix .
+
+    ---Rho and Sigma
+    ops Rho Sig : -> Vector .
+
+    ---Constant values to represent s and e
+    ops s e : -> Vector .
+endfm
+
+---Module to specify all the hash functions that are used in the steps of KYBER KEM
+fmod KYBER-HASH-OPERATIONS is
+    protecting DATA-TYPES .
+
+    ---H recieves a random vector and returns a hash of it (which is also a vector)
+    op H : Vector -> Vector .
+
+    ---G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
+    op G : Vector -> Pair .
+    eq G(d) = (Rho,Sig) .
+    ---eq G(m||H(pk)) = (key1',r) .
+
+    ops key1 key2 : -> Vector .
+
+    ---Key Derivation Function receives a value and a hash value and derivates a key
+    op KDF : Vector Vector -> Vector .
+    ---eq KDF() = key1 .
 endfm
 
 ---Module to represent the operations and data handled during KEYGEN
 fmod KYBER-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
 
-    ---Rho and Sigma
-    ops Rho Sig : -> Vector .
-
-    ---Sample values taken from the set of byte-arrays of length 32
-    op d : -> Vector .
-
-    ---HASH FUNCTIONS----------------------------------------------------------------
-    ---G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
-    op G : Vector -> Pair .
-    eq G(d) = (Rho,Sig) .
-
-    ---H recieves a random vector and returns a hash of it (which is also a vector)
-    op H : Vector -> Vector .
-    ----------------------------------------------------------------------------------
-
-    op A : -> Matrix .
     ---Operator to generate a matrix from the FIRST vector given by G(d)
     op generateA : Vector -> Matrix .
     eq generateA(Rho) = A .
-
-    ---Constant values to represent s and e
-    ops s e : -> Vector .
 
     ---Operators to sample vectors s and e from the SECOND vector given by G(d)
     ops sampleS sampleE : Vector -> Vector .
@@ -112,6 +115,7 @@ endfm
 ---CRYSTALS-KYBER
 mod KYBERV2 is
     ---IMPORTS-------------------------------
+    protecting KYBER-HASH-OPERATIONS .
     protecting KYBER-CPAPKE-KEYGEN .
     protecting KYBER-CPAPKE-ENC .
 
