@@ -69,7 +69,7 @@ fmod KYBER-HASH-OPERATIONS is
     --- eq KDF() = key1 .
 endfm
 
---- Module to specifiy basic operations and 
+--- Module to specifiy basic operations on data
 fmod ENCRYPTION is
     protecting DATA-TYPES .
 
@@ -77,8 +77,8 @@ fmod ENCRYPTION is
     ops Compress Decompress : Vector NzNat -> Vector .
 
     --- Definition of Decompress
-    --- eq decompress(decode(ciphertext),du) =  u .
-    --- eq decompress(decode(c v+ du m* k *n/8), dv) = v .
+    --- eq Decompress(decode(ciphertext),du) =  u .
+    --- eq Decompress(decode(c v+ du m* k *n/8), dv) = v .
 
     --- Property of interest
     --- x' == Decompress(Compress(x,d),d)
