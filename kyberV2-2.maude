@@ -33,9 +33,6 @@ fmod DATA-TYPES is
     eq second((v1,v2)) = v2 .
 
     --- Constant and values necessary on modules for operations
-    
-    --- u and v are constants that represent obtained values
-    ops u v : -> Vector .
 
     --- du and dv are integer parameters of CPAPKE in ENC and DEC
     ops du dv : -> NzNat .
@@ -204,6 +201,8 @@ mod KYBERV2 is
     var MSGS : Msgs . 
     op k : -> Key .
     vars pk sk : Key .
+    var u : Vector .
+    op v : -> Vector .
     var ks : Keys .
     vars Ciph c1 c2 : Vector .
     var Cont1 Cont2 : Content .
@@ -223,6 +222,7 @@ mod KYBERV2 is
     crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
+        u := ((generateA'(first(G(d))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         Ciph := c1 || c2 .
@@ -230,6 +230,7 @@ mod KYBERV2 is
     crl [SendCiph] : < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](Ciph)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
+        u := ((generateA'(first(G(d))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         Ciph := c1 || c2 .
@@ -237,6 +238,7 @@ mod KYBERV2 is
     crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](Ciph)}) => < (Alice[ks]Cont1 (Ciph)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
+        u := ((generateA'(first(G(d))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         Ciph := c1 || c2 .
@@ -244,6 +246,7 @@ mod KYBERV2 is
     crl [Dec] : < (Alice[sk | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)}) => < (Alice[sk | k | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](Ciph)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
+        u := ((generateA'(first(G(d))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         Ciph := c1 || c2 .
@@ -251,6 +254,7 @@ mod KYBERV2 is
     crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
+        u := ((generateA'(first(G(d))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         Ciph := c1 || c2 .
