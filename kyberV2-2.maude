@@ -167,7 +167,10 @@ mod KYBERV2 is
 
     ---We define keys as a type of content
     subsorts Vector < Key < Content .
-    
+
+    --- We also declare that a pair is content
+    subsort Pair < Content .
+
     --- sort Ciphertext .
     --- subsort Ciphertext < Vector < Content .
 
@@ -215,7 +218,8 @@ mod KYBERV2 is
     var u : Vector .
     op v : -> Vector .
     var ks : Keys .
-    vars Ciph c1 c2 : Vector .
+    vars c1 c2 : Vector .
+    var c : Pair .
     var Cont1 Cont2 : Content .
     ---Constant to represent the generation of a 
 
@@ -231,37 +235,37 @@ mod KYBERV2 is
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) .
     
-    crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
+    crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
-        Ciph := c1 || c2 .
+        c := (c1,c2) .
 
-    crl [SendCiph] : < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]Ciph Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](Ciph)})
+    crl [SendCiph] : < (Bob[ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
-        Ciph := c1 || c2 .
+        c := (c1,c2) .
 
-    crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](Ciph)}) => < (Alice[ks]Cont1 (Ciph)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)})
+    crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](c)}) => < (Alice[ks]Cont1 (c)) PS >net(MSGS msg{(Bob,Alice)[received](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
-        Ciph := c1 || c2 .
+        c := (c1,c2) .
 
-    crl [Dec] : < (Alice[sk | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](Ciph)}) => < (Alice[sk | k | ks](Ciph Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](Ciph)})
+    crl [Dec] : < (Alice[sk | ks](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](c)}) => < (Alice[sk | k | ks](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
-        Ciph := c1 || c2 .
+        c := (c1,c2) .
 
     crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
         if sk := sampleS(second(G(d))) /\ 
@@ -269,7 +273,7 @@ mod KYBERV2 is
         u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
-        Ciph := c1 || c2 .
+        c := (c1,c2) .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
