@@ -16,6 +16,9 @@ fmod DATA-TYPES is
     --- Operator for the substraction of vectors
     op _v-_ : Vector Vector -> Vector .
 
+    --- Operator multiplication of a vector and a vector
+    op _v*_ : Vector Vector -> Vector .
+
     vars m1 m2 m3 : Matrix .
     --- Operator multiplication of a matrix and a vector
     op _m*_ : Matrix Vector -> Vector .
@@ -120,13 +123,6 @@ fmod KYBER-CPAPKE-ENC is
     --- Decode de pk
     --- eq Decode((A m* s) v+ e) = t .
 
-    --- Another public square matrix
-    op A' : -> Matrix .
-
-    --- Operator to generate a matrix from the FIRST vector given by G(d)
-    op generateA' : Vector -> Matrix .
-    eq generateA'(Rho) = A' .
-
     op sampleR' : Vector -> Vector . 
     eq sampleR'(r) = r' .
 
@@ -215,13 +211,11 @@ mod KYBERV2 is
     var MSGS : Msgs . 
     op k : -> Key .
     vars pk sk : Key .
-    var u : Vector .
-    op v : -> Vector .
+    var u v : Vector .
     var ks : Keys .
     vars c1 c2 : Vector .
     var c : Pair .
     var Cont1 Cont2 : Content .
-    ---Constant to represent the generation of a 
 
     crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[pk | sk]emptyC) PS >net(emptyM)
         if sk := sampleS(second(G(d))) /\ 
@@ -238,7 +232,8 @@ mod KYBERV2 is
     crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
@@ -246,7 +241,8 @@ mod KYBERV2 is
     crl [SendCiph] : < (Bob[ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
@@ -254,7 +250,8 @@ mod KYBERV2 is
     crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](c)}) => < (Alice[ks]Cont1 (c)) PS >net(MSGS msg{(Bob,Alice)[received](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
@@ -262,7 +259,8 @@ mod KYBERV2 is
     crl [Dec] : < (Alice[sk | ks](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](c)}) => < (Alice[sk | k | ks](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
@@ -270,7 +268,8 @@ mod KYBERV2 is
     crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        u := ((tpM(generateA'(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+        v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
         c1 := Compress(u,du) /\
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
