@@ -7,6 +7,9 @@ fmod DATA-TYPES is
     --- We also define type for matrices and polynomials
     sorts Vector Matrix .
 
+    --- We specify that a vector is a matrix of one row or one column
+    subsort Vector < Matrix .
+
     --- Concatenation of vectors result in a new vector
     op _||_ : Vector Vector -> Vector .
 
@@ -118,11 +121,6 @@ fmod KYBER-CPAPKE-ENC is
     protecting DATA-TYPES .
     protecting ENCRYPTION .
 
-    op t : -> Vector .
-
-    --- Decode de pk
-    --- eq Decode((A m* s) v+ e) = t .
-
     op sampleR' : Vector -> Vector . 
     eq sampleR'(r) = r' .
 
@@ -167,9 +165,6 @@ mod KYBERV2 is
     --- We also declare that a pair is content
     subsort Pair < Content .
 
-    --- sort Ciphertext .
-    --- subsort Ciphertext < Vector < Content .
-
     sort GlobalState .
     
     --- OPERATORS----------------------------
@@ -212,7 +207,7 @@ mod KYBERV2 is
     op k : -> Key .
     vars pk sk : Key .
     var u v : Vector .
-    var ks : Keys .
+    var ks1 ks2 : Keys .
     vars c1 c2 : Vector .
     var c : Pair .
     var Cont1 Cont2 : Content .
@@ -221,15 +216,15 @@ mod KYBERV2 is
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) .
 
-    crl [SendPK] : < (Alice[pk | ks]Cont1) PS >net(emptyM) => < (Alice[pk | ks]Cont1) PS >net(msg{(Alice,Bob)[sent]pk})
+    crl [SendPK] : < (Alice[pk | ks1]Cont1) PS >net(emptyM) => < (Alice[pk | ks1]Cont1) PS >net(msg{(Alice,Bob)[sent]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) .
 
-    crl [RecievePK] : < (Bob[ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk})
+    crl [RecievePK] : < (Bob[ks1]Cont1) PS >net(MSGS msg{(Alice,Bob)[sent]pk}) => < (Bob[pk | ks1]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) .
     
-    crl [Enc] : < (Bob[pk | ks]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
+    crl [Enc] : < (Bob[pk | ks1]Cont1) PS >net(MSGS msg{(Alice,Bob)[received]pk}) => < (Bob[k | pk | ks1]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
@@ -238,7 +233,7 @@ mod KYBERV2 is
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
 
-    crl [SendCiph] : < (Bob[ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](c)})
+    crl [SendCiph] : < (Bob[ks1]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks1]c Cont1) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
@@ -247,7 +242,7 @@ mod KYBERV2 is
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
 
-    crl [RecieveCiph] : < (Alice[ks]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](c)}) => < (Alice[ks]Cont1 (c)) PS >net(MSGS msg{(Bob,Alice)[received](c)})
+    crl [RecieveCiph] : < (Alice[ks1]Cont1) PS >net(MSGS msg{(Bob,Alice)[sent](c)}) => < (Alice[ks1]Cont1 (c)) PS >net(MSGS msg{(Bob,Alice)[received](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
@@ -256,7 +251,7 @@ mod KYBERV2 is
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
 
-    crl [Dec] : < (Alice[sk | ks](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[received](c)}) => < (Alice[sk | k | ks](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](c)})
+    crl [Dec] : < (Alice[sk | ks1]c Cont1) PS >net(MSGS msg{(Bob,Alice)[received](c)}) => < (Alice[sk | k | ks1](c Cont1)) PS >net(MSGS msg{(Bob,Alice)[consumed](c)})
         if sk := sampleS(second(G(d))) /\ 
         pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
         u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
@@ -265,7 +260,7 @@ mod KYBERV2 is
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
 
-    --- crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
+    rl [Comp] : < (Alice[k | ks1]Cont1) (Bob[k | ks2]Cont2) PS >net(MSGS) => True .
     ---     if sk := sampleS(second(G(d))) /\ 
     ---     pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
     ---     u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
@@ -280,5 +275,5 @@ mod KYBERV2 is
     eq init = < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 endm
 
---- search in KYBERV2: init =>* True .
+search init =>* True .
 rew init .
