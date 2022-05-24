@@ -265,14 +265,14 @@ mod KYBERV2 is
         c2 := Compress(v,dv) /\
         c := (c1,c2) .
 
-    crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
-        if sk := sampleS(second(G(d))) /\ 
-        pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-        u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
-        c1 := Compress(u,du) /\
-        c2 := Compress(v,dv) /\
-        c := (c1,c2) .
+    --- crl [Comp] : < (Alice[k | ks]Cont1) (Bob[k | ks]Cont2) PS >net(MSGS) => True
+    ---     if sk := sampleS(second(G(d))) /\ 
+    ---     pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
+    ---     u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+    ---     v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
+    ---     c1 := Compress(u,du) /\
+    ---     c2 := Compress(v,dv) /\
+    ---     c := (c1,c2) .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
@@ -281,3 +281,4 @@ mod KYBERV2 is
 endm
 
 --- search in KYBERV2: init =>* True .
+rew init .
