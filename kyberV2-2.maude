@@ -261,13 +261,6 @@ mod KYBERV2 is
         c := (c1,c2) .
 
     rl [Comp] : < (Alice[k | ks1]Cont1) (Bob[k | ks2]Cont2) PS >net(MSGS) => True .
-    ---     if sk := sampleS(second(G(d))) /\ 
-    ---     pk := ((generateA(first(G(d))) m* sk) v+ sampleE(second(G(d)))) /\
-    ---     u := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-    ---     v := (((tpV(pk) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
-    ---     c1 := Compress(u,du) /\
-    ---     c2 := Compress(v,dv) /\
-    ---     c := (c1,c2) .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
