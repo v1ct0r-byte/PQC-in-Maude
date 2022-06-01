@@ -138,7 +138,7 @@ endfm
 fmod KYBER-CPAPKE-DEC is
     protecting DATA-TYPES .
 
-    var CHIPHERTEXT : Vector .
+    
 endfm
 
 --- CRYSTALS-KYBER
@@ -260,7 +260,7 @@ mod KYBERV2 is
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
 
-    rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
+    ---rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
@@ -268,5 +268,5 @@ mod KYBERV2 is
     eq init = < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 endm
 
-search init =>* True .
+---search init =>* True .
 rew init .
