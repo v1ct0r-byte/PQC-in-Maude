@@ -95,8 +95,11 @@ fmod ENCRYPTION is
     --- eq Decompress(decode(ciphertext),du) =  u .
     --- eq Decompress(decode(c v+ du m* k *n/8), dv) = v .
 
+    vars X : Vector .
+
     --- Property of interest
-    --- x' == Decompress(Compress(x,d),d)
+    eq Decompress(Compress(X,1),1) = X .
+    eq Compress(Decompress(X,1),1) = X .
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN
