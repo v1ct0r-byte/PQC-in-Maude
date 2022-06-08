@@ -95,6 +95,8 @@ fmod ENCRYPTION is
     --- eq Decompress(decode(ciphertext),du) =  u .
     --- eq Decompress(decode(c v+ du m* k *n/8), dv) = v .
 
+    --- We assume the property leaves X ass the same, in practice this 
+    --- is not true but a new x called X' is obteined which is close to X
     vars X : Vector .
 
     --- Property of interest
