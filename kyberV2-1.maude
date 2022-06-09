@@ -36,7 +36,7 @@ mod KYBERV2 is
     ---Sender, Receiver, State, Content
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
     op emptyM : -> Msgs .
-    op __ : Msgs Msgs -> Msgs [id: emptyM] .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
 
     ops Alice Eve Bob : ->  Identifier .
     ---Definition of the components of a Principal
@@ -70,7 +70,7 @@ mod KYBERV2 is
 
     rl [SendCiph] : < (Bob[ks1]Ciph Cont) PS >net(MSGS msg{(Alice,Bob)[consumed]pk}) => < (Bob[ks1]Ciph Cont) PS >net(MSGS msg{(Alice,Bob)[consumed]pk} msg{(Bob,Alice)[sent]Ciph}) .
 
-    rl [RecieveCiph] : < (Alice[ks]1Cont) PS >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks1]Cont Ciph) PS >net(MSGS msg{(Bob,Alice)[received]Ciph}) .
+    rl [RecieveCiph] : < (Alice[ks1]Cont) PS >net(MSGS msg{(Bob,Alice)[sent]Ciph}) => < (Alice[ks1]Cont Ciph) PS >net(MSGS msg{(Bob,Alice)[received]Ciph}) .
 
     rl [Dec] : < (Alice[sk | ks1]Ciph Cont) PS >net(MSGS msg{(Bob,Alice)[received]Ciph}) => < (Alice[sk | k | ks1]Ciph Cont) PS >net(MSGS msg{(Bob,Alice)[consumed]Ciph}) .
 
