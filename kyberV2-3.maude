@@ -96,7 +96,7 @@ fmod ENCRYPTION is
     --- eq Decompress(decode(c v+ du m* k *n/8), dv) = v .
 
     --- We assume the property leaves X ass the same, in practice this 
-    --- is not true but a new x called X' is obteined which is close to X
+    --- is not true but a new X' is obteined which is close to X
     vars X : Vector .
 
     --- Property of interest
@@ -109,7 +109,7 @@ fmod KYBER-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
 
     --- Public Square matrix A
-    op A1 A2 A3 A4 A5 : -> Matrix .
+    ops A1 A2 A3 A4 A5 : -> Matrix .
 
     var RHO : Vector .
 
@@ -196,7 +196,7 @@ mod KYBERV2 is
     --- Sender, Receiver, State, Content
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
     op emptyM : -> Msgs .
-    op __ : Msgs Msgs -> Msgs [id: emptyM assoc] .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
 
     ops Alice Eve Bob : ->  Identifier .
     --- Definition of the components of a Principal
@@ -271,7 +271,7 @@ mod KYBERV2 is
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
 
-    ---rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
+    rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
