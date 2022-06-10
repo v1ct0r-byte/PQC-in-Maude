@@ -271,7 +271,7 @@ mod KYBERV2 is
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
 
-    rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
+    --- rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
