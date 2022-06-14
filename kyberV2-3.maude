@@ -30,7 +30,12 @@ fmod DATA-TYPES is
 
     --- Pair
     sort Pair .
+
+    --- A Pair can be seen as a Vector divided in two parts
+    subsort Pair < Vector .
+
     op _,_ : Vector Vector -> Pair .
+
     --- First element of Pair
     op first : Pair -> Vector .
     eq first((V1,V2)) = V1 .
@@ -66,17 +71,16 @@ fmod KYBER-HASH-OPERATIONS is
 
     --- H recieves a random vector and returns a hash of it (which is also a vector)
     op H : Vector -> Vector .
-    eq H(m) = m .
 
     --- Sample values taken from the set of byte-arrays of length 32
     op d : -> Vector .
 
+    ops key1 key2 : -> Vector .
+
     --- G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
     op G : Vector -> Pair .
     eq G(d) = (Rho,Sig) .
-    --- eq G(m||H(PK)) = (key1',r) .
-
-    ops key1 key2 : -> Vector .
+    --- eq G(m||H(PK)) = (key1,r) .
 
     --- Key Derivation Function receives a value and a hash value and derivates a key
     op KDF : Vector Vector -> Vector .
@@ -109,17 +113,17 @@ fmod KYBER-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
 
     --- Public Square matrix A
-    ops A1 A2 A3 A4 A5 : -> Matrix .
+    ops A A2 A3 A4 A5 : -> Matrix .
 
     var RHO : Vector .
 
     --- Operator to generate a matrix from the FIRST vector given by G(d)
-    op generateA : Vector -> Matrix .
-    eq generateA(RHO) = A1 .
-    eq generateA(RHO) = A2 .
-    eq generateA(RHO) = A3 .
-    eq generateA(RHO) = A4 .
-    eq generateA(RHO) = A5 .
+    op generateA : Vector  -> Matrix .
+    eq generateA(RHO) = A .
+    --- eq generateA(RHO) = A2 .
+    --- eq generateA(RHO) = A3 .
+    --- eq generateA(RHO) = A4 .
+    --- eq generateA(RHO) = A5 .
 
     --- Operators to sample vectors s and e from the SECOND vector given by G(d)
     ops sampleS sampleE : Vector -> Vector .
@@ -216,6 +220,7 @@ mod KYBERV2 is
     var PS : Principals .
     var MSGS : Msgs . 
     op k : -> Key .
+    var K : Key .
     vars PK SK : Key .
     var U V : Vector .
     var KS1 KS2 : Keys .
