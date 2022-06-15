@@ -10,23 +10,32 @@ fmod DATA-TYPES is
     --- We specify that a vector is a matrix of one row or one column
     subsort Vector < Matrix .
 
+    --- We specify number is a vector
+    subsort Nat < Vector .
+
+    vars V1 V2 V3 : Vector .
+
     --- Concatenation of vectors result in a new vector
     op _||_ : Vector Vector -> Vector .
 
     --- Operator for the sum of vectors
     op _v+_ : Vector Vector -> Vector .
 
+    --- Necessary equations for Dec step
+    eq V1 v+ 0 = V1 .
+
     --- Operator for the substraction of vectors
     op _v-_ : Vector Vector -> Vector .
+
+    --- Necessary equations for Dec step
+    eq V1 v- V1 = 0 .
+    eq V1 v- 0 = V1 .
 
     --- Operator multiplication of a vector and a vector
     op _v*_ : Vector Vector -> Vector .
 
-    vars M1 M2 M3 : Matrix .
     --- Operator multiplication of a matrix and a vector
     op _m*_ : Matrix Vector -> Vector .
-
-    vars V1 V2 V3 : Vector .
 
     --- Pair
     sort Pair .
@@ -75,16 +84,9 @@ fmod KYBER-HASH-OPERATIONS is
     --- Sample values taken from the set of byte-arrays of length 32
     op d : -> Vector .
 
-    ops key1 key2 : -> Vector .
-
     --- G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
     op G : Vector -> Pair .
     eq G(d) = (Rho,Sig) .
-    --- eq G(m||H(PK)) = (key1,r) .
-
-    --- Key Derivation Function receives a value and a hash value and derivates a key
-    op KDF : Vector Vector -> Vector .
-    --- eq KDF() = key1 .
 endfm
 
 --- Module to specifiy basic operations on data
@@ -94,18 +96,14 @@ fmod ENCRYPTION is
     --- Operators to compress and decompress
     ops Compress Decompress : Vector NzNat -> Vector .
 
-    --- Definition of Decompress
-    --- eq Decompress() = m' .
-    --- eq Decompress(decode(ciphertext),du) =  u .
-    --- eq Decompress(decode(c v+ du m* k *n/8), dv) = v .
-
     --- We assume the property leaves X ass the same, in practice this 
     --- is not true but a new X' is obteined which is close to X
-    vars X : Vector .
+    var X : Vector .
+    var N : NzNat .
 
     --- Property of interest
-    eq Decompress(Compress(X,1),1) = X .
-    eq Compress(Decompress(X,1),1) = X .
+    eq Decompress(Compress(X,N),N) = X .
+    eq Compress(Decompress(X,N),N) = X .
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN
@@ -186,7 +184,7 @@ mod KYBERV2 is
     --- Empty group of keys
     op emptyK : -> Keys .
     --- Group of keys
-    op _|_ : Keys Keys -> Keys [assoc id: emptyK comm] .
+    op _;_ : Keys Keys -> Keys [assoc id: emptyK comm] .
 
     --- Posible states for a message
     ops sent received consumed intercepted : -> MsgState .
@@ -222,29 +220,30 @@ mod KYBERV2 is
     op k : -> Key .
     var K : Key .
     vars PK SK : Key .
-    var U V : Vector .
+    var U V U' V' : Vector .
     var KS1 KS2 : Keys .
     vars C1 C2 : Vector .
     var C : Pair .
     var CONT1 CONT2 : Content .
 
-    crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[PK | SK]emptyC) PS >net(emptyM)
+    --- For now the protocol only starts when the content of the participant is empty
+    crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[PK ; SK]emptyC) PS >net(emptyM)
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
 
-    crl [SendPK] : < (Alice[PK | KS1]CONT1) PS >net(emptyM) => < (Alice[PK | KS1]CONT1) PS >net(msg{(Alice,Bob)[sent]PK})
+    crl [SendPK] : < (Alice[PK ; KS1]CONT1) PS >net(emptyM) => < (Alice[PK ; KS1]CONT1) PS >net(msg{(Alice,Bob)[sent]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
 
-    crl [RecievePK] : < (Bob[KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[sent]PK}) => < (Bob[PK | KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK})
+    crl [RecievePK] : < (Bob[KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[sent]PK}) => < (Bob[PK ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
     
-    crl [Enc] : < (Bob[PK | KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK}) => < (Bob[k | PK | KS1]C CONT1) PS >net(MSGS msg{(Alice,Bob)[consumed]PK})
+    crl [Enc] : < (Bob[PK ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK}) => < (Bob[m ; PK ; KS1]C CONT1) PS >net(MSGS msg{(Alice,Bob)[consumed]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
+        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
@@ -253,7 +252,7 @@ mod KYBERV2 is
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
+        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
@@ -262,21 +261,24 @@ mod KYBERV2 is
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
+        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
 
-    crl [Dec] : < (Alice[SK | KS1]C CONT1) PS >net(MSGS msg{(Bob,Alice)[received](C)}) => < (Alice[SK | k | KS1](C CONT1)) PS >net(MSGS msg{(Bob,Alice)[consumed](C)})
+    crl [Dec] : < (Alice[SK ; KS1]C CONT1) PS >net(MSGS msg{(Bob,Alice)[received](C)}) => < (Alice[SK ; K ; KS1](C CONT1)) PS >net(MSGS msg{(Bob,Alice)[consumed](C)})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(H(m),1)) /\
+        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
-        C := (C1,C2) .
+        C := (C1,C2) /\
+        U' := Decompress(first(C),du) /\
+        V' := Decompress(second(C),dv) /\
+        K := Compress(V' v- (tpV(SK) m* U'),1) .
 
-    --- rl [Comp] : < (Alice[k | KS1]CONT1) (Bob[k | KS2]CONT2) PS >net(MSGS) => True .
+    --- rl [Comp] : < (Alice[K ; KS1]CONT1) (Bob[K ; KS2]CONT2) PS >net(MSGS) => True .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
