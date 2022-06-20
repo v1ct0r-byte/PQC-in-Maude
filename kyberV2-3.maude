@@ -7,10 +7,10 @@ fmod DATA-TYPES is
     --- We also define type for matrices and polynomials
     sorts Vector Matrix .
 
-    --- We specify that a vector is a matrix of one row or one column
+    --- We specify that a vector is a also a matrix
     subsort Vector < Matrix .
 
-    --- We specify number is a vector
+    --- We specify numbers are vectors
     subsort Nat < Vector .
 
     vars V1 V2 V3 : Vector .
@@ -32,11 +32,11 @@ fmod DATA-TYPES is
     eq V1 v- 0 = V1 .
 
     --- Operator multiplication of a vector and a vector
-    op _v*_ : Vector Vector -> Vector [assoc] .
+    op _dot_ : Vector Vector -> Vector [assoc] .
 
-    --- Equation to specify the distributive property of v* over v+
-    eq (V1 v+ V2) v* V3 = (V1 v* V3) v+ (V2 v* V3) .
-    eq V1 v* (V2 v+ V3) = (V1 v* V2) v+ (V1 v* V3) .
+    --- Equation to specify the distributive property of dot over v+
+    eq (V1 v+ V2) dot V3 = (V1 dot V3) v+ (V2 dot V3) .
+    eq V1 dot (V2 v+ V3) = (V1 dot V2) v+ (V1 dot V3) .
 
     var M1 : Matrix .
 
@@ -108,12 +108,15 @@ fmod ENCRYPTION is
 
     --- We assume the property leaves X ass the same, in practice this 
     --- is not true but a new X' is obteined which is close to X
-    var X : Vector .
+    vars X V1 V2 : Vector .
     var N : NzNat .
 
     --- Property of interest
     eq Decompress(Compress(X,N),N) = X .
     eq Compress(Decompress(X,N),N) = X .
+
+    --- Property of noise cancelation
+    eq  (V1 v+ Decompress(X,N)) v- V2 = Decompress(X,N) .
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN
@@ -128,10 +131,6 @@ fmod KYBER-CPAPKE-KEYGEN is
     --- Operator to generate a matrix from the FIRST vector given by G(d)
     op generateA : Vector  -> Matrix .
     eq generateA(RHO) = A .
-    --- eq generateA(RHO) = A2 .
-    --- eq generateA(RHO) = A3 .
-    --- eq generateA(RHO) = A4 .
-    --- eq generateA(RHO) = A5 .
 
     --- Operators to sample vectors s and e from the SECOND vector given by G(d)
     ops sampleS sampleE : Vector -> Vector .
@@ -253,7 +252,7 @@ mod KYBERV2 is
         if ---SK := sampleS(second(G(d))) /\ 
         ---PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
+        V := (((tpV(PK) dot sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
@@ -262,7 +261,7 @@ mod KYBERV2 is
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
+        V := (((tpV(PK) dot sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
@@ -271,7 +270,7 @@ mod KYBERV2 is
         if SK := sampleS(second(G(d))) /\
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := ((tpV(PK) v* sampleR'(r)) v+ sampleE2(r) v+ Decompress(m,1)) /\
+        V := ((tpV(PK) dot sampleR'(r)) v+ sampleE2(r) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
@@ -280,13 +279,13 @@ mod KYBERV2 is
         if SK := sampleS(second(G(d))) /\
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
-        V := (((tpV(PK) v* sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
+        V := (((tpV(PK) dot sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
         C1 := Compress(U,du) /\
         C2 := Compress(V,dv) /\
         C := (C1,C2) /\
         U' := Decompress(first(C),du) /\
         V' := Decompress(second(C),dv) /\
-        K := Compress(V' v- (tpV(SK) v* U'),1) .
+        K := Compress(V' v- tpV(SK) dot U',1) .
 
     --- rl [Comp] : < (Alice[K ; KS1]CONT1) (Bob[K ; KS2]CONT2) PS >net(MSGS) => True .
 
