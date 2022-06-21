@@ -225,8 +225,7 @@ mod KYBERV2 is
     
     vars P1 P2 : Principal .
     var PS : Principals .
-    var MSGS : Msgs . 
-    op k : -> Key .
+    var MSGS : Msgs .
     var K : Key .
     vars PK SK : Key .
     var U V U' V' : Vector .
@@ -240,11 +239,11 @@ mod KYBERV2 is
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
 
-    crl [SendPK] : < (Alice[PK ; KS1]CONT1) PS >net(emptyM) => < (Alice[PK ; KS1]CONT1) PS >net(msg{(Alice,Bob)[sent]PK})
+    crl [SendPK] : < (P1[PK ; KS1]CONT1) (P2[KS2]CONT2) PS >net(emptyM) => < (P1[PK ; KS1]CONT1) (P2[KS2]CONT2) PS >net(msg{(P1,P2)[sent]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
 
-    crl [RecievePK] : < (Bob[KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[sent]PK}) => < (Bob[PK ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK})
+    crl [RecievePK] : < (P1[KS1]CONT1) PS >net(MSGS msg{(P2,P1)[sent]PK}) => < (P1[PK ; KS1]CONT1) PS >net(MSGS msg{(P2,P1)[received]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
     
@@ -287,7 +286,10 @@ mod KYBERV2 is
         V' := Decompress(second(C),dv) /\
         K := Compress(V' v- tpV(SK) dot U',1) .
 
-    rl [Comp] : < (Alice[K ; KS1]CONT1) (Bob[K ; KS2]CONT2) PS >net(MSGS) => True .
+    --- rl [Comp] : < (Alice[K ; KS1]CONT1) (Bob[K ; KS2]CONT2) PS >net(MSGS) => True .
+
+    --- Intruder behaviour
+    --- crl [intercept]
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
