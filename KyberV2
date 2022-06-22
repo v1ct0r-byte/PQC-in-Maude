@@ -82,3 +82,31 @@ ME GUARDO ESTA PARTE POR SI HACE FALTA MÁS ADELANTE
     ---Decaps(sk,c) -> k
     op DEC : Ciphertext Key -> Instr .
     eq [Decaps] DEC(c,sk) = k .
+
+--- Rules to send and receive a key between two participants
+crl [SendPK] : < (ID1[PK ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(emptyM) => < (ID1[PK ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(msg{(ID1,ID2)[sent]PK})
+        if SK := sampleS(second(G(d))) /\ 
+        PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
+
+crl [RecievePK] : < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sent]PK}) => < (ID1[PK ; KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[received]PK})
+        if SK := sampleS(second(G(d))) /\ 
+        PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
+
+--- Rules to send and receive a chipered text
+crl [SendCiph] : < (ID1[KS1]C CONT1) PS >net(MSGS msg{(ID2,ID1)[consumed]PK}) => < (ID1[KS1]C CONT1) PS >net(MSGS msg{(ID2,ID1)[consumed]PK} msg{(ID1,ID2)[sent](C)})
+    if SK := sampleS(second(G(d))) /\ 
+    PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
+    U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+    V := (((tpV(PK) dot sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
+    C1 := Compress(U,du) /\
+    C2 := Compress(V,dv) /\
+    C := (C1,C2) .
+
+crl [RecieveCiph] : < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sent](C)}) => < (ID1[KS1]CONT1 (C)) PS >net(MSGS msg{(ID2,ID1)[received](C)})
+    if SK := sampleS(second(G(d))) /\
+    PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
+    U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
+    V := ((tpV(PK) dot sampleR'(r)) v+ sampleE2(r) v+ Decompress(m,1)) /\
+    C1 := Compress(U,du) /\
+    C2 := Compress(V,dv) /\
+    C := (C1,C2) .

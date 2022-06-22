@@ -1,4 +1,4 @@
---- Specification of CRYSTALS-KYBER till step 3
+--- Specification of CRYSTALS-KYBER till step 4
 
 --- Module specifying basic datatypes and its operations used in KYBER
 fmod DATA-TYPES is
@@ -19,9 +19,10 @@ fmod DATA-TYPES is
     op _||_ : Vector Vector -> Vector .
 
     --- Operator for the sum of vectors
-    op _v+_ : Vector Vector -> Vector [assoc] .
+    op _v+_ : Vector Vector -> Vector [assoc comm] .
 
     --- Necessary equations for Dec step
+    --- Identity element is 0
     eq V1 v+ 0 = V1 .
 
     --- Operator for the substraction of vectors
@@ -29,6 +30,9 @@ fmod DATA-TYPES is
 
     --- Necessary equations for Dec step
     eq V1 v- V1 = 0 .
+    eq (V1 v+ V2) v- V1 = V2 .
+    --- This one is the most important because it allows us to eliminate ((A m* s) dot r)
+    eq (V1 v+ V2) v- (V1 v+ V3) = V2 v- V3 .
     eq V1 v- 0 = V1 .
 
     --- Operator multiplication of a vector and a vector
@@ -42,6 +46,9 @@ fmod DATA-TYPES is
 
     --- Operator multiplication of a matrix and a vector
     op _m*_ : Matrix Vector -> Vector .
+
+    --- Distributive property of dot over m*
+    eq (M1 m* V1) dot V2 = V1 dot (M1 m* V2) .
 
     --- Pair
     sort Pair .
@@ -80,7 +87,7 @@ fmod DATA-TYPES is
     op tpV : Vector -> Vector .
 
     --- We define the distribution of the operation traspose over v+ and m*
-    eq tpV((V1 v+ V2)) = tpV(V1) v+ tpV(V2) .
+    eq tpV(V1 v+ V2) = tpV(V1) v+ tpV(V2) .
     eq tpV(M1 m* V1) = tpM(M1) m* tpV(V1) .
 endfm
 
@@ -181,8 +188,11 @@ mod KYBERV2 is
     sorts Key Keys .
     subsort Key < Keys .
 
+    --- We distinguish between public and secret keys, both being keys in the end
+    sorts PKey SKey .
+
     ---We define keys as a type of content
-    subsorts Vector < Key < Content .
+    subsorts Vector < PKey SKey < Key < Content .
 
     --- We also declare that a pair is content
     subsort Pair < Content .
@@ -194,6 +204,15 @@ mod KYBERV2 is
     op emptyK : -> Keys .
     --- Group of keys
     op _;_ : Keys Keys -> Keys [assoc id: emptyK comm] .
+
+    --- Operator to represent the relation of a public key and a principal
+    op publicKey : Identifier Key -> PKey .
+
+    --- Operator to represent the relation of a secret key and a principal
+    op secretKey : Identifier Key -> SKey .
+
+    --- Operator to represent the shared key with a participant
+    op sharedKey : Identifier Key -> SKey .
 
     --- Posible states for a message
     ops sent received consumed intercepted : -> MsgState .
@@ -224,10 +243,12 @@ mod KYBERV2 is
     --- RULES-------------------------------------------------------------------------------------------------------------
     
     vars P1 P2 : Principal .
+    vars ID1 ID2 : Identifier .
     var PS : Principals .
     var MSGS : Msgs .
-    var K : Key .
-    vars PK SK : Key .
+    vars K SK : SKey .
+    vars PK PK' : PKey .
+    ---vars PK SK : Key .
     var U V U' V' : Vector .
     var KS1 KS2 : Keys .
     vars C1 C2 : Vector .
@@ -235,20 +256,20 @@ mod KYBERV2 is
     var CONT1 CONT2 : Content .
 
     --- For now the protocol only starts when the content of the participant is empty
-    crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[PK ; SK]emptyC) PS >net(emptyM)
+    crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[publicKey(Alice,PK) ; secretKey(Alice,SK)]emptyC) PS >net(emptyM)
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
 
-    crl [SendPK] : < (P1[PK ; KS1]CONT1) (P2[KS2]CONT2) PS >net(emptyM) => < (P1[PK ; KS1]CONT1) (P2[KS2]CONT2) PS >net(msg{(P1,P2)[sent]PK})
+    crl [SendPK] : < (Alice[publicKey(Alice,PK) ; KS1]CONT1) PS >net(emptyM) => < (Alice[publicKey(Alice,PK) ; KS1]CONT1) PS >net(msg{(Alice,Bob)[sent]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
 
-    crl [RecievePK] : < (P1[KS1]CONT1) PS >net(MSGS msg{(P2,P1)[sent]PK}) => < (P1[PK ; KS1]CONT1) PS >net(MSGS msg{(P2,P1)[received]PK})
+    crl [RecievePK] : < (Bob[KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[sent]PK}) => < (Bob[publicKey(Alice,PK) ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK})
         if SK := sampleS(second(G(d))) /\ 
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
     
-    crl [Enc] : < (Bob[PK ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK}) => < (Bob[m ; PK ; KS1]C CONT1) PS >net(MSGS msg{(Alice,Bob)[consumed]PK})
-        if ---SK := sampleS(second(G(d))) /\ 
+    crl [Enc] : < (Bob[publicKey(Alice,PK) ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[received]PK}) => < (Bob[sharedKey(Alice,m) ; publicKey(Alice,PK) ; KS1]C CONT1) PS >net(MSGS msg{(Alice,Bob)[consumed]PK})
+        if ---SK := sampleS(second(G(d))) /\
         ---PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
         V := (((tpV(PK) dot sampleR'(r)) v+ sampleE2(r)) v+ Decompress(m,1)) /\
@@ -274,7 +295,7 @@ mod KYBERV2 is
         C2 := Compress(V,dv) /\
         C := (C1,C2) .
 
-    crl [Dec] : < (Alice[SK ; KS1]C CONT1) PS >net(MSGS msg{(Bob,Alice)[received](C)}) => < (Alice[SK ; K ; KS1](C CONT1)) PS >net(MSGS msg{(Bob,Alice)[consumed](C)})
+    crl [Dec] : < (Alice[secretKey(Alice,SK) ; KS1]C CONT1) PS >net(MSGS msg{(Bob,Alice)[received](C)}) => < (Alice[secretKey(Alice,SK) ; sharedKey(Bob,K) ; KS1]C CONT1) PS >net(MSGS msg{(Bob,Alice)[consumed](C)})
         if SK := sampleS(second(G(d))) /\
         PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) /\
         U := ((tpM(generateA(first(G(d)))) m* sampleR'(r)) v+ sampleE1(r)) /\
@@ -289,7 +310,9 @@ mod KYBERV2 is
     --- rl [Comp] : < (Alice[K ; KS1]CONT1) (Bob[K ; KS2]CONT2) PS >net(MSGS) => True .
 
     --- Intruder behaviour
-    --- crl [intercept]
+    rl [intercept] : < (Eve[PK ; KS1]emptyC) PS >net(MSGS msg{(Alice,Bob)[sent]PK'}) => < (Eve[PK ; KS1]emptyC) PS >net(MSGS msg{(Alice,Bob)[intercepted]PK'} msg{(Alice,Bob)[sent]PK}) .
+
+    --- crl []
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
