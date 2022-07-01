@@ -83,6 +83,11 @@ ME GUARDO ESTA PARTE POR SI HACE FALTA MÁS ADELANTE
     op DEC : Ciphertext Key -> Instr .
     eq [Decaps] DEC(c,sk) = k .
 
+--- Rule that models the function KeyGen for Alice
+crl [KeyGen] : < (Alice[emptyK]emptyC) PS >net(emptyM) => < (Alice[publicKey(Alice,PK) ; secretKey(Alice,SK)]emptyC) PS >net(emptyM)
+        if SK := sampleS(second(G(d))) /\ 
+        PK := ((generateA(first(G(d))) m* SK) v+ sampleE(second(G(d)))) .
+
 --- Rules to send and receive a key between two participants
 crl [SendPK] : < (ID1[PK ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(emptyM) => < (ID1[PK ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(msg{(ID1,ID2)[sent]PK})
         if SK := sampleS(second(G(d))) /\ 
