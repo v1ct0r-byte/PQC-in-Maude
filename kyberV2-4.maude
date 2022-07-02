@@ -188,12 +188,6 @@ fmod KYBER-CPAPKE-DEC is
     
 endfm
 
-fmod MSG-COLLECTION is
-    ---protecting DATA-TYPES .
-
-    
-endfm
-
 --- CRYSTALS-KYBER
 mod KYBERV2 is
     --- IMPORTS-------------------------------
@@ -202,7 +196,6 @@ mod KYBERV2 is
     protecting ENCRYPTION .
     protecting KYBER-CPAPKE-KEYGEN .
     protecting KYBER-CPAPKE-ENC .
-    protecting MSG-COLLECTION .
 
     --- SORTS---------------------------------
     
