@@ -297,7 +297,7 @@ mod KYBERV2 is
     --- Group of principals
     op __ : Principal Principal -> Principals [assoc comm] .
 
-    --- Global state composed by Principals and a network with messages
+    --- Global state composed by Samples, Principals and a Network with messages
     op {_}<_>net(_) : Content Principals Msgs -> GlobalState .
     op True : -> GlobalState .
 
@@ -306,11 +306,11 @@ mod KYBERV2 is
     vars P1 P2 : Principal .
     vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
-    vars MSGS MSGS2 : Msgs .
-    vars K SK : SKey .
+    var MSGS : Msgs .
+    vars K1 K2 SK : SKey .
     vars PK PK' : PKey .
     vars U V U' V' : Vector .
-    vars KS1 KS2 : Keys .
+    vars KS1 KS2 KS3 : Keys .
     vars C1 C2 : Vector .
     vars SAM1 SAM2 SAM3 : Vector .
     vars C C' : Pair .
@@ -360,7 +360,7 @@ mod KYBERV2 is
         if (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
 
     --- Once decompressed, the ciphertext is destroyed from local memory of the participant
-    crl [Dec] : { CONT } < (ID1[secretKey(ID1,SK) ; KS1]dI(ID1,SAM1) cI(ID2,C') CONT1) (ID3[KS2]cI(ID3,C') mI(ID3,SAM2) rI(ID3,SAM3) CONT2) PS >net(MSGS) => { CONT } < (ID1[secretKey(ID1,SK) ; sharedKey(ID2,K) ; KS1]dI(ID1,SAM1) CONT1) (ID3[KS2]cI(ID3,C') mI(ID3,SAM2) rI(ID3,SAM3) CONT2) PS >net(MSGS)
+    crl [Dec] : { CONT } < (ID1[secretKey(ID1,SK) ; KS1]dI(ID1,SAM1) cI(ID2,C') CONT1) (ID3[KS2]cI(ID3,C') mI(ID3,SAM2) rI(ID3,SAM3) CONT2) PS >net(MSGS) => { CONT } < (ID1[secretKey(ID1,SK) ; sharedKey(ID2,K1) ; KS1]dI(ID1,SAM1) CONT1) (ID3[KS2]cI(ID3,C') mI(ID3,SAM2) rI(ID3,SAM3) CONT2) PS >net(MSGS)
         if SK := sampleS(second(G(SAM1))) /\
         PK := ((generateA(first(G(SAM1))) m* SK) v+ sampleE(second(G(SAM1)))) /\
         U := ((tpM(generateA(first(G(SAM1)))) m* sampleR'(SAM3)) v+ sampleE1(SAM3)) /\
@@ -370,10 +370,10 @@ mod KYBERV2 is
         C := (C1,C2) /\ 
         U' := Decompress(first(C),du) /\
         V' := Decompress(second(C),dv) /\
-        K := Compress(V' v- tpV(SK) dot U',1) /\
+        K1 := Compress(V' v- tpV(SK) dot U',1) /\
         ID1 =/= ID2 .
 
-    rl [Comp] : { CONT } < (ID1[sharedKey(ID2,K) ; KS1]CONT1) (ID2[sharedKey(ID1,K) ; KS2]CONT2) PS >net(MSGS) => True .
+    rl [Comp] : { CONT } < (ID1[sharedKey(ID2,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; KS2]CONT2) PS >net(MSGS) => True .
 
     --- Intruder behaviour
     crl [Intercept1] : { CONT } < (Eve[publicKey(Eve,PK) ; KS1]CONT1) (Alice[publicKey(Alice,PK') ; KS2]CONT2) PS >net(MSGS msg{(Alice,Bob)[sentPK]PK'}) => { CONT } < (Eve[publicKey(Eve,PK) ; publicKey(Alice,PK') ; KS1]CONT1) (Alice[publicKey(Alice,PK') ; KS2]CONT2) PS >net(MSGS msg{(Alice,Bob)[interceptedPK]PK'} msg{(Alice,Bob)[sentPK]PK}) 
@@ -389,5 +389,8 @@ mod KYBERV2 is
     eq init = {ds(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 endm
 
-search init =>* True .
+--- For one search is limited to one solution because of sendPK and sendC rules are infinite
+search [1] init =>* True .
+--- MITM Attack search
+search [1] init =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
 ---rew init .
