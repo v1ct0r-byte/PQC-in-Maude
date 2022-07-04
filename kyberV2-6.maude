@@ -330,7 +330,8 @@ mod KYBERV2 is
     crl [SendPK] : { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS) => { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK})
         if (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\
         (msg{(ID1,ID2)[interceptedPK]PK}) in MSGS == false /\ 
-        (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false .
+        (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false /\
+        ID1 =/= ID2 .
 
     --- Last condition is to avoid receiveing Ciph as PK
     crl [RecievePK] : { CONT } < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) => { CONT } < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK})
