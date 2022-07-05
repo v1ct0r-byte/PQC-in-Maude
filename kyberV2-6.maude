@@ -327,11 +327,14 @@ mod KYBERV2 is
         PK := ((generateA(first(G(SAM1))) m* SK) v+ sampleE(second(G(SAM1)))) .
 
     --- Send PK to someone if it has not been sent before and the reciever didnt recieve it before
-    crl [SendPK] : { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS) => { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK})
+    crl [SendPK] : { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) (ID3[KS3]CONT3) >net(MSGS) => { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) (ID3[KS3]CONT3) >net(MSGS msg{(ID1,ID2)[sentPK]PK})
         if (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\
         (msg{(ID1,ID2)[interceptedPK]PK}) in MSGS == false /\ 
         (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false /\
-        ID1 =/= ID2 .
+        (ID1 =/= ID2) /\ 
+        (msg{(ID1,ID3)[sentPK]PK}) in MSGS == false /\
+        (msg{(ID1,ID3)[interceptedPK]PK}) in MSGS == false /\ 
+        (msg{(ID1,ID3)[receivedPK]PK}) in MSGS == false .
 
     --- Last condition is to avoid receiveing Ciph as PK
     crl [RecievePK] : { CONT } < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) => { CONT } < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK})
@@ -352,8 +355,13 @@ mod KYBERV2 is
         C := (C1,C2) /\ 
         ID1 =/= ID2 .
 
-    crl [SendCiph] : { CONT } < (ID2[sharedKey(ID1,SAM1) ; KS1]cI(ID2,C) CONT1) PS >net(MSGS) => { CONT } < (ID2[sharedKey(ID1,SAM1) ; KS1]cI(ID2,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)})
-        if (msg{(ID2,ID1)[sentC](C)}) in MSGS == false /\
+    crl [SendCiph] : { CONT } < (ID2[sharedKey(ID1,SAM1) ; publicKey(ID1,(M1 m* V1) v+ V2) ; KS1]cI(ID2,C) rI(ID2,SAM2) CONT1) PS >net(MSGS) => { CONT } < (ID2[sharedKey(ID1,SAM1) ; publicKey(ID1,(M1 m* V1) v+ V2) ; KS1]cI(ID2,C) rI(ID2,SAM2) CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)})
+        if U := ((tpM(M1) m* sampleR'(SAM2)) v+ sampleE1(SAM2)) /\
+        V := (((tpV((M1 m* V1) v+ V2) dot sampleR'(SAM2)) v+ sampleE2(SAM2)) v+ Decompress(SAM1,1)) /\
+        C1 := Compress(U,du) /\
+        C2 := Compress(V,dv) /\
+        C := (C1,C2) /\
+        (msg{(ID2,ID1)[sentC](C)}) in MSGS == false /\
         (msg{(ID2,ID1)[interceptedC](C)}) in MSGS == false /\
         (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
 
@@ -386,12 +394,19 @@ mod KYBERV2 is
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     
-    op init : -> GlobalState .
-    eq init = {ds(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    ops init init2 : -> GlobalState .
+    eq init = {ds(d1 emptyS) ms(m1 emptyS) rs(r1 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init2 = {ds(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 endm
 
 --- Agreement search
 search init =>* True .
 --- MITM Attack search
 search init =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
+---rew init .
+
+--- Agreement search
+search init2 =>* True .
+--- MITM Attack search
+search init2 =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
 ---rew init .
