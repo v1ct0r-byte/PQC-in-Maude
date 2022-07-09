@@ -1,0 +1,16 @@
+mod KYBERV2-CHECK is
+    protecting KYBERV2-PREDS .
+    including MODEL-CHECKER .
+    including LTL-SIMPLIFIER .
+
+    *** GlobalState declarations
+    ops initial1 initial2 : -> GlobalState .
+
+    *** 3 participants and the necesary samples for 1 key exchange
+    eq initial1 = {ds(d1 emptyS) ms(m1 emptyS) rs(r1 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    *** 3 participants and the necesary samples for 2 key exchanges
+    eq initial2 = {ds(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+endm
+
+*** Vivacity:
+---red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .

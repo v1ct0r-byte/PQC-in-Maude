@@ -1,0 +1,48 @@
+mod KYBERV2-PREDS is
+    protecting KYBERV2 .
+    including SATISFACTION .
+
+    *** DEfintion of GlobalState as subtype of State
+    subsort GlobalState < State .
+
+    *** Declaration of predicate to represent a principal starting the protocol
+    op wantsToShareKey : Identifier Identifier -> Prop .
+    
+    *** Declaration of predicate to represent a principal finished the protocol
+    op sharedAKeyWith : Identifier Identifier -> Prop .
+
+    *** Declaration of predicate to represent a principal stole a secret key
+    op stolenSecret : Identifier Identifier -> Prop .
+
+    *** Variables for the equations
+    vars P1 P2 : Principal .
+    vars ID1 ID2 ID3 : Identifier .
+    var PS : Principals .
+    var MSGS : Msgs .
+    vars K1 K2 SK : SKey .
+    vars PK PK' : PKey .
+    vars U V U' V' : Vector .
+    vars KS1 KS2 KS3 : Keys .
+    vars C1 C2 : Vector .
+    vars SAM1 SAM2 SAM3 : Vector .
+    vars C C' : Pair .
+    vars CONT CONT1 CONT2 CONT3 CONT4 CONT5 : Content .
+    vars V1 V2 V3 : Vector .
+    var M1 : Matrix .
+    var GS : GlobalState .
+    var P : Prop .
+
+    *** Equations for the state's predicates
+
+    *** Equations indicating two actors want to share a key
+    eq { CONT } < (ID1[publicKey(ID1,PK) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) |= wantsToShareKey(ID1,ID2) = true .
+
+    *** Equations indicating two actors share a key
+    eq { CONT } < (ID1[sharedKey(ID2,PK) ; KS1]CONT1) (ID2[sharedKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS) |= sharedAKeyWith(ID1,ID2) = true .
+
+    *** Equations indicating an actor learned the secret key from another one
+    eq { CONT } < (ID1[secretKey(ID1,SK) ; KS1]CONT1) (ID2[secretKey(ID1,SK) ; KS2]CONT2) PS >net(MSGS) |= stolenSecret(ID1,ID2) = true .
+
+    *** Equation to include other cases
+    eq GS |= P = false [owise] .
+endm
