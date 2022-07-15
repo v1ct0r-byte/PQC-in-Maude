@@ -24,6 +24,7 @@ fmod DATA-TYPES is
     --- Necessary equations for Dec step
     --- Identity element is 0
     eq V1 v+ 0 = V1 .
+    eq 0 v+ V1 = V1 .
 
     --- Operator for the substraction of vectors
     op _v-_ : Vector Vector -> Vector [assoc] .

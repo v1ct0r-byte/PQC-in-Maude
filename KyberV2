@@ -13,9 +13,13 @@ load kyberv2-6-CHECK.maude .
 red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
 red modelCheck(initial2, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
 
---- SECRECY
+--- SECURITY
 red modelCheck(initial1, ([] ~(stolenSecret(Alice,Eve)))) .
 red modelCheck(initial2, ([] ~(stolenSecret(Alice,Eve)))) .
+
+---SECRECY
+red modelCheck(initial1, ([] ~(stolenSharedKey(Alice,Eve)))) .
+red modelCheck(initial2, ([] ~(stolenSharedKey(Alice,Eve)))) .
 ------------------------------------------------------------------------------------------------------------------------
 NOTACIONES REUNION 1
 
