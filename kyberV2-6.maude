@@ -46,7 +46,8 @@ fmod DATA-TYPES is
     var M1 : Matrix .
 
     --- Operator multiplication of a matrix and a vector
-    op _m*_ : Matrix Vector -> Vector .
+    ---op _m*_ : Matrix Vector -> Vector .
+    op _m*_ : Matrix Matrix -> Vector .
 
     --- Distributive property of dot over m*
     eq (M1 m* V1) dot V2 = V1 dot (M1 m* V2) .
@@ -82,7 +83,8 @@ fmod DATA-TYPES is
 
     --- We define the distribution of the operation traspose over v+ and m*
     eq tpV(V1 v+ V2) = tpV(V1) v+ tpV(V2) .
-    eq tpV(M1 m* V1) = tpM(M1) m* tpV(V1) . 
+    ---eq tpV(M1 m* V1) = tpM(M1) m* tpV(V1) . 
+    eq tpV(M1 m* V1) = tpV(V1) m* tpM(M1) . 
 endfm
 
 --- Module to specify all the hash functions that are used in the steps of KYBER KEM
@@ -409,5 +411,5 @@ search init =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID
 --- Agreement search
 search init2 =>* True .
 --- MITM Attack search
-search init2 =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
+search[1] init2 =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
 ---rew init .
