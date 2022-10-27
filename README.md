@@ -1,1 +1,1 @@
-Este repositorio tiene la finalidad de guardar el código desarrollado en el lenguaje Maude en la especificación de protocolos.
+This repositoy stores the Maude's modules that represent the behaivour of the Key Encapsulation Mechanism KYBER (https://pq-crystals.org/kyber/). Such modules are used to perform invariant analysis over the model and model checking of two properties. For a full detailed explanation refer to http://hdl.handle.net/10251/186510 (UPDATE TO FAVPQC when published).
