@@ -1,5 +1,7 @@
-mod KYBERV2-PREDS is
-    protecting KYBERV2 .
+--- Author: Víctor García Valero <vicgarv2@upv.es>
+
+mod KYBER-PREDS is
+    protecting KYBER .
     including SATISFACTION .
 
     *** DEfintion of GlobalState as subtype of State

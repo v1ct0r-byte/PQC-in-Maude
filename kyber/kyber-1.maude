@@ -1,5 +1,7 @@
 ---Specification of CRYSTALS-KYBER till step 2
-mod KYBERV2 is
+--- Author: Víctor García Valero <vicgarv2@upv.es>
+
+mod KYBER is
     
     ---Sorts-------------------------------------------------------------------------------------------------------------
     

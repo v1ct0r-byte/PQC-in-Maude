@@ -1,3 +1,9 @@
+                                        NOTES ON BIKE KEY ENCAPSULATION MECHANISM
+
+This document is a collection of explanations and instructions on the proposed solution to model and analyze the protocol.
+Author: Víctor García Valero <vicgarv2@upv.es>
+------------------------------------------------------------------------------------------------------------------------
+
 ---Acrónimos
 MDPC codes: Moderate Density Parity Check codes -> 
 

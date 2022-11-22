@@ -1,6 +1,7 @@
---- Specification of CRYSTALS-KYBER till step 6
+--- Specification of BIKE
+--- Author: Víctor García Valero <vicgarv2@upv.es>
 
---- Module specifying basic datatypes and its operations used in KYBER
+--- Module specifying basic datatypes and its operations used in BIKE
 fmod DATA-TYPES is
     protecting INT .
     --- Here we are subsuming all sizes of vectors (and abstract that all vectors are column vectors)
@@ -87,8 +88,8 @@ fmod DATA-TYPES is
     eq tpV(M1 m* V1) = tpV(V1) m* tpM(M1) . 
 endfm
 
---- Module to specify all the hash functions that are used in the steps of KYBER KEM
-fmod KYBER-HASH-OPERATIONS is
+--- Module to specify all the hash functions that are used in the steps of BIKE KEM
+fmod BIKE-HASH-OPERATIONS is
     protecting DATA-TYPES .
 
     --- H recieves a random vector and returns a hash of it (which is also a vector)
@@ -125,7 +126,7 @@ fmod ENCRYPTION is
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN
-fmod KYBER-CPAPKE-KEYGEN is
+fmod BIKE-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
 
     --- Public Square matrix A
@@ -155,7 +156,7 @@ fmod KYBER-CPAPKE-KEYGEN is
 endfm
 
 --- Module to represent the operations and data handled during ENC
-fmod KYBER-CPAPKE-ENC is
+fmod BIKE-CPAPKE-ENC is
     protecting DATA-TYPES .
     protecting ENCRYPTION .
 
@@ -189,20 +190,20 @@ endfm
 --- Module to represent the operations and data handled during DEC
 --- Its main purpouse is to demonstrate that the computed key is
 --- the one that originated c in Bob side using PK
-fmod KYBER-CPAPKE-DEC is
+fmod BIKE-CPAPKE-DEC is
     protecting DATA-TYPES .
 
     
 endfm
 
---- CRYSTALS-KYBER
-mod KYBERV2 is
+--- CRYSTALS-BIKE
+mod BIKEV2 is
     --- IMPORTS-------------------------------
     ---protecting DATA-TYPES .
-    protecting KYBER-HASH-OPERATIONS .
+    protecting BIKE-HASH-OPERATIONS .
     protecting ENCRYPTION .
-    protecting KYBER-CPAPKE-KEYGEN .
-    protecting KYBER-CPAPKE-ENC .
+    protecting BIKE-CPAPKE-KEYGEN .
+    protecting BIKE-CPAPKE-ENC .
 
     --- SORTS---------------------------------
     

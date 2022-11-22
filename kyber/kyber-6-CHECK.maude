@@ -1,5 +1,7 @@
+--- Author: Víctor García Valero <vicgarv2@upv.es>
+
 mod KYBERV2-CHECK is
-    protecting KYBERV2-PREDS .
+    protecting KYBER-PREDS .
     including MODEL-CHECKER .
     including LTL-SIMPLIFIER .
 

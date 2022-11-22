@@ -1,0 +1,70 @@
+                                NOTES ON KYBER KEY ENCAPSULATION MECHANISM
+
+This document is a collection of explanations and instructions on the proposed solution to model and analyze the protocol.
+Author: Víctor García Valero <vicgarv2@upv.es>
+------------------------------------------------------------------------------------------------------------------------
+ACRONIMS
+
+    CPA: Chosen plaintext attack
+    PKE: Public key exchange
+    KEM: Key Encapsulaption Mechanism
+    MITM: Man in the middle
+    AES: Advanced Encryption Estandar -> Symmetric block cipher protocol.
+    MLWR: Module Learning With Rounding
+    NTT: Number Theoric Transform -> Transformation of matrices and vectors.
+    Ring: https://en.wikipedia.org/wiki/Ring_(mathematics)
+    LWE: Learning With Errors
+    IND: Indistinguishability
+    IND-CPA: Indistinguishability chosen plaintext attack
+
+------------------------------------------------------------------------------------------------------------------------
+COMMANDS
+
+    Loading modules:
+
+    load kyberv2-6.maude .
+    load ../maude-3.1/model-checker.maude .
+    load kyberv2-6-PREDS.maude .
+    load kyberv2-6-CHECK.maude .
+
+    MODEL CHECKING
+
+    --- FAIRNESS
+    red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
+    red modelCheck(initial2, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
+
+    --- LIVENESS
+    red modelCheck(initial1, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
+    red modelCheck(initial2, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
+
+    --- SECURITY
+    red modelCheck(initial1, ([] ~(stolenSecret(Alice,Eve)))) .
+    red modelCheck(initial2, ([] ~(stolenSecret(Alice,Eve)))) .
+
+    ---SECRECY
+    red modelCheck(initial1, ([] ~(stolenSharedKey(Alice,Eve)))) .
+    red modelCheck(initial2, ([] ~(stolenSharedKey(Alice,Eve)))) .
+
+------------------------------------------------------------------------------------------------------------------------
+IMPORTANT MATHEMATICAL NOTATION (BACKGROUND)
+
+-> Beta es un conjunto de números enteros que abarca de 0 a 255, por ejemplo el conjunto de enteros de 8-bit sin signo.
+-> Beta^k es el conjunto de cadenas de bytes con longitud k.
+-> Beta^* es el conjunto de cadenas de bytes con longitud arbitraria.
+-> Dadas dos cadenas de bytes a y b, (a||b) representa la concatenación de a y b.
+-> El anillo de enteros mod q es Zq, donde los enteros se encuentran en el rango [0,q).
+-> R es el anillo de polinomios (algo muy profundo).
+-> En KYBER los valores de n = 7681 y q = 256.
+
+-> Existen dos funciones hash:
+    H : B^* -> B^32, es una función que recibe enteros de longitud arbitraria y devuelve un entero de longitud 32 (o un vector de dicha longitud).
+    G : B^* -> B^32 x B^3, es una función que recibe también enteros de longitud arbitraria pero devuelve una matriz de tamaño 32x32.
+-> KDF (key derivation function) : B^* -> B^32.
+-> Q son los números racionales (son aquellos números que pueden representarse como el cociente de dos números enteros).
+-> [x] indica la aproximación al entero mas cercano (por techo o suelo) cuando x pertence a Q.
+-> Siendo x un número del anillo de enteros hasta q = 256, y sea d < [log2q]:
+    La función de compresión sobre q recibe la x y un d
+    La función de decpmpresión sobre q recibe la x y un d
+-> CBD significa Centered binomial distribution. Representa el dominio de donde son sacadas las muestras de forma pseudoaleatorias para los vectores/arrays de bytes u y v.
+
+------------------------------------------------------------------------------------------------------------------------
