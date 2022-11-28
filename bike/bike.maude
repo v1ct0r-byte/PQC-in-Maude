@@ -197,7 +197,7 @@ fmod BIKE-CPAPKE-DEC is
 endfm
 
 --- CRYSTALS-BIKE
-mod BIKEV2 is
+mod BIKE is
     --- IMPORTS-------------------------------
     ---protecting DATA-TYPES .
     protecting BIKE-HASH-OPERATIONS .
