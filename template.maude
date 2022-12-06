@@ -1,0 +1,158 @@
+--- Tempalte for the specification of protocols with post-quantum capabilities
+--- Author: Víctor García Valero <vicgarv2@upv.es>
+
+--- Module specifying basic datatypes and the operations
+fmod DATA-TYPES is
+     
+endfm
+
+--- Module to specify all the hash functions used during the protocol
+fmod KYBER-HASH-OPERATIONS is
+    protecting DATA-TYPES .
+
+endfm
+
+--- Module to specifiy basic operations on data
+fmod ENCRYPTION is
+    protecting DATA-TYPES .
+
+    --- Maybe some property of interest might belong here
+endfm
+
+--- Module to represent the operations and data handled during KEYGEN step
+fmod KYBER-CPAPKE-KEYGEN is
+    protecting DATA-TYPES .
+
+endfm
+
+--- Module to represent the operations and data handled during ENC
+fmod KYBER-CPAPKE-ENC is
+    protecting DATA-TYPES .
+    protecting ENCRYPTION .
+
+endfm
+
+--- Module to represent the operations and data handled during DEC
+fmod KYBER-CPAPKE-DEC is
+    protecting DATA-TYPES .
+
+endfm
+
+--- KEM behaviour
+mod PROTOCOL is
+    --- IMPORTS -------------------------------
+    ---protecting DATA-TYPES .
+    protecting KYBER-HASH-OPERATIONS .
+    protecting ENCRYPTION .
+    protecting KYBER-CPAPKE-KEYGEN .
+    protecting KYBER-CPAPKE-ENC .
+
+    --- SORTS ---------------------------------
+    
+    sorts Identifier Principal Content Principals . 
+    sorts MsgState Msg Msgs .
+    subsort Msg < Msgs .
+    subsort Principal < Principals .
+
+    sorts Key Keys .
+    subsort Key < Keys .
+
+    --- We distinguish between public and secret keys, both being keys in the end
+    sorts PKey SKey .
+
+    ---We define keys as a type of content
+    subsorts Vector < PKey SKey < Key < Content .
+
+    --- We also declare that a pair is content
+    subsort Pair < Content .
+
+    sort GlobalState .
+    
+    --- OPERATORS ----------------------------
+    --- Empty group of keys
+    op emptyK : -> Keys .
+    --- Group of keys
+    op _;_ : Keys Keys -> Keys [assoc id: emptyK comm] .
+
+    --- Operator to represent the relation of a public key and a principal
+    op publicKey : Identifier Key -> PKey .
+
+    --- Operator to represent the relation of a secret key and a principal
+    op secretKey : Identifier Key -> SKey .
+
+    --- Operator to represent the shared key with a participant
+    op sharedKey : Identifier Key -> SKey .
+
+    --- Posible states for a message delivering PK
+    ops sentPK receivedPK interceptedPK : -> MsgState .
+    --- Posible states for a message delivering C
+    ops sentC receivedC interceptedC : -> MsgState .
+
+    --- Empty content
+    op emptyC : -> Content .
+    --- Group of contents
+    op __ : Content Content -> Content [assoc id: emptyC comm] .
+
+    --- We declare a sort for all the lists of samples
+    ---sorts Sample Samples .
+    ---subsorts Vector < Sample < Samples .
+
+    op emptyS : -> Content .
+
+    --- Group of vectors d that can be sampled
+    op ds : Content -> Content .
+
+    --- Group of messages m that can be sampled
+    op ms : Content -> Content .
+
+    --- Group of coins r that can be sampled
+    op rs : Content -> Content .
+
+    --- Operator to assign a vector 'd' to a participant
+    op dI : Identifier Vector -> Content .
+
+    --- Operator to assign a message to a participant
+    op mI : Identifier Vector -> Content .
+
+    --- Operator to assign a random coin to a participant
+    op rI : Identifier Vector -> Content .
+
+    --- Operator to assign a Ciphered text to a participant
+    op cI : Identifier Vector -> Content .
+
+    --- Structure of a message
+    --- Sender, Receiver, State, Content
+    op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
+    op emptyM : -> Msgs .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
+
+    --- Operation to check the network
+    var M : Msg .
+    vars MS1 MS2 : Msgs .
+
+    op _in_ : Msg Msgs -> Bool .
+
+    eq M in (MS1 M MS2) = true .
+    eq M in (MS1) = false [owise] .
+
+    ops Alice Eve Bob : ->  Identifier .
+    --- Definition of the components of a Principal
+    --- (idenifier that can be Alice, Bob or Eve [keys received or generated] content that the principal stores)
+    op _[_]_ : Identifier Keys Content -> Principal .
+
+    --- Group of principals
+    op __ : Principal Principal -> Principals [assoc comm] .
+
+    --- Global state composed by Samples, Principals and a Network with messages
+    op {_}<_>net(_) : Content Principals Msgs -> GlobalState .
+    op True : -> GlobalState .
+
+    --- RULES -------------------------------------------------------------------------------------------------------------
+    
+
+    --- Intruder behaviour
+    
+
+    --- Initial states -------------------------------------------------------------------------------------------------------------
+    
+endm

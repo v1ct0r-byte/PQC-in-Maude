@@ -6,7 +6,7 @@ fmod DATA-TYPES is
     sort Data .
     --- Here we are subsuming all sizes of vectors (and abstract that all vectors are column vectors)
     sorts Vector Matrix Polynomial .
-    subsort Vector Matrix Polynomial < Data .
+    subsorts Vector Matrix Polynomial < Data .
 
     --- g is a monoic irreducible polynomial in F_2
     op g : -> Polynomial .
@@ -29,7 +29,7 @@ fmod DATA-TYPES is
     op delta : -> Vector .
 
     --- Functions for matrix generation
-
+    
     
     ---
     ops I T : -> Matrix .
