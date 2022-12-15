@@ -3,19 +3,18 @@
 
 --- Module specifying basic datatypes and its operations used in BIKE
 fmod DATA-TYPES is
-    protecting INT .
     --- Supersort of all data
     sort Data . 
     --- Definition of type polynomial for our data
     sort Polynomial .
 
     --- We specify that polynomials is data
-    subsorts Nat < Polynomial < Data .
+    subsort Polynomial < Data .
 
-    --- Operator addition of vectors
+    --- Operator addition of polynomials
     op _p+_ : Polynomial Polynomial -> Polynomial [assoc comm prec 33] .
 
-    --- --- Operator multiplication of matrices
+    --- --- Operator multiplication of polynomials
     op _p*_ : Polynomial Polynomial -> Polynomial [assoc comm prec 31] .
 
     --- Pair
@@ -24,7 +23,7 @@ fmod DATA-TYPES is
     --- A Pair can be seen as a Polynomial divided in two parts
     subsort Pair < Polynomial .
 
-    op [_,_] : Data Data -> Pair .
+    op [_,_] : Data Data -> Pair [ctor] .
 
     vars D1 D2 : Data .
 
@@ -44,14 +43,17 @@ fmod BIKE-HASH-OPERATIONS is
     protecting DATA-TYPES .
 
     --- H recieves a random polynomial and returns a hash of it (which is a pair of polynomials)
-    op H : Polynomial -> Pair .
-    op K : Polynomial Pair -> Polynomial .
-    op L : Pair -> Polynomial .
+    op H : Polynomial -> Pair [ctor] .
+    op K : Polynomial Pair -> Polynomial [ctor] .
+    op L : Pair -> Polynomial [ctor] .
 endfm
 
 --- Module to specifiy basic operations on data
 fmod ENCRYPTION is
     protecting DATA-TYPES .
+    protecting NAT .
+
+    subsort Nat < Data .
 
     var D : Data .
 
@@ -98,7 +100,7 @@ endfm
 
 --- Module to represent the operations and data handled during DEC
 --- Its main purpouse is to demonstrate that the computed key is
---- the one that originated c in Bob side using PK
+--- the one that was computed in the other side using PK and C
 fmod BIKE-CPAPKE-DEC is
     protecting DATA-TYPES .
 
@@ -178,18 +180,18 @@ fmod MODEL-CONFIGURATION is
     eq M in (MS1) = false [owise] .
 
     --- Defintion of our three main participants followiing the literature
-    ops Alice Eve Bob : ->  Identifier .
+    ops Alice Eve Bob : ->  Identifier [ctor] .
 
     --- Definition of the components of a Principal
     --- (idenifier [keys] content)
-    op _[_]_ : Identifier Keys Content -> Principal .
+    op _[_]_ : Identifier Keys Content -> Principal [ctor] .
 
     --- Group of principals
     op __ : Principal Principal -> Principals [assoc comm] .
 
     --- Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState .
-    op True : -> GlobalState . ---TODO: Should I leave it?
+    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor] .
+    op True : -> GlobalState [ctor] . ---TODO: Should I leave it?
 endfm
 
 --- Protocol/mechanism samples and behaviour
@@ -233,10 +235,10 @@ mod BIKE is
     
     vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
-    var MSGS : Msgs .
+    vars MSGS MSGS' : Msgs .
     vars K1 K2 SK : SKey .
     vars PK PK' : PKey .
-    vars C H E : Pair .
+    vars Cs Hs Es : Pair .
     vars C0 C1 : Polynomial .
     vars E0 E1 : Polynomial .
     var M : Polynomial .
@@ -257,39 +259,41 @@ mod BIKE is
                     if  (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\ 
                         (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false .
 
-    rl [ReceivePK] :    {CONT3} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)})
+    rl [ReceivePK] :    {CONT3} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)} MSGS')
                         =>
-                        {CONT3} < (ID2[KS2]publicKey(ID1, PK) CONT2) PS >net(MSGS msg{(ID1, ID2)[receivedPK](PK)}) .
+                        {CONT3} < (ID2[KS2]publicKey(ID1, PK) CONT2) PS >net(MSGS msg{(ID1, ID2)[receivedPK](PK)} MSGS') .
     
     crl [Enc] : {ms(SAM1 CONT1) CONT3} < (ID2[KS2] publicKey(ID1, PK) CONT2) PS >net(MSGS)
                 =>
-                {ms(CONT1) CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] mI(ID2, SAM1) cI(ID2, C) publicKey(ID1, PK) CONT2) PS >net(MSGS)
-                if  E := H(SAM1) /\
-                    E0 := first(E) /\
-                    E1 := second(E) /\
-                    C := [(E0 p+ (E1 p* (PK))), (SAM1 xorD L(E))] /\
-                    SK := K(SAM1, C) .
-    
-    crl [SendCiph] :    {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] cI(ID2, C) CONT2) PS >net(MSGS)
-                        =>
-                        {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] cI(ID2, C) CONT2) PS >net(MSGS msg{(ID2, ID1)[sentC](C)}) 
-                        if  (msg{(ID2, ID1)[sentC](C)}) in MSGS == false /\ 
-                            (msg{(ID2, ID1)[receivedC](C)}) in MSGS == false .
-    
-    rl [ReceiveCiph] :  {CONT3} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2, ID1)[sentC](C)}) 
-                        =>
-                        {CONT3} < (ID1[KS1]cI(ID2, C) CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](C)})  .
+                {ms(CONT1) CONT3} < (ID2[sharedKey(ID1, SK) ; KS2]mI(ID2, SAM1) cI(ID2, Cs) publicKey(ID1, PK) CONT2) PS >net(MSGS)
+                if  ID1 =/= ID2 /\
+                    Es := H(SAM1) /\
+                    E0 := first(Es) /\
+                    E1 := second(Es) /\
+                    Cs := [(E0 p+ (E1 p* (PK))), (SAM1 xorD L(Es))] /\
+                    SK := K(SAM1, Cs) .
 
-    crl [Dec] :  {CONT3}< (ID1[publicKey(ID1, PK)]hI(ID1, H) cI(ID2, C) CONT1) PS >net(MSGS)
+    crl [SendCiph] :    {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] cI(ID2, Cs) CONT2) PS >net(MSGS)
+                        =>
+                        {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] cI(ID2, Cs) CONT2) PS >net(MSGS msg{(ID2, ID1)[sentC](Cs)}) 
+                        if  (msg{(ID2, ID1)[sentC](Cs)}) in MSGS == false /\ 
+                            (msg{(ID2, ID1)[receivedC](Cs)}) in MSGS == false .
+    
+    rl [ReceiveCiph] :  {CONT3} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2, ID1)[sentC](Cs)} MSGS') 
+                        =>
+                        {CONT3} < (ID1[KS1]cI(ID2, Cs) CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](Cs)} MSGS')  .
+
+    crl [Dec] :  {CONT3}< (ID1[publicKey(ID1, PK)]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS)
                 =>
-                {CONT3}< (ID1[publicKey(ID1, PK) ; sharedKey(ID2, SK)]hI(ID1, H) cI(ID2, C) CONT1) PS >net(MSGS) 
-                if  E := decoder(first(C) p* first(H), first(H),second(H)) /\
-                    E0 := first(E) /\
-                    E1 := second(E) /\
-                    M := second(C) xorD L(E) /\
-                    SK := K(M,C) .
+                {CONT3}< (ID1[publicKey(ID1, PK) ; sharedKey(ID2, SK)]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS) 
+                if  Es := decoder(first(Cs) p* first(Hs), first(Hs), second(Hs)) /\
+                    E0 := first(Es) /\
+                    E1 := second(Es) /\
+                    M := second(Cs) xorD L(Es) /\
+                    SK := K(M, Cs) .
+
+    --- Specific intruder behaivour
+
 endm
 
 rew init1 .
-
---- search init1 =>! {CONT1} < PS >net(MSGS) .
