@@ -341,7 +341,7 @@ mod KYBER is
         (msg{(ID1,ID3)[receivedPK]PK}) in MSGS == false .
 
     --- Last condition is to avoid receiveing Ciph as PK
-    crl [RecievePK] : { CONT } < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) => { CONT } < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK})
+    crl [ReceivePK] : { CONT } < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) => { CONT } < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK})
         if (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false .
     
     --- Generation of ms when a participant has the pk of another participant
@@ -369,7 +369,7 @@ mod KYBER is
         (msg{(ID2,ID1)[interceptedC](C)}) in MSGS == false /\
         (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
 
-    crl [RecieveCiph] : { CONT } < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)}) => { CONT } < (ID1[KS1]cI(ID2,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[receivedC](C)})
+    crl [ReceiveCiph] : { CONT } < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)}) => { CONT } < (ID1[KS1]cI(ID2,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[receivedC](C)})
         if (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
 
     --- Once decompressed, the ciphertext is destroyed from local memory of the participant
