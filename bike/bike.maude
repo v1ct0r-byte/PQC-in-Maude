@@ -8,7 +8,7 @@ fmod DATA-TYPES is
     --- Definition of type polynomial for our data
     sort Polynomial .
 
-    --- We specify that polynomials is data
+    --- We specify that polynomials are data
     subsort Polynomial < Data .
 
     --- Operator addition of polynomials
