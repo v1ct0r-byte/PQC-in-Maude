@@ -68,10 +68,10 @@ fmod BIKE-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
 
     --- Constant value representing the h_i sampled from the private key space H_w
-    ops h0 h1 : -> Polynomial .
+    ops h0 h1 h0' h1' : -> Polynomial .
 
     --- Constant value representing the sigma obtained in step 3
-    op sigma : -> Polynomial .
+    ops sigma sigma' : -> Polynomial .
 endfm
 
 --- Module to represent the operations and data handled during ENC
@@ -92,10 +92,12 @@ fmod BIKE-CPAPKE-ENC is
     eq H(m2) = [e0',e1'] .
 
     --- Operator to represent the shared key
-    op k : -> Polynomial .
+    ops k k' : -> Polynomial .
     var C : Pair .
     --- Key generated from K(m1,c)
     eq K(m1,C) = k .
+    --- Key generated from K(m2,c)
+    eq K(m2,C) = k' .
 endfm
 
 --- Module to represent the operations and data handled during DEC
@@ -143,6 +145,14 @@ fmod MODEL-CONFIGURATION is
     --- Group of keys
     op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
 
+    var K : Key .
+    vars KS1 KS2 : Keys .
+
+    --- Operation to check the precence of a key in a participant
+    op _in_ : Key Keys -> Bool .
+    eq K in (KS1 ; K ; KS2) = true .
+    eq K in (KS1) = false [owise] .
+
     --- Operator to represent the relation of a public key and a principal
     op publicKey : Identifier Key -> PKey .
 
@@ -161,6 +171,13 @@ fmod MODEL-CONFIGURATION is
     op emptyC : -> Content .
     --- Group of contents
     op __ : Content Content -> Content [assoc comm id: emptyC] .
+
+    vars C CONT1 CONT2 : Content .
+
+    --- Operation to check the contents of a participant
+    op _in_ : Content Content -> Bool .
+    eq C in (CONT1 C CONT2) = true .
+    eq C in (CONT1) = false [owise] .
 
     --- Structure of a message
     --- Sender, Receiver, State, Content
@@ -229,26 +246,26 @@ mod BIKE is
     --- Initial state-------------------------------------------------------------------------------------------------------------
     ops init1 init2 : -> GlobalState .
     eq init1 = {sigmas(sigma) ms(m1) hs([h0,h1])} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
-    --- eq init2 = {sigmas(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init2 = {sigmas(sigma sigma') ms(m1 m2) hs([h0,h1] [h0',h1'])} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 
     --- RULES-------------------------------------------------------------------------------------------------------------
     
     vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
     vars MSGS MSGS' : Msgs .
-    vars K1 K2 SK : SKey .
+    vars SK SK' : SKey .
     vars PK PK' : PKey .
-    vars Cs Hs Es : Pair .
+    vars Cs Cs' Hs Es : Pair .
     vars C0 C1 : Polynomial .
     vars E0 E1 : Polynomial .
     var M : Polynomial .
-    vars KS1 KS2 : Keys .
+    vars KS1 KS2 KS3 : Keys .
     vars SAM1 SAM2 : Data .
     vars CONT1 CONT2 CONT3 : Content .
 
     --- For now the protocol only starts when the participant can sample necesary values for keygen
 
-    crl [KeyGen] :   {sigmas(SAM1 CONT1) hs(SAM2 CONT2) CONT3} < (ID1[emptyK]emptyC) PS >net(MSGS) 
+    crl [KeyGen] :  {sigmas(SAM1 CONT1) hs(SAM2 CONT2) CONT3} < (ID1[emptyK]emptyC) PS >net(MSGS) 
                     => 
                     {sigmas(CONT1) hs(CONT2) CONT3} < (ID1[publicKey(ID1, PK)]sigmaI(ID1,SAM1) hI(ID1, SAM2)) PS >net(MSGS) 
                     if PK := (second(SAM2) p* inv(first(SAM2))) .
@@ -261,11 +278,12 @@ mod BIKE is
 
     rl [ReceivePK] :    {CONT3} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)} MSGS')
                         =>
-                        {CONT3} < (ID2[KS2]publicKey(ID1, PK) CONT2) PS >net(MSGS msg{(ID1, ID2)[receivedPK](PK)} MSGS') .
+                        {CONT3} < (ID2[publicKey(ID1, PK) ; KS2] CONT2) PS >net(MSGS msg{(ID1, ID2)[receivedPK](PK)} MSGS') .
     
-    crl [Enc] : {ms(SAM1 CONT1) CONT3} < (ID2[KS2] publicKey(ID1, PK) CONT2) PS >net(MSGS)
+    --- The public key is consumed to generate a shared key
+    crl [Enc] : {ms(SAM1 CONT1) CONT3} < (ID2[publicKey(ID1, PK) ; KS2]CONT2) PS >net(MSGS)
                 =>
-                {ms(CONT1) CONT3} < (ID2[sharedKey(ID1, SK) ; KS2]mI(ID2, SAM1) cI(ID2, Cs) publicKey(ID1, PK) CONT2) PS >net(MSGS)
+                {ms(CONT1) CONT3} < (ID2[sharedKey(ID1, SK) ; KS2]mI(ID2, SAM1) cI(ID2, Cs)CONT2) PS >net(MSGS)
                 if  ID1 =/= ID2 /\
                     Es := H(SAM1) /\
                     E0 := first(Es) /\
@@ -283,17 +301,43 @@ mod BIKE is
                         =>
                         {CONT3} < (ID1[KS1]cI(ID2, Cs) CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](Cs)} MSGS')  .
 
-    crl [Dec] :  {CONT3}< (ID1[publicKey(ID1, PK)]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS)
+    --- The ciphered text is consumed to generate the shared key
+    crl [Dec] :  {CONT3}< (ID1[KS1]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS)
                 =>
-                {CONT3}< (ID1[publicKey(ID1, PK) ; sharedKey(ID2, SK)]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS) 
-                if  Es := decoder(first(Cs) p* first(Hs), first(Hs), second(Hs)) /\
+                {CONT3}< (ID1[sharedKey(ID2, SK) ; KS1]hI(ID1, Hs) CONT1) PS >net(MSGS) 
+                if  ID1 =/= ID2 /\
+                    Es := decoder(first(Cs) p* first(Hs), first(Hs), second(Hs)) /\
                     E0 := first(Es) /\
                     E1 := second(Es) /\
                     M := second(Cs) xorD L(Es) /\
                     SK := K(M, Cs) .
 
     --- Specific intruder behaivour
+    crl [Intercept1] :  {CONT3}< (Eve[publicKey(Eve, PK') ; KS1]CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK](PK)} MSGS') 
+                        =>
+                        {CONT3}< (Eve[publicKey(Eve, PK') ; publicKey(ID1,PK) ; KS1]CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK](PK')} MSGS') 
+                        if  ID1 =/= Eve /\
+                            ID2 =/= Eve /\ 
+                            PK =/= PK' .
 
+    crl [Intercept2] :  {CONT3}< (Eve[KS1]cI(Eve,Cs') CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC](Cs)} MSGS') 
+                        =>
+                        {CONT3}< (Eve[KS1]cI(Eve,Cs') cI(ID1,Cs) CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC](Cs')} MSGS') 
+                        if  ID1 =/= Eve /\
+                            ID2 =/= Eve /\
+                            Cs =/= Cs' .
 endm
 
-rew init1 .
+--- rew init1 .
+
+--- rew init2 .
+
+--- Agreement search
+search [1] init1 =>* { CONT:Content } < (Alice[sharedKey(Bob,SK) ; KS1]CONT1) (Bob[sharedKey(Alice,SK) ; KS2]CONT2) PS >net(MSGS) .
+--- MITM Attack search
+search [1] init1 =>* { CONT:Content } < (ID1[sharedKey(ID3,SK) ; KS1]CONT1) (ID2[sharedKey(ID1,SK) ; sharedKey(ID3,SK') ; KS2]CONT2) (ID3[sharedKey(ID1,SK') ; KS3]CONT3) >net(MSGS)  .
+
+--- Agreement search
+search [1] init2 =>* { CONT:Content } < (Alice[sharedKey(Bob,SK) ; KS1]CONT1) (Bob[sharedKey(Alice,SK) ; KS2]CONT2) PS >net(MSGS) .
+--- MITM Attack search
+search[1] init2 =>* { CONT:Content } < (ID1[sharedKey(ID3,SK) ; KS1]CONT1) (ID2[sharedKey(ID1,SK) ; sharedKey(ID3,SK') ; KS2]CONT2) (ID3[sharedKey(ID1,SK') ; KS3]CONT3) >net(MSGS)  .
