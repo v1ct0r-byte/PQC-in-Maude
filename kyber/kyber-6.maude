@@ -4,12 +4,18 @@
 --- Module specifying basic datatypes and its operations used in KYBER
 fmod DATA-TYPES is
     protecting INT .
+
+    sort Data .
+
     --- Here we are subsuming all sizes of vectors (and abstract that all vectors are column vectors)
     --- We also define type for matrices and polynomials
     sorts Vector Matrix .
 
     --- We specify that a vector is a also a matrix
     subsort Vector < Matrix .
+
+    --- Vectors and matrices are data of our model
+    subsorts Vector Matrix < Data .
 
     --- We specify numbers are vectors
     subsort Nat < Vector .
@@ -59,16 +65,16 @@ fmod DATA-TYPES is
     --- A Pair can be seen as a Vector divided in two parts
     subsort Pair < Vector .
 
-    op _,_ : Vector Vector -> Pair .
+    op [_,_] : Data Data -> Pair .
+
+    vars D1 D2 : Data .
 
     --- First element of Pair
-    op first : Pair -> Vector .
-    eq first((V1,V2)) = V1 .
+    op first : Pair -> Data .
+    eq first([D1,D2]) = D1 .
     --- Second element of Pair
-    op second : Pair -> Vector .
-    eq second((V1,V2)) = V2 .
-
-    --- Constant and values necessary on modules for operations
+    op second : Pair -> Data .
+    eq second([D1,D2]) = D2 .
 
     --- du and dv are integer parameters of CPAPKE in ENC and DEC
     ops du dv : -> NzNat .
@@ -100,9 +106,9 @@ fmod KYBER-HASH-OPERATIONS is
 
     --- G recieves a random number (vector) from the polynomial ring R and returns a pair of vectors
     op G : Vector -> Pair .
-    eq G(d1) = (Rho1,Sig1) .
-    eq G(d2) = (Rho2,Sig2) .
-    eq G(d3) = (Rho3,Sig3) .
+    eq G(d1) = ([Rho1,Sig1]) .
+    eq G(d2) = ([Rho2,Sig2]) .
+    eq G(d3) = ([Rho3,Sig3]) .
 endfm
 
 --- Module to specifiy basic operations on data
@@ -192,22 +198,15 @@ endfm
 --- the one that originated c in Bob side using PK
 fmod KYBER-CPAPKE-DEC is
     protecting DATA-TYPES .
-
     
 endfm
 
---- CRYSTALS-KYBER
-mod KYBER is
-    --- IMPORTS-------------------------------
-    ---protecting DATA-TYPES .
-    protecting KYBER-HASH-OPERATIONS .
-    protecting ENCRYPTION .
-    protecting KYBER-CPAPKE-KEYGEN .
-    protecting KYBER-CPAPKE-ENC .
+--- Specification of the system upon KYBER will work
+fmod MODEL-CONFIGURATION is
+    protecting DATA-TYPES .
 
     --- SORTS---------------------------------
-    
-    sorts Identifier Principal Content Principals . 
+    sorts Identifier Content Principal Principals . 
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
     subsort Principal < Principals .
@@ -219,18 +218,27 @@ mod KYBER is
     sorts PKey SKey .
 
     ---We define keys as a type of content
-    subsorts Vector < PKey SKey < Key < Content .
+    subsorts PKey SKey < Key < Content .
 
     --- We also declare that a pair is content
     subsort Pair < Content .
 
+    --- Sort for the State of our system
     sort GlobalState .
-    
+
     --- OPERATORS----------------------------
     --- Empty group of keys
     op emptyK : -> Keys .
     --- Group of keys
-    op _;_ : Keys Keys -> Keys [assoc id: emptyK comm] .
+    op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
+
+    var K : Key .
+    vars KS1 KS2 : Keys .
+
+    --- Operation to check the precence of a key in a participant
+    op _in_ : Key Keys -> Bool .
+    eq K in (KS1 ; K ; KS2) = true .
+    eq K in (KS1) = false [owise] .
 
     --- Operator to represent the relation of a public key and a principal
     op publicKey : Identifier Key -> PKey .
@@ -239,7 +247,7 @@ mod KYBER is
     op secretKey : Identifier Key -> SKey .
 
     --- Operator to represent the shared key with a participant
-    op sharedKey : Identifier Key -> SKey .
+    op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
     --- Posible states for a message delivering PK
     ops sentPK receivedPK interceptedPK : -> MsgState .
@@ -249,13 +257,59 @@ mod KYBER is
     --- Empty content
     op emptyC : -> Content .
     --- Group of contents
-    op __ : Content Content -> Content [assoc id: emptyC comm] .
+    op __ : Content Content -> Content [assoc comm id: emptyC] .
 
-    --- We declare a sort for all the list of samples
-    ---sorts Sample Samples .
-    ---subsorts Vector < Sample < Samples .
+    vars C CONT1 CONT2 : Content .
 
-    op emptyS : -> Content .
+    --- Operation to check the contents of a participant
+    op _in_ : Content Content -> Bool .
+    eq C in (CONT1 C CONT2) = true .
+    eq C in (CONT1) = false [owise] .
+
+    --- Structure of a message
+    --- Sender, Receiver, State, Content
+    op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
+
+    --- Group of messsages
+    op emptyM : -> Msgs .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
+
+    var M : Msg .
+    vars MS1 MS2 : Msgs .
+    
+    --- Operation to check the network
+    op _in_ : Msg Msgs -> Bool .
+
+    eq M in (MS1 M MS2) = true .
+    eq M in (MS1) = false [owise] .
+
+    --- Defintion of our three main participants followiing the literature
+    ops Alice Eve Bob : ->  Identifier [ctor] .
+
+    --- Definition of the components of a Principal
+    --- (idenifier [keys] content)
+    op _[_]_ : Identifier Keys Content -> Principal [ctor] .
+
+    --- Group of principals
+    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
+
+    --- Global state composed by Samples, Principals and a Network with messages
+    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+endfm
+
+--- CRYSTALS-KYBER
+mod KYBER is
+    --- IMPORTS-------------------------------
+    protecting DATA-TYPES .
+    protecting KYBER-HASH-OPERATIONS .
+    protecting ENCRYPTION .
+    protecting KYBER-CPAPKE-KEYGEN .
+    protecting KYBER-CPAPKE-ENC .
+    protecting KYBER-CPAPKE-DEC .
+    protecting MODEL-CONFIGURATION .
+
+    subsorts Vector Matrix < Content .
+    subsorts Vector < PKey SKey .
 
     --- Group of vectors d that can be sampled
     op ds : Content -> Content .
@@ -278,32 +332,10 @@ mod KYBER is
     --- Operator to assign a Ciphered text to a participant
     op cI : Identifier Vector -> Content .
 
-    --- Structure of a message
-    --- Sender, Receiver, State, Content
-    op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
-    op emptyM : -> Msgs .
-    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
-
-    --- Operation to check the network
-    var M : Msg .
-    vars MS1 MS2 : Msgs .
-
-    op _in_ : Msg Msgs -> Bool .
-
-    eq M in (MS1 M MS2) = true .
-    eq M in (MS1) = false [owise] .
-
-    ops Alice Eve Bob : ->  Identifier .
-    --- Definition of the components of a Principal
-    --- (idenifier that can be Alice, Bob or Eve [keys received or generated] content that the principal stores)
-    op _[_]_ : Identifier Keys Content -> Principal .
-
-    --- Group of principals
-    op __ : Principal Principal -> Principals [assoc comm] .
-
-    --- Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState .
-    op True : -> GlobalState .
+    --- Initial state-------------------------------------------------------------------------------------------------------------
+    ops init1 init2 : -> GlobalState .
+    eq init1 = {ds(d1) ms(m1) rs(r1)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init2 = {ds(d1 d2) ms(m1 m2) rs(r1 r2)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 
     --- RULES-------------------------------------------------------------------------------------------------------------
     
@@ -316,101 +348,81 @@ mod KYBER is
     vars U V U' V' : Vector .
     vars KS1 KS2 KS3 : Keys .
     vars C1 C2 : Vector .
-    vars SAM1 SAM2 SAM3 : Vector .
+    vars SAM1 SAM2 SAM3 : Data .
     vars C C' : Pair .
-    vars CONT CONT1 CONT2 CONT3 CONT4 CONT5 : Content .
+    vars CONT1 CONT2 CONT3 CONT4 : Content .
     vars V1 V2 V3 : Vector .
     var M1 : Matrix .
 
-    --- For simplyfing reasons we only sample d when there is no message on the network
-    ---rl [SampleD] : { ds(SAM1 CONT emptyS) CONT1 } < (ID1[emptyK]emptyC) PS >net(emptyM) => { ds(CONT emptyS) CONT1 } < (ID1[emptyK]dI(ID1,SAM1)) PS >net(emptyM) .
-
     --- For now the protocol only starts when the participant can sample necesary values for keygen
-    crl [KeyGen] : { ds(SAM1 CONT emptyS) CONT2 } < (ID1[emptyK]emptyC) PS >net(MSGS) => { ds(CONT emptyS) CONT2 } < (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]dI(ID1,SAM1) emptyC) PS >net(MSGS)
-        if SK := sampleS(second(G(SAM1))) /\ 
-        PK := ((generateA(first(G(SAM1))) m* SK) v+ sampleE(second(G(SAM1)))) .
+    crl [KeyGen] :  {ds(SAM1 CONT1) CONT4} < (ID1[emptyK]emptyC) PS >net(MSGS) 
+                    => 
+                    {ds(CONT1) CONT4} < (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]dI(ID1,SAM1)emptyC) PS >net(MSGS)
+                    if  SK := sampleS(second(G(SAM1))) /\ 
+                        PK := ((generateA(first(G(SAM1))) m* SK) v+ sampleE(second(G(SAM1)))) .
 
     --- Send PK to someone if it has not been sent before and the reciever didnt recieve it before
-    crl [SendPK] : { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) (ID3[KS3]CONT3) >net(MSGS) => { CONT } < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) (ID3[KS3]CONT3) >net(MSGS msg{(ID1,ID2)[sentPK]PK})
-        if (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\
-        (msg{(ID1,ID2)[interceptedPK]PK}) in MSGS == false /\ 
-        (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false /\
-        (ID1 =/= ID2) /\ 
-        (msg{(ID1,ID3)[sentPK]PK}) in MSGS == false /\
-        (msg{(ID1,ID3)[interceptedPK]PK}) in MSGS == false /\ 
-        (msg{(ID1,ID3)[receivedPK]PK}) in MSGS == false .
+    crl [SendPK] :  {CONT4} < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS) 
+                    => 
+                    {CONT4} < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK})
+                    if  (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\
+                        (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false /\
+                        (ID1 =/= ID2) .
 
-    --- Last condition is to avoid receiveing Ciph as PK
-    crl [ReceivePK] : { CONT } < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) => { CONT } < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK})
-        if (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false .
-    
-    --- Generation of ms when a participant has the pk of another participant
-    ---crl [SampleM] : { ms(SAM1 CONT emptyS) CONT2 } < (ID1[publicKey(ID2,PK) ; KS1]CONT1) PS >net(MSGS) => { ms(CONT emptyS) CONT2 } < (ID1[publicKey(ID2,PK) ; KS1]mI(ID1,SAM1) CONT1) PS >net(MSGS) 
-        ---if  ID1 =/= ID2 .
+    rl [ReceivePK] :   {CONT4} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) 
+                        => 
+                        {CONT4} < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK}) .
 
-    --- Generation of rs right after generating m
-    ---rl [SampleR] : { rs(SAM1 CONT emptyS) CONT2 } < (ID1[publicKey(ID2,PK) ; KS1]mI(ID1,SAM2) CONT1) PS >net(MSGS) => { rs(CONT emptyS) CONT2 } < (ID1[publicKey(ID2,PK) ; KS1]rI(ID1,SAM1) mI(ID1,SAM2) CONT1) PS >net(MSGS) .
+    --- The public key is consumed to generate the shared key
+    crl [Enc] : {ms(SAM1 CONT1) rs(SAM2 CONT3) CONT4} < (ID2[publicKey(ID1,(M1 m* V1) v+ V2) ; KS2] CONT2) PS >net(MSGS) 
+                => 
+                {ms(CONT1) rs(CONT3) CONT4} < (ID2[sharedKey(ID1,SAM1) ; KS2]cI(ID2,C) mI(ID2,SAM1) rI(ID2,SAM2) CONT2) PS >net(MSGS)
+                if  ID1 =/= ID2 /\
+                    U := ((tpM(M1) m* sampleR'(SAM2)) v+ sampleE1(SAM2)) /\
+                    V := (((tpV((M1 m* V1) v+ V2) dot sampleR'(SAM2)) v+ sampleE2(SAM2)) v+ Decompress(SAM1,1)) /\
+                    C1 := Compress(U,du) /\
+                    C2 := Compress(V,dv) /\
+                    C := ([C1,C2]) .
 
-    crl [Enc] : { ms(SAM1 CONT1 emptyS) rs(SAM2 CONT2 emptyS) CONT3 } < (ID2[publicKey(ID1,(M1 m* V1) v+ V2) ; KS2] CONT4) PS >net(MSGS) => { ms(CONT1 emptyS) rs(CONT2 emptyS) CONT3 } < (ID2[sharedKey(ID1,SAM1) ; publicKey(ID1,(M1 m* V1) v+ V2) ; KS2]cI(ID2,C) mI(ID2,SAM1) rI(ID2,SAM2) CONT4) PS >net(MSGS)
-        if U := ((tpM(M1) m* sampleR'(SAM2)) v+ sampleE1(SAM2)) /\
-        V := (((tpV((M1 m* V1) v+ V2) dot sampleR'(SAM2)) v+ sampleE2(SAM2)) v+ Decompress(SAM1,1)) /\
-        C1 := Compress(U,du) /\
-        C2 := Compress(V,dv) /\
-        C := (C1,C2) /\ 
-        ID1 =/= ID2 .
+    crl [SendCiph] :    {CONT4} < (ID2[sharedKey(ID1,SK) ; KS2]cI(ID2,C) rI(ID2,SAM2) CONT2) PS >net(MSGS) 
+                        => 
+                        {CONT4} < (ID2[sharedKey(ID1,SK) ; KS2]cI(ID2,C) rI(ID2,SAM2) CONT2) PS >net(MSGS msg{(ID2,ID1)[sentC](C)})
+                        if  (msg{(ID2,ID1)[sentC](C)}) in MSGS == false /\
+                            (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
 
-    crl [SendCiph] : { CONT } < (ID2[sharedKey(ID1,SAM1) ; publicKey(ID1,(M1 m* V1) v+ V2) ; KS1]cI(ID2,C) rI(ID2,SAM2) CONT1) PS >net(MSGS) => { CONT } < (ID2[sharedKey(ID1,SAM1) ; publicKey(ID1,(M1 m* V1) v+ V2) ; KS1]cI(ID2,C) rI(ID2,SAM2) CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)})
-        if U := ((tpM(M1) m* sampleR'(SAM2)) v+ sampleE1(SAM2)) /\
-        V := (((tpV((M1 m* V1) v+ V2) dot sampleR'(SAM2)) v+ sampleE2(SAM2)) v+ Decompress(SAM1,1)) /\
-        C1 := Compress(U,du) /\
-        C2 := Compress(V,dv) /\
-        C := (C1,C2) /\
-        (msg{(ID2,ID1)[sentC](C)}) in MSGS == false /\
-        (msg{(ID2,ID1)[interceptedC](C)}) in MSGS == false /\
-        (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
-
-    crl [ReceiveCiph] : { CONT } < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)}) => { CONT } < (ID1[KS1]cI(ID2,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[receivedC](C)})
-        if (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
+    rl [ReceiveCiph] : {CONT4} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)}) 
+                        => 
+                        {CONT4} < (ID1[KS1]cI(ID2,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[receivedC](C)}) .
 
     --- Once decompressed, the ciphertext is destroyed from local memory of the participant
-    crl [Dec] : { CONT } < (ID1[secretKey(ID1,SK) ; KS1]dI(ID1,SAM1) cI(ID2,C') CONT1) (ID3[KS2]cI(ID3,C') mI(ID3,SAM2) rI(ID3,SAM3) CONT2) PS >net(MSGS) => { CONT } < (ID1[secretKey(ID1,SK) ; sharedKey(ID2,K1) ; KS1]dI(ID1,SAM1) CONT1) (ID3[KS2]cI(ID3,C') mI(ID3,SAM2) rI(ID3,SAM3) CONT2) PS >net(MSGS)
-        if SK := sampleS(second(G(SAM1))) /\
-        PK := ((generateA(first(G(SAM1))) m* SK) v+ sampleE(second(G(SAM1)))) /\
-        U := ((tpM(generateA(first(G(SAM1)))) m* sampleR'(SAM3)) v+ sampleE1(SAM3)) /\
-        V := (((tpV(PK) dot sampleR'(SAM3)) v+ sampleE2(SAM3)) v+ Decompress(SAM2,1)) /\
-        C1 := Compress(U,du) /\
-        C2 := Compress(V,dv) /\
-        C := (C1,C2) /\ 
-        U' := Decompress(first(C),du) /\
-        V' := Decompress(second(C),dv) /\
-        K1 := Compress(V' v- tpV(SK) dot U',1) /\
-        ID1 =/= ID2 .
-
-    rl [Comp] : { CONT } < (ID1[sharedKey(ID2,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; KS2]CONT2) PS >net(MSGS) => True .
+    --- The ciphered text is consumed to save space
+    crl [Dec] : {CONT4} < (ID1[secretKey(ID1,SK) ; KS1]dI(ID1,SAM1) cI(ID2,C) CONT1) PS >net(MSGS) 
+                =>
+                {CONT4} < (ID1[secretKey(ID1,SK) ; sharedKey(ID2,K1) ; KS1]dI(ID1,SAM1) CONT1) PS >net(MSGS)
+                if  ID1 =/= ID2 /\
+                    U' := Decompress(first(C),du) /\
+                    V' := Decompress(second(C),dv) /\
+                    K1 := Compress(V' v- tpV(SK) dot U',1) .
 
     --- Intruder behaviour
-    crl [Intercept1] : { CONT } < (Eve[publicKey(Eve,PK) ; KS1]CONT1) (Alice[publicKey(Alice,PK') ; KS2]CONT2) PS >net(MSGS msg{(Alice,Bob)[sentPK]PK'}) => { CONT } < (Eve[publicKey(Eve,PK) ; publicKey(Alice,PK') ; KS1]CONT1) (Alice[publicKey(Alice,PK') ; KS2]CONT2) PS >net(MSGS msg{(Alice,Bob)[interceptedPK]PK'} msg{(Alice,Bob)[sentPK]PK}) 
-        if (msg{(Alice,Bob)[interceptedPK]PK'}) in MSGS == false .
+    crl [Intercept1] :  {CONT4} < (Eve[publicKey(Eve,PK) ; KS1]CONT1) (Alice[publicKey(Alice,PK') ; KS2]CONT2) PS >net(MSGS msg{(Alice,Bob)[sentPK]PK'}) 
+                        => 
+                        {CONT4} < (Eve[publicKey(Eve,PK) ; publicKey(Alice,PK') ; KS1]CONT1) (Alice[publicKey(Alice,PK') ; KS2]CONT2) PS >net(MSGS msg{(Alice,Bob)[interceptedPK]PK'} msg{(Alice,Bob)[sentPK]PK}) 
+                        if  (msg{(Alice,Bob)[interceptedPK]PK'}) in MSGS == false .
 
-    crl [Intercept2] : { CONT } < (Eve[publicKey(Eve,PK) ; KS1]cI(Eve,C') CONT1) PS >net(MSGS msg{(Bob,Alice)[sentC]C}) => { CONT } < (Eve[publicKey(Eve,PK) ; KS1]cI(Eve,C') cI(Bob,C) CONT1) PS >net(MSGS msg{(Bob,Alice)[interceptedC]C} msg{(Bob,Alice)[sentC]C'}) 
-        if (msg{(Bob,Alice)[interceptedC]C}) in MSGS == false /\
-        C =/= C' .
-
-    --- Initial state-------------------------------------------------------------------------------------------------------------
-    
-    ops init init2 : -> GlobalState .
-    eq init = {ds(d1 emptyS) ms(m1 emptyS) rs(r1 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
-    eq init2 = {ds(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    crl [Intercept2] :  {CONT4} < (Eve[publicKey(Eve,PK) ; KS1]cI(Eve,C') CONT1) PS >net(MSGS msg{(Bob,Alice)[sentC]C}) 
+                        => 
+                        {CONT4} < (Eve[publicKey(Eve,PK) ; KS1]cI(Eve,C') cI(Bob,C) CONT1) PS >net(MSGS msg{(Bob,Alice)[interceptedC]C} msg{(Bob,Alice)[sentC]C'}) 
+                        if  (msg{(Bob,Alice)[interceptedC]C}) in MSGS == false /\
+                            C =/= C' .
 endm
 
 --- Agreement search
-search init =>* True .
+search [1] init1 =>* {CONT4} < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
 --- MITM Attack search
-search init =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
----rew init .
+search init1 =>* {CONT4} < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
 
 --- Agreement search
-search init2 =>* True .
+search [1] init2 =>* {CONT4} < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
 --- MITM Attack search
-search[1] init2 =>* { CONT } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
----rew init .
+search[1] init2 =>* {CONT4} < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
