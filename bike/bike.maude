@@ -118,6 +118,7 @@ endfm
 --- Specification of the system upon BIKE will work
 fmod MODEL-CONFIGURATION is
     protecting DATA-TYPES .
+
     --- SORTS---------------------------------
     sorts Identifier Content Principal Principals . 
     sorts MsgState Msg Msgs .
@@ -160,7 +161,7 @@ fmod MODEL-CONFIGURATION is
     op secretKey : Identifier Key -> SKey .
 
     --- Operator to represent the shared key with a participant
-    op sharedKey : Identifier Key -> SKey .
+    op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
     --- Posible states for a message delivering PK
     ops sentPK receivedPK interceptedPK : -> MsgState .
@@ -185,7 +186,7 @@ fmod MODEL-CONFIGURATION is
 
     --- Group of messsages
     op emptyM : -> Msgs .
-    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
 
     var M : Msg .
     vars MS1 MS2 : Msgs .
@@ -204,11 +205,10 @@ fmod MODEL-CONFIGURATION is
     op _[_]_ : Identifier Keys Content -> Principal [ctor] .
 
     --- Group of principals
-    op __ : Principal Principal -> Principals [assoc comm] .
+    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
 
     --- Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor] .
-    op True : -> GlobalState [ctor] . ---TODO: Should I leave it?
+    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
 --- Protocol/mechanism samples and behaviour
