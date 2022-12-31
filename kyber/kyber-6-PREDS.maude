@@ -4,7 +4,7 @@ mod KYBER-PREDS is
     protecting KYBER .
     including SATISFACTION .
 
-    *** DEfintion of GlobalState as subtype of State
+    *** Defintion of GlobalState as subtype of State
     subsort GlobalState < State .
 
     *** Declaration of predicate to represent a principal starting the protocol
@@ -14,7 +14,7 @@ mod KYBER-PREDS is
     op sharedAKeyWith : Identifier Identifier -> Prop .
 
     *** Declaration of predicate to represent a principal stole a secret key
-    op stolenSecret : Identifier Identifier -> Prop .
+    op stolenSharedKey : Identifier Identifier -> Prop .
 
     *** Variables for the equations
     vars P1 P2 : Principal .
@@ -28,7 +28,7 @@ mod KYBER-PREDS is
     vars C1 C2 : Vector .
     vars SAM1 SAM2 SAM3 : Vector .
     vars C C' : Pair .
-    vars CONT CONT1 CONT2 CONT3 CONT4 CONT5 : Content .
+    vars CONT1 CONT2 CONT3 CONT4 CONT5 : Content .
     vars V1 V2 V3 : Vector .
     var M1 : Matrix .
     var GS : GlobalState .
@@ -37,14 +37,14 @@ mod KYBER-PREDS is
     *** Equations for the state's predicates
 
     *** Equations indicating two actors want to share a key
-    eq { CONT } < (ID1[publicKey(ID1,PK) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) |= wantsToShareKey(ID1,ID2) = true .
+    eq {CONT3} < (ID1[publicKey(ID1,PK) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) |= wantsToShareKey(ID1,ID2) = true .
 
     *** Equations indicating two actors share a key
-    eq { CONT } < (ID1[sharedKey(ID2,PK) ; KS1]CONT1) (ID2[sharedKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS) |= sharedAKeyWith(ID1,ID2) = true .
+    eq {CONT3} < (ID1[sharedKey(ID2,PK) ; KS1]CONT1) (ID2[sharedKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS) |= sharedAKeyWith(ID1,ID2) = true .
 
     *** Equations indicating an actor learned the secret key from another one
-    eq { CONT } < (ID1[secretKey(ID1,SK) ; KS1]CONT1) (ID2[secretKey(ID1,SK) ; KS2]CONT2) PS >net(MSGS) |= stolenSecret(ID1,ID2) = true .
+    eq {CONT3} < (ID1[secretKey(ID1,SK) ; KS1]CONT1) (ID2[secretKey(ID1,SK) ; KS2]CONT2) PS >net(MSGS) |= stolenSharedKey(ID1,ID2) = true .
 
-    *** Equation to include other cases
+    *** Equation to include any other cases as false
     eq GS |= P = false [owise] .
 endm
