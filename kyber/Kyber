@@ -22,10 +22,10 @@ COMMANDS
 
     Loading modules:
 
-    load kyberv2-6.maude .
-    load ../maude-3.1/model-checker.maude .
-    load kyberv2-6-PREDS.maude .
-    load kyberv2-6-CHECK.maude .
+    load kyber/kyber-6.maude
+    load model-checker.maude
+    load kyber/kyber-6-PREDS.maude
+    load kyber/kyber-6-CHECK.maude
 
     MODEL CHECKING
 
@@ -36,10 +36,6 @@ COMMANDS
     --- LIVENESS
     red modelCheck(initial1, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
     red modelCheck(initial2, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
-
-    --- SECURITY
-    red modelCheck(initial1, ([] ~(stolenSecret(Alice,Eve)))) .
-    red modelCheck(initial2, ([] ~(stolenSecret(Alice,Eve)))) .
 
     ---SECRECY
     red modelCheck(initial1, ([] ~(stolenSharedKey(Alice,Eve)))) .
