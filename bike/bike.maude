@@ -164,9 +164,9 @@ fmod MODEL-CONFIGURATION is
     op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
     --- Posible states for a message delivering PK
-    ops sentPK receivedPK interceptedPK : -> MsgState .
+    ops sentPK receivedPK : -> MsgState .
     --- Posible states for a message delivering C
-    ops sentC receivedC interceptedC : -> MsgState .
+    ops sentC receivedC : -> MsgState .
 
     --- Empty content
     op emptyC : -> Content .
