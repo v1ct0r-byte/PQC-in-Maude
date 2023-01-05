@@ -21,7 +21,7 @@ COMMANDS
     load bike/bike-PREDS.maude
     load bike/bike-CHECK.maude
 
-    MODEL CHECKING
+    --- MODEL CHECKING
 
     --- FAIRNESS
     red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
