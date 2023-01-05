@@ -27,7 +27,7 @@ COMMANDS
     load kyber/kyber-6-PREDS.maude
     load kyber/kyber-6-CHECK.maude
 
-    MODEL CHECKING
+    --- MODEL CHECKING
 
     --- FAIRNESS
     red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
@@ -41,6 +41,18 @@ COMMANDS
     red modelCheck(initial1, ([] ~(stolenSharedKey(Alice,Eve)))) .
     red modelCheck(initial2, ([] ~(stolenSharedKey(Alice,Eve)))) .
 
+    select KYBER .
+
+    --- SEARCH
+    --- Agreement search
+    search [1] init1 =>* {CONT4} < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
+    --- MITM Attack search
+    search init1 =>* {CONT4} < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
+
+    --- Agreement search
+    search [1] init2 =>* {CONT4} < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
+    --- MITM Attack search
+    search init2 =>* {CONT4} < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
 ------------------------------------------------------------------------------------------------------------------------
 IMPORTANT MATHEMATICAL NOTATION (BACKGROUND)
 
