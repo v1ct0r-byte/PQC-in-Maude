@@ -2,10 +2,49 @@
 
 This document is a collection of explanations and instructions on the proposed solution to model and analyze the protocol.
 Author: Víctor García Valero <vicgarv2@upv.es>
+
 ------------------------------------------------------------------------------------------------------------------------
+ACRONIMS
 
----Acrónimos
-MDPC codes: Moderate Density Parity Check codes -> 
+MDPC codes: Moderate Density Parity Check codes 
 
----Anotaciones
+---NOTATIONS
 Línea 20 debería ser eq P1 p+ neg(P1) = 0 .
+
+------------------------------------------------------------------------------------------------------------------------
+COMMANDS
+
+    Loading modules:
+
+    load bike/bike.maude
+    load model-checker.maude
+    load bike/bike-PREDS.maude
+    load bike/bike-CHECK.maude
+
+    MODEL CHECKING
+
+    --- FAIRNESS
+    red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
+    red modelCheck(initial2, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
+
+    --- LIVENESS
+    red modelCheck(initial1, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
+    red modelCheck(initial2, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
+
+    --- SECRECY
+    red modelCheck(initial1, ([] ~(stolenSharedKey(Alice,Eve)))) .
+    red modelCheck(initial2, ([] ~(stolenSharedKey(Alice,Eve)))) .
+
+    select BIKE .
+
+    --- SEARCH
+    --- Agreement search
+    search [1] init1 =>* { CONT:Content } < (Alice[sharedKey(Bob,SK) ; KS1]CONT1) (Bob[sharedKey(Alice,SK) ; KS2]CONT2) PS >net(MSGS) .
+    --- MITM Attack search
+    search init1 =>* { CONT:Content } < (ID1[sharedKey(ID3,SK) ; KS1]CONT1) (ID2[sharedKey(ID1,SK) ; sharedKey(ID3,SK') ; KS2]CONT2) (ID3[sharedKey(ID1,SK') ; KS3]CONT3) >net(MSGS)  .
+
+    --- Agreement search
+    search [1] init2 =>* { CONT:Content } < (Alice[sharedKey(Bob,SK) ; KS1]CONT1) (Bob[sharedKey(Alice,SK) ; KS2]CONT2) PS >net(MSGS) .
+    --- MITM Attack search
+    search init2 =>* { CONT:Content } < (ID1[sharedKey(ID3,SK) ; KS1]CONT1) (ID2[sharedKey(ID1,SK) ; sharedKey(ID3,SK') ; KS2]CONT2) (ID3[sharedKey(ID1,SK') ; KS3]CONT3) >net(MSGS)  .
+------------------------------------------------------------------------------------------------------------------------
