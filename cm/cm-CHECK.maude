@@ -1,0 +1,15 @@
+--- Author: Víctor García Valero <vicgarv2@upv.es>
+
+mod CM-CHECK is
+    protecting CM-PREDS .
+    including MODEL-CHECKER .
+    including LTL-SIMPLIFIER .
+
+    *** GlobalState declarations
+    ops initial1 initial2 : -> GlobalState .
+
+    *** 3 participants and the necesary samples for 1 key exchange
+    eq initial1 = {deltas(delta1)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    *** 3 participants and the necesary samples for 2 key exchanges
+    eq initial2 = {deltas(delta1 delta2)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+endm

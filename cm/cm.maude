@@ -403,5 +403,3 @@ mod CM is
                             C =/= C' /\
                             (cI(ID1,C)) in CONT1 == false .
 endm
-
-rew init1 .
