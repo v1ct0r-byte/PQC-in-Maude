@@ -34,10 +34,29 @@ fmod DATA-TYPES is
     eq second([D1,D2]) = D2 .
 endfm
 
---- View to associate polynomials as elements of view TRIV, later used in LIST
-view Polynomial from TRIV to DATA-TYPES is
-  sort Elt to Polynomial .
+--- View to associate Data as elements of view TRIV, later used in LIST
+view Data from TRIV to DATA-TYPES is
+  sort Elt to Data .
 endv
+
+---Module to extend add operations and concepts of DATA-TYPES regarding lists of data
+mod DATA-TYPES-EXT is
+    protecting DATA-TYPES .
+    protecting LIST{Data} .
+
+    --- Ground operator
+    op ground : -> Data [ctor] .
+
+    var L : List{Data} .
+    var N : Nat .
+    
+    --- Operation to access an element in a List of Data
+    op elem : Nat List{Data} -> Data .
+    eq elem(N, nil) = ground .
+    eq elem(0, L) = ground .
+    eq elem(1, L) = head(L) .
+    eq elem(s(N), L) = elem(N, tail(L)) .
+endm
 
 --- Module to specify all the hash functions that are used in the steps of CM KEM
 fmod CM-HASH-OPERATIONS is
@@ -53,21 +72,12 @@ fmod ENCRYPTION is
     protecting DATA-TYPES .
     protecting NAT .
 
-    subsort Nat < Data .
-
-    var D : Data .
-
     --- ENCODE & DECODE operations
     ops ENCODE DECODE : Polynomial Polynomial -> Polynomial .
     
     --- Property of interest
-    vars E T : Polynomial .
-    eq DECODE(ENCODE(E,T),T) = E .
-
-    --- XOR
-    op _xorD_ : Data Data -> Data [assoc comm] .
-    eq D xorD 0 = D .
-    eq D xorD D = 0 .
+    vars E T T' : Polynomial .
+    eq DECODE(ENCODE(E,T),T') = E .
 endfm
 
 --- Module to represent the data and operations handled during KEYGEN
@@ -81,10 +91,11 @@ endfm
 --- Module to represent the data and operations handled during SEEDED-KEYGEN
 fmod CM-CPAPKE-SEEDED-KEYGEN is
     protecting DATA-TYPES .
-    protecting LIST{Polynomial} .
+    protecting LIST{Data} .
+    protecting CM-CPAPKE-KEYGEN .
 
     --- Pseudorandom bit generator G
-    op G : Polynomial -> Polynomial .
+    op G : Polynomial -> Polynomial [ctor] .
 
     --- Values for the key generation
     ops delta' s : -> Polynomial .
@@ -93,7 +104,7 @@ fmod CM-CPAPKE-SEEDED-KEYGEN is
     op lastL : Polynomial -> Polynomial .
     eq lastL(G(delta)) = delta' .
     
-    --- Operation to represent the extraction of the last L bits of E
+    --- Operation to represent the extraction of the first N bits of E
     op firstN : Polynomial -> Polynomial .
     eq firstN(G(delta)) = s .
 
@@ -106,6 +117,15 @@ fmod CM-CPAPKE-SEEDED-KEYGEN is
 
     --- Value representing alpha_n, part of alpha_q and used in the construction of Gamma
     op alphaN : -> Polynomial .
+    op segmentN : Polynomial -> Polynomial .
+    eq segmentN(alphaQ) = alphaN .
+
+    --- Special operator for the N element of alphaN
+    op alphan : -> Polynomial .
+
+    op elemN : Polynomial -> Polynomial .
+    --- We use alphaQ because AlphaN does not contain element n, only till n-1
+    eq elemN(alphaQ) = alphan .
 
     --- Operation IRREDUCIBLE
     op IRREDUCIBLE : Polynomial -> Polynomial .
@@ -114,23 +134,21 @@ fmod CM-CPAPKE-SEEDED-KEYGEN is
     op g : -> Polynomial .
     eq IRREDUCIBLE(G(delta)) = g .
 
-    --- Symbol to reprent Gamma, that is the T without the right stick on top
-    op Gamma : -> Pair .
-    eq Gamma = [g,alpha_q] .
-
     --- For algorithm MATGEN we only consider the systematic form scenario
     --- Operator representing the public matrix part genereted by algorithm MATGEN
-    op T : -> Polynomial .
+    op T : -> Matrix .
     
     --- Operator to construct Gamma'
     op alphaN' : -> Polynomial .
 
-    op MATGEN : Pair -> Pair .
-    eq MATGEN(Gamma) = [] .
-    
+    ops c gamma' : -> Polynomial .
+
+    op MATGEN : Pair -> List{Data} .
+    eq MATGEN([g, alphaN]) = (T c (g alphaN')) .
 endfm
 
 --- Module to represent the operations and data handled during ENC
+--- The module has to be system type to be able to have rules to represent indeterminism with the FIXEDWEIGHT algorithm
 fmod CM-CPAPKE-ENC is
     protecting DATA-TYPES .
     protecting CM-HASH-OPERATIONS .
@@ -139,8 +157,9 @@ fmod CM-CPAPKE-ENC is
     op FIXEDWEIGHT : -> Polynomial .
 
     --- Result from FIXEDWEIGHT
-    op e : -> Polynomial .
+    ops e e' : -> Polynomial .
     eq FIXEDWEIGHT = e .
+    eq FIXEDWEIGHT = e' [owise] .
 endfm
 
 --- Module to represent the operations and data handled during DEC
@@ -148,13 +167,22 @@ endfm
 --- the one that was computed in the other side using PK and C
 fmod CM-CPAPKE-DEC is
     protecting DATA-TYPES .
+    protecting CM-CPAPKE-ENC .
+    protecting CM-HASH-OPERATIONS .
 
-    
+    ops k k' : -> Polynomial [ctor] .
+
+    var T : Polynomial .
+
+    eq H(1, e, T) = k .
+    eq H(1, e', T) = k' .
 endfm
 
 --- Specification of the system upon CM will work
 fmod MODEL-CONFIGURATION is
     protecting DATA-TYPES .
+    protecting LIST{Data} .
+
     --- SORTS---------------------------------
     sorts Identifier Content Principal Principals . 
     sorts MsgState Msg Msgs .
@@ -170,6 +198,9 @@ fmod MODEL-CONFIGURATION is
     ---We define keys as a type of content
     subsorts Polynomial < PKey SKey < Key < Content .
 
+    --- Given the secret key nature we decalre the list of data as a type of secret key
+    subsort List{Data} < SKey .
+
     --- We also declare that a pair is content
     subsort Pair < Content .
 
@@ -182,6 +213,14 @@ fmod MODEL-CONFIGURATION is
     --- Group of keys
     op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
 
+    var K : Key .
+    vars KS1 KS2 : Keys .
+
+    --- Operation to check the precence of a key in a participant
+    op _in_ : Key Keys -> Bool .
+    eq K in (KS1 ; K ; KS2) = true .
+    eq K in (KS1) = false [owise] .
+
     --- Operator to represent the relation of a public key and a principal
     op publicKey : Identifier Key -> PKey .
 
@@ -189,17 +228,24 @@ fmod MODEL-CONFIGURATION is
     op secretKey : Identifier Key -> SKey .
 
     --- Operator to represent the shared key with a participant
-    op sharedKey : Identifier Key -> SKey .
+    op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
     --- Posible states for a message delivering PK
-    ops sentPK receivedPK interceptedPK : -> MsgState .
+    ops sentPK receivedPK : -> MsgState .
     --- Posible states for a message delivering C
-    ops sentC receivedC interceptedC : -> MsgState .
+    ops sentC receivedC : -> MsgState .
 
     --- Empty content
     op emptyC : -> Content .
     --- Group of contents
-    op __ : Content Content -> Content [assoc comm id: emptyC] .
+    op _|_ : Content Content -> Content [assoc comm id: emptyC] .
+
+    vars C CONT1 CONT2 : Content .
+
+    --- Operation to check the contents of a participant
+    op _in_ : Content Content -> Bool .
+    eq C in (CONT1 C CONT2) = true .
+    eq C in (CONT1) = false [owise] .
 
     --- Structure of a message
     --- Sender, Receiver, State, Content
@@ -207,7 +253,7 @@ fmod MODEL-CONFIGURATION is
 
     --- Group of messsages
     op emptyM : -> Msgs .
-    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
 
     var M : Msg .
     vars MS1 MS2 : Msgs .
@@ -226,100 +272,107 @@ fmod MODEL-CONFIGURATION is
     op _[_]_ : Identifier Keys Content -> Principal [ctor] .
 
     --- Group of principals
-    op __ : Principal Principal -> Principals [assoc comm] .
+    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
 
     --- Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor] .
-    op True : -> GlobalState [ctor] . ---TODO: Should I leave it?
+    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
 --- Protocol/mechanism samples and behaviour
 mod CM is
     --- IMPORTS-------------------------------
-    protecting DATA-TYPES .
+    protecting DATA-TYPES-EXT .
     protecting CM-HASH-OPERATIONS .
     protecting ENCRYPTION .
-    protecting CM-CPAPKE-KEYGEN .
+    protecting CM-CPAPKE-SEEDED-KEYGEN .
     protecting CM-CPAPKE-ENC .
     protecting CM-CPAPKE-DEC .
     protecting MODEL-CONFIGURATION .
 
-    --- Group of polynomials sigma that can be sampled
-    
+    --- Group of polynomials delta that can be sampled
+    op deltas : Content -> Content .
 
-    --- Operator to assign a polynomial 'sigma' to a participant
-    
+    --- Operator to assign a polynomial 'delta' to a participant
+    op deltaI : Identifier Polynomial -> Content .
 
     --- Operator to assign a Ciphered text to a participant
-    op cI : Identifier Pair -> Content .
+    op cI : Identifier Data -> Content .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     ops init1 init2 : -> GlobalState .
-    eq init1 = {emptyC} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
-    --- eq init2 = {sigmas(d1 d2 emptyS) ms(m1 m2 emptyS) rs(r1 r2 emptyS)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init1 = {deltas(delta)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    --- eq init2 = {deltas(delta delta') ms(m1 m2) hs([h0,h1] [h0',h1'])} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 
     --- RULES-------------------------------------------------------------------------------------------------------------
     
     vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
     vars MSGS MSGS' : Msgs .
-    vars K1 K2 SK : SKey .
+    vars K1 K2 : SKey .
     vars PK PK' : PKey .
-    vars Cs Hs Es : Pair .
-    vars C0 C1 : Polynomial .
-    vars E0 E1 : Polynomial .
+    vars GAMMA GAMMA' : Pair .
+    vars D' S E ER C ALPHAQ : Polynomial .
     var M : Polynomial .
-    vars KS1 KS2 : Keys .
+    vars KS1 KS2 KS3 : Keys .
+    vars AUX ALPHA SK : List{Data} .
     vars SAM1 SAM2 : Data .
     vars CONT1 CONT2 CONT3 : Content .
 
-    crl [KeyGen] :  {CONT3} < (ID1[emptyK]emptyC) PS >net(MSGS) 
+    crl [KeyGen] :  {deltas(SAM1 CONT1) CONT3} < (ID1[emptyK]emptyC) PS >net(MSGS) 
                     => 
-                    {CONT3} < (ID1[publicKey(ID1, PK)]sigmaI(ID1,SAM1) hI(ID1, SAM2)) PS >net(MSGS) 
-                    if PK := (second(SAM2) p* inv(first(SAM2))) /\
-                    .
+                    {deltas(CONT1) CONT3} < (ID1[publicKey(ID1, PK) ; secretKey(ID1,SK)]deltaI(ID1,SAM1)) PS >net(MSGS) 
+                    if  E := G(SAM1) /\
+                        D' := lastL(E) /\
+                        S := firstN(E) /\
+                        ALPHAQ := FIELDORDERING(E) /\
+                        GAMMA := [IRREDUCIBLE(E), segmentN(ALPHAQ)] /\
+                        AUX := MATGEN(GAMMA) /\
+                        GAMMA' := [elem(3, AUX), elem(4, AUX)] /\
+                        PK := head(AUX) /\
+                        ALPHA := (second(GAMMA') elemN(ALPHAQ) ALPHAQ) /\ 
+                        SK := (SAM1 elem(2, AUX) first(GAMMA') ALPHA S) .
 
+    --- The public key is sent
     crl [SendPK] :  {CONT3} < (ID1[publicKey(ID1, PK) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS)
                     =>
-                    {CONT3} < (ID1[publicKey(ID1, PK) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)})
-                    if  (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\ 
+                    {CONT3} < (ID1[KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)})
+                    if  (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\
                         (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false .
 
-    rl [ReceivePK] :    {CONT3} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)} MSGS')
+    rl [ReceivePK] :    {CONT3} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1, ID2)[sentPK](PK)})
                         =>
-                        {CONT3} < (ID2[KS2]publicKey(ID1, PK) CONT2) PS >net(MSGS msg{(ID1, ID2)[receivedPK](PK)} MSGS') .
-    
-    crl [Enc] : {ms(SAM1 CONT1) CONT3} < (ID2[KS2] publicKey(ID1, PK) CONT2) PS >net(MSGS)
+                        {CONT3} < (ID2[publicKey(ID1, PK) ; KS2] CONT2) PS >net(MSGS msg{(ID1, ID2)[receivedPK](PK)}) .
+
+    --- The public key is consumed to generate a shared key
+    crl [Enc] : {CONT3} < (ID2[publicKey(ID1, PK) ; KS2]CONT2) PS >net(MSGS)
                 =>
-                {ms(CONT1) CONT3} < (ID2[sharedKey(ID1, SK) ; KS2]mI(ID2, SAM1) cI(ID2, Cs) publicKey(ID1, PK) CONT2) PS >net(MSGS)
+                {CONT3} < (ID2[sharedKey(ID1, K1) ; KS2]cI(ID2, C) CONT2) PS >net(MSGS)
                 if  ID1 =/= ID2 /\
-                    Es := H(SAM1) /\
-                    E0 := first(Es) /\
-                    E1 := second(Es) /\
-                    Cs := [(E0 p+ (E1 p* (PK))), (SAM1 xorD L(Es))] /\
-                    SK := K(SAM1, Cs) .
+                    ER := FIXEDWEIGHT /\
+                    C := ENCODE(ER, PK) /\
+                    K1 := H(1, ER, C) .
 
-    crl [SendCiph] :    {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] cI(ID2, Cs) CONT2) PS >net(MSGS)
+    --- The ciphered text is sent
+    crl [SendCiph] :    {CONT3} < (ID2[KS2 ; sharedKey(ID1, K1)] cI(ID2, C) CONT2) PS >net(MSGS)
                         =>
-                        {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] cI(ID2, Cs) CONT2) PS >net(MSGS msg{(ID2, ID1)[sentC](Cs)}) 
-                        if  (msg{(ID2, ID1)[sentC](Cs)}) in MSGS == false /\ 
-                            (msg{(ID2, ID1)[receivedC](Cs)}) in MSGS == false .
-    
-    rl [ReceiveCiph] :  {CONT3} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2, ID1)[sentC](Cs)} MSGS') 
-                        =>
-                        {CONT3} < (ID1[KS1]cI(ID2, Cs) CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](Cs)} MSGS')  .
+                        {CONT3} < (ID2[KS2 ; sharedKey(ID1, K1)] CONT2) PS >net(MSGS msg{(ID2, ID1)[sentC](C)}) 
+                        if  ID1 =/= ID2 /\
+                            (msg{(ID2, ID1)[sentC](C)}) in MSGS == false /\ 
+                            (msg{(ID2, ID1)[receivedC](C)}) in MSGS == false .
 
-    crl [Dec] :  {CONT3}< (ID1[publicKey(ID1, PK)]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS)
+    rl [ReceiveCiph] :  {CONT3} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2, ID1)[sentC](C)}) 
+                        =>
+                        {CONT3} < (ID1[KS1]cI(ID2, C) CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](C)})  .
+
+    --- The ciphered text and secret keys are consumed to generate the shared key
+    crl [Dec] :  {CONT3}< (ID1[secretKey(ID1, SK); KS1]cI(ID2, C) CONT1) PS >net(MSGS)
                 =>
-                {CONT3}< (ID1[publicKey(ID1, PK) ; sharedKey(ID2, SK)]hI(ID1, Hs) cI(ID2, Cs) CONT1) PS >net(MSGS) 
-                if  Es := decoder(first(Cs) p* first(Hs), first(Hs), second(Hs)) /\
-                    E0 := first(Es) /\
-                    E1 := second(Es) /\
-                    M := second(Cs) xorD L(Es) /\
-                    SK := K(M, Cs) .
-
-    --- Specific intruder behaivour
-
+                {CONT3}< (ID1[sharedKey(ID2, K1) ; KS1]CONT1) PS >net(MSGS) 
+                if  ID1 =/= ID2 /\
+                    S := last(SK) /\
+                    GAMMA' := [elem(3, SK), elem(4, SK)] /\
+                    ER := DECODE(C,GAMMA') /\
+                    K1 := H(1, ER, C) .
 endm
 
 rew init1 .
