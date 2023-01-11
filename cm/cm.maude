@@ -76,16 +76,16 @@ fmod ENCRYPTION is
     ops ENCODE DECODE : Polynomial Polynomial -> Polynomial .
     
     --- Property of interest
-    vars E T T' : Polynomial .
-    eq DECODE(ENCODE(E,T),T') = E .
+    vars E T1 T2 : Polynomial .
+    eq DECODE(ENCODE(E,T1),T2) = E .
 endfm
 
 --- Module to represent the data and operations handled during KEYGEN
 fmod CM-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
 
-    --- Constant value representing the sigma obtained in step 1
-    op delta : -> Polynomial .
+    --- Constant values representing the sigma obtained in step 1
+    ops delta1 delta2 : -> Polynomial .
 endfm
 
 --- Module to represent the data and operations handled during SEEDED-KEYGEN
@@ -98,68 +98,78 @@ fmod CM-CPAPKE-SEEDED-KEYGEN is
     op G : Polynomial -> Polynomial [ctor] .
 
     --- Values for the key generation
-    ops delta' s : -> Polynomial .
+    ops delta1' delta2' s1 s2 : -> Polynomial .
 
     --- Operation to represent the extraction of the last L bits of E
     op lastL : Polynomial -> Polynomial .
-    eq lastL(G(delta)) = delta' .
+    eq lastL(G(delta1)) = delta1' .
+    eq lastL(G(delta2)) = delta2' .
     
     --- Operation to represent the extraction of the first N bits of E
     op firstN : Polynomial -> Polynomial .
-    eq firstN(G(delta)) = s .
+    eq firstN(G(delta1)) = s1 .
+    eq firstN(G(delta2)) = s2 .
 
     --- Operation FILEDORDERING
     op FIELDORDERING : Polynomial -> Polynomial .
 
     --- Value representing alpha_q, output of FIELDORDERING
-    op alphaQ : -> Polynomial .
-    eq FIELDORDERING(G(delta)) = alphaQ .
+    ops alphaQ1 alphaQ2 : -> Polynomial .
+    eq FIELDORDERING(G(delta1)) = alphaQ1 .
+    eq FIELDORDERING(G(delta2)) = alphaQ2 .
 
     --- Value representing alpha_n, part of alpha_q and used in the construction of Gamma
-    op alphaN : -> Polynomial .
+    ops alphaN1 alphaN2 : -> Polynomial .
     op segmentN : Polynomial -> Polynomial .
-    eq segmentN(alphaQ) = alphaN .
+    eq segmentN(alphaQ1) = alphaN1 .
+    eq segmentN(alphaQ2) = alphaN2 .
 
     --- Special operator for the N element of alphaN
-    op alphan : -> Polynomial .
+    ops alphan1 alphan2 : -> Polynomial .
 
     op elemN : Polynomial -> Polynomial .
     --- We use alphaQ because AlphaN does not contain element n, only till n-1
-    eq elemN(alphaQ) = alphan .
+    eq elemN(alphaQ1) = alphan1 .
+    eq elemN(alphaQ2) = alphan2 .
 
     --- Operation IRREDUCIBLE
     op IRREDUCIBLE : Polynomial -> Polynomial .
 
     --- Operator representing a polynomial output of IRREDUCIBLE
-    op g : -> Polynomial .
-    eq IRREDUCIBLE(G(delta)) = g .
+    ops g1 g2 : -> Polynomial .
+    eq IRREDUCIBLE(G(delta1)) = g1 .
+    eq IRREDUCIBLE(G(delta2)) = g2 .
 
     --- For algorithm MATGEN we only consider the systematic form scenario
     --- Operator representing the public matrix part genereted by algorithm MATGEN
-    op T : -> Matrix .
+    ops T1 T2 : -> Matrix .
     
     --- Operator to construct Gamma'
-    op alphaN' : -> Polynomial .
+    ops alphaN1' alphaN2' : -> Polynomial .
 
-    ops c gamma' : -> Polynomial .
+    ops c1 c2 : -> Polynomial .
 
     op MATGEN : Pair -> List{Data} .
-    eq MATGEN([g, alphaN]) = (T c (g alphaN')) .
+    eq MATGEN([g1, alphaN1]) = (T1 c1 (g1 alphaN1')) .
+    eq MATGEN([g2, alphaN2]) = (T2 c2 (g2 alphaN2')) .
 endfm
 
 --- Module to represent the operations and data handled during ENC
 --- The module has to be system type to be able to have rules to represent indeterminism with the FIXEDWEIGHT algorithm
 fmod CM-CPAPKE-ENC is
     protecting DATA-TYPES .
+    protecting CM-CPAPKE-SEEDED-KEYGEN .
     protecting CM-HASH-OPERATIONS .
     protecting ENCRYPTION .
 
-    op FIXEDWEIGHT : -> Polynomial .
+    --- In reality FIXEDWEIGHT does not have any parameters, but for the pourpose of modeling the diferent outcomes we
+    --- differentiated both outputs depending on the public key used
+    op FIXEDWEIGHT : Matrix -> Polynomial .
 
     --- Result from FIXEDWEIGHT
     ops e e' : -> Polynomial .
-    eq FIXEDWEIGHT = e .
-    eq FIXEDWEIGHT = e' [owise] .
+    eq FIXEDWEIGHT(T1) = e .
+    eq FIXEDWEIGHT(T2) = e' .
 endfm
 
 --- Module to represent the operations and data handled during DEC
@@ -300,8 +310,8 @@ mod CM is
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     ops init1 init2 : -> GlobalState .
-    eq init1 = {deltas(delta)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
-    --- eq init2 = {deltas(delta delta') ms(m1 m2) hs([h0,h1] [h0',h1'])} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init1 = {deltas(delta1)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init2 = {deltas(delta1 delta2)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
 
     --- RULES-------------------------------------------------------------------------------------------------------------
     
@@ -311,7 +321,7 @@ mod CM is
     vars K1 K2 : SKey .
     vars PK PK' : PKey .
     vars GAMMA GAMMA' : Pair .
-    vars D' S E ER C ALPHAQ : Polynomial .
+    vars D' S E ER C C' ALPHAQ : Polynomial .
     var M : Polynomial .
     vars KS1 KS2 KS3 : Keys .
     vars AUX ALPHA SK : List{Data} .
@@ -346,14 +356,14 @@ mod CM is
     --- The public key is consumed to generate a shared key
     crl [Enc] : {CONT3} < (ID2[publicKey(ID1, PK) ; KS2]CONT2) PS >net(MSGS)
                 =>
-                {CONT3} < (ID2[sharedKey(ID1, K1) ; KS2]cI(ID2, C) CONT2) PS >net(MSGS)
+                {CONT3} < (ID2[sharedKey(ID1, K1) ; KS2]cI(ID2, C) | CONT2) PS >net(MSGS)
                 if  ID1 =/= ID2 /\
-                    ER := FIXEDWEIGHT /\
+                    ER := FIXEDWEIGHT(PK) /\
                     C := ENCODE(ER, PK) /\
                     K1 := H(1, ER, C) .
 
     --- The ciphered text is sent
-    crl [SendCiph] :    {CONT3} < (ID2[KS2 ; sharedKey(ID1, K1)] cI(ID2, C) CONT2) PS >net(MSGS)
+    crl [SendCiph] :    {CONT3} < (ID2[KS2 ; sharedKey(ID1, K1)] cI(ID2, C) | CONT2) PS >net(MSGS)
                         =>
                         {CONT3} < (ID2[KS2 ; sharedKey(ID1, K1)] CONT2) PS >net(MSGS msg{(ID2, ID1)[sentC](C)}) 
                         if  ID1 =/= ID2 /\
@@ -362,10 +372,10 @@ mod CM is
 
     rl [ReceiveCiph] :  {CONT3} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2, ID1)[sentC](C)}) 
                         =>
-                        {CONT3} < (ID1[KS1]cI(ID2, C) CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](C)})  .
+                        {CONT3} < (ID1[KS1]cI(ID2, C) | CONT1) PS >net(MSGS msg{(ID2, ID1)[receivedC](C)})  .
 
     --- The ciphered text and secret keys are consumed to generate the shared key
-    crl [Dec] :  {CONT3}< (ID1[secretKey(ID1, SK); KS1]cI(ID2, C) CONT1) PS >net(MSGS)
+    crl [Dec] :  {CONT3}< (ID1[secretKey(ID1, SK); KS1]cI(ID2, C) | CONT1) PS >net(MSGS)
                 =>
                 {CONT3}< (ID1[sharedKey(ID2, K1) ; KS1]CONT1) PS >net(MSGS) 
                 if  ID1 =/= ID2 /\
@@ -373,6 +383,25 @@ mod CM is
                     GAMMA' := [elem(3, SK), elem(4, SK)] /\
                     ER := DECODE(C,GAMMA') /\
                     K1 := H(1, ER, C) .
+
+    --- Specific intruder behaivour
+    crl [Intercept1] :  {CONT3}< (Eve[publicKey(Eve, PK') ; KS1]CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK](PK)}) 
+                        =>
+                        {CONT3}< (Eve[publicKey(Eve, PK') ; publicKey(ID1,PK) ; KS1]CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK](PK')}) 
+                        if  ID1 =/= Eve /\
+                            ID2 =/= Eve /\ 
+                            ID1 =/= ID2 /\
+                            PK =/= PK' /\
+                            (publicKey(ID1,PK)) in KS1 == false .
+
+    crl [Intercept2] :  {CONT3}< (Eve[KS1]cI(Eve,C') | CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC](C)}) 
+                        =>
+                        {CONT3}< (Eve[KS1]cI(Eve,C') | cI(ID1,C) | CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC](C')}) 
+                        if  ID1 =/= Eve /\
+                            ID2 =/= Eve /\
+                            ID1 =/= ID2 /\
+                            C =/= C' /\
+                            (cI(ID1,C)) in CONT1 == false .
 endm
 
 rew init1 .
