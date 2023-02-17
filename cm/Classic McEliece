@@ -30,12 +30,12 @@ COMMANDS
 
     --- SEARCH
     --- Agreement search
-    search [1] init1 =>* { CONT:Content } < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
+    search init1 =>! { CONT4 } < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
     --- MITM Attack search
-    search init1 =>* { CONT:Content } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
+    search init1 =>! { CONT4 } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS) .
 
     --- Agreement search
-    search [1] init2 =>* { CONT:Content } < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
+    search init2 =>! { CONT4 } < (Alice[sharedKey(Bob,K1) ; KS1]CONT1) (Bob[sharedKey(Alice,K1) ; KS2]CONT2) PS >net(MSGS) .
     --- MITM Attack search
-    search init2 =>* { CONT:Content } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
+    search [1] init2 =>! { CONT4 } < (ID1[sharedKey(ID3,K1) ; KS1]CONT1) (ID2[sharedKey(ID1,K1) ; sharedKey(ID3,K2) ; KS2]CONT2) (ID3[sharedKey(ID1,K2) ; KS3]CONT3) >net(MSGS)  .
 ------------------------------------------------------------------------------------------------------------------------
