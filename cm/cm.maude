@@ -254,7 +254,7 @@ fmod MODEL-CONFIGURATION is
 
     --- Operation to check the contents of a participant
     op _in_ : Content Content -> Bool .
-    eq C in (CONT1 C CONT2) = true .
+    eq C in (CONT1 | C | CONT2) = true .
     eq C in (CONT1) = false [owise] .
 
     --- Structure of a message
@@ -279,6 +279,12 @@ fmod MODEL-CONFIGURATION is
 
     --- Definition of the default participant
     op none : -> Identifier [ctor] .
+
+    --- Operator to assign a Ciphered text to a participant
+    op cI : Identifier Data -> Content .
+
+    --- Operator to mark the current participant to whom the key exchange is happening
+    op peer : Identifier -> Content .
 
     --- Definition of the components of a Principal
     --- (idenifier [keys] content)
@@ -307,12 +313,6 @@ mod CM is
 
     --- Operator to assign a polynomial 'delta' to a participant
     op deltaI : Identifier Polynomial -> Content .
-
-    --- Operator to assign a Ciphered text to a participant
-    op cI : Identifier Data -> Content .
-
-    --- Operator to mark the current participant to whom the key exchange is happening
-    op peer : Identifier -> Content .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     ops init1 init2 : -> GlobalState .
