@@ -286,6 +286,14 @@ fmod MODEL-CONFIGURATION is
     --- Defintion of our three main participants followiing the literature
     ops Alice Eve Bob : ->  Identifier [ctor] .
 
+    op none : -> Identifier [ctor] .
+
+    --- Operator to assign a Ciphered text to a participant
+    op cI : Identifier Data -> Content .
+
+    --- Operator to mark the current participant to whom the key exchange is happening
+    op peer : Identifier -> Content .
+
     --- Definition of the components of a Principal
     --- (idenifier [keys] content)
     op _[_]_ : Identifier Keys Content -> Principal [ctor] .
@@ -330,12 +338,12 @@ mod KYBER is
     op rI : Identifier Vector -> Content .
 
     --- Operator to assign a Ciphered text to a participant
-    op cI : Identifier Vector -> Content .
+    ---op cI : Identifier Vector -> Content .
 
     --- Initial state-------------------------------------------------------------------------------------------------------------
     ops init1 init2 : -> GlobalState .
-    eq init1 = {ds(d1) ms(m1) rs(r1)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
-    eq init2 = {ds(d1 d2) ms(m1 m2) rs(r1 r2)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq init1 = {ds(d1) ms(m1) rs(r1)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init2 = {ds(d1 d2) ms(m1 m2) rs(r1 r2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 
     --- RULES-------------------------------------------------------------------------------------------------------------
     
@@ -355,29 +363,29 @@ mod KYBER is
     var M1 : Matrix .
 
     --- For now the protocol only starts when the participant can sample necesary values for keygen
-    crl [KeyGen] :  {ds(SAM1 CONT1) CONT4} < (ID1[emptyK]emptyC) PS >net(MSGS) 
+    crl [KeyGen] :  {ds(SAM1 CONT1) CONT4} < (ID1[emptyK]peer(none)) PS >net(MSGS) 
                     => 
-                    {ds(CONT1) CONT4} < (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]dI(ID1,SAM1)emptyC) PS >net(MSGS)
+                    {ds(CONT1) CONT4} < (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]dI(ID1,SAM1) peer(none)) PS >net(MSGS)
                     if  SK := sampleS(second(G(SAM1))) /\ 
                         PK := ((generateA(first(G(SAM1))) m* SK) v+ sampleE(second(G(SAM1)))) .
 
     --- Send PK to someone if it has not been sent before and the reciever didnt recieve it before
     --- The publick key is sent "literally"
-    crl [SendPK] :  {CONT4} < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS) 
+    crl [SendPK] :  {CONT4} < (ID1[publicKey(ID1,PK) ; KS1]dI(ID1,SAM1) peer(none) CONT1) (ID2[KS2]peer(none)) PS >net(MSGS) 
                     => 
-                    {CONT4} < (ID1[KS1]dI(ID1,SAM1) CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK})
+                    {CONT4} < (ID1[KS1]dI(ID1,SAM1) peer(ID2) CONT1) (ID2[KS2]peer(none)) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK})
                     if  (msg{(ID1,ID2)[sentPK]PK}) in MSGS == false /\
                         (msg{(ID1,ID2)[receivedPK]PK}) in MSGS == false /\
                         (ID1 =/= ID2) .
 
-    rl [ReceivePK] :   {CONT4} < (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) 
+    rl [ReceivePK] :   {CONT4} < (ID2[KS2]peer(none) CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) 
                         => 
-                        {CONT4} < (ID2[publicKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK}) .
+                        {CONT4} < (ID2[publicKey(ID1,PK) ; KS2]peer(ID1) CONT2) PS >net(MSGS msg{(ID1,ID2)[receivedPK]PK}) .
 
     --- The public key is consumed to generate the shared key
-    crl [Enc] : {ms(SAM1 CONT1) rs(SAM2 CONT3) CONT4} < (ID2[publicKey(ID1,(M1 m* V1) v+ V2) ; KS2] CONT2) PS >net(MSGS) 
+    crl [Enc] : {ms(SAM1 CONT1) rs(SAM2 CONT3) CONT4} < (ID2[publicKey(ID1,(M1 m* V1) v+ V2) ; KS2]peer(ID1) CONT2) PS >net(MSGS) 
                 => 
-                {ms(CONT1) rs(CONT3) CONT4} < (ID2[sharedKey(ID1,SAM1) ; KS2]cI(ID2,C) mI(ID2,SAM1) rI(ID2,SAM2) CONT2) PS >net(MSGS)
+                {ms(CONT1) rs(CONT3) CONT4} < (ID2[sharedKey(ID1,SAM1) ; KS2]cI(ID1,C) mI(ID1,SAM1) rI(ID1,SAM2) peer(ID1) CONT2) PS >net(MSGS)
                 if  ID1 =/= ID2 /\
                     U := ((tpM(M1) m* sampleR'(SAM2)) v+ sampleE1(SAM2)) /\
                     V := (((tpV((M1 m* V1) v+ V2) dot sampleR'(SAM2)) v+ sampleE2(SAM2)) v+ Decompress(SAM1,1)) /\
@@ -385,40 +393,41 @@ mod KYBER is
                     C2 := Compress(V,dv) /\
                     C := ([C1,C2]) .
 
-    --- The ciphered text is sent "literally"
-    crl [SendCiph] :    {CONT4} < (ID2[sharedKey(ID1,SK) ; KS2]cI(ID2,C) rI(ID2,SAM2) CONT2) PS >net(MSGS) 
+    --- The ciphered text is sent
+    crl [SendCiph] :    {CONT4} < (ID2[sharedKey(ID1,SK) ; KS2]peer(ID1) cI(ID1,C) rI(ID1,SAM2) CONT2) PS >net(MSGS) 
                         => 
-                        {CONT4} < (ID2[sharedKey(ID1,SK) ; KS2]rI(ID2,SAM2) CONT2) PS >net(MSGS msg{(ID2,ID1)[sentC](C)})
+                        {CONT4} < (ID2[sharedKey(ID1,SK) ; KS2]peer(none) rI(ID1,SAM2) CONT2) PS >net(MSGS msg{(ID2,ID1)[sentC](C)})
                         if  (msg{(ID2,ID1)[sentC](C)}) in MSGS == false /\
                             (msg{(ID2,ID1)[receivedC](C)}) in MSGS == false .
 
-    rl [ReceiveCiph] : {CONT4} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)}) 
+    rl [ReceiveCiph] :  {CONT4} < (ID1[KS1]CONT1) PS >net(MSGS msg{(ID2,ID1)[sentC](C)}) 
                         => 
-                        {CONT4} < (ID1[KS1]cI(ID2,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[receivedC](C)}) .
+                        {CONT4} < (ID1[KS1]cI(ID1,C) CONT1) PS >net(MSGS msg{(ID2,ID1)[receivedC](C)}) .
 
     --- Once decompressed, the ciphertext is destroyed from local memory of the participant
     --- The ciphered text is consumed
-    crl [Dec] : {CONT4} < (ID1[secretKey(ID1,SK) ; KS1]dI(ID1,SAM1) cI(ID2,C) CONT1) PS >net(MSGS) 
+    crl [Dec] : {CONT4} < (ID1[secretKey(ID1,SK) ; KS1]peer(ID2) dI(ID1,SAM1) cI(ID1,C) CONT1) PS >net(MSGS) 
                 =>
-                {CONT4} < (ID1[secretKey(ID1,SK) ; sharedKey(ID2,K1) ; KS1]dI(ID1,SAM1) CONT1) PS >net(MSGS)
+                {CONT4} < (ID1[sharedKey(ID2,K1) ; KS1]peer(none) CONT1) PS >net(MSGS)
                 if  ID1 =/= ID2 /\
+                    ID2 =/= none /\
                     U' := Decompress(first(C),du) /\
                     V' := Decompress(second(C),dv) /\
-                    K1 := Compress(V' v- tpV(SK) dot U',1) .
+                    K1 := Compress(V' v- tpV(SK) dot U', 1) .
 
     --- Intruder behaviour
-    crl [Intercept1] :  {CONT4} < (Eve[publicKey(Eve,PK') ; KS1]CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) 
+    crl [Intercept1] :  {CONT4} < (Eve[publicKey(Eve,PK') ; KS1]peer(none) CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) 
                         => 
-                        {CONT4} < (Eve[publicKey(Eve,PK') ; publicKey(ID1,PK) ; KS1]CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK'}) 
+                        {CONT4} < (Eve[publicKey(ID1,PK) ; KS1]peer(ID1) CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK'}) 
                         if  ID1 =/= Eve /\
                             ID2 =/= Eve /\ 
                             ID1 =/= ID2 /\
                             PK =/= PK' /\
                             (publicKey(ID1,PK)) in KS1 == false .
 
-    crl [Intercept2] :  {CONT4} < (Eve[KS1]cI(Eve,C') CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC]C}) 
+    crl [Intercept2] :  {CONT4} < (Eve[KS1]peer(ID2) cI(ID2,C') CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC]C}) 
                         => 
-                        {CONT4} < (Eve[KS1]cI(Eve,C') cI(ID1,C) CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC]C'})
+                        {CONT4} < (Eve[KS1]peer(ID1) cI(Eve,C) CONT1) PS >net(MSGS msg{(ID1,ID2)[sentC]C'})
                         if  ID1 =/= Eve /\
                             ID2 =/= Eve /\
                             ID1 =/= ID2 /\
