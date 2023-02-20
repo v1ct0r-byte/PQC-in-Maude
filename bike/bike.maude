@@ -273,7 +273,7 @@ mod BIKE is
 
     crl [KeyGen] :  {sigmas(SAM1 CONT1) hs(SAM2 CONT2) CONT3} < (ID1[emptyK]peer(none)) PS >net(MSGS) 
                     => 
-                    {sigmas(CONT1) hs(CONT2) CONT3} < (ID1[publicKey(ID1, PK)]sigmaI(ID1,SAM1) hI(ID1, SAM2) peer(none)) PS >net(MSGS) 
+                    {sigmas(CONT1) hs(CONT2) CONT3} < (ID1[publicKey(ID1, PK)]peer(none) sigmaI(ID1,SAM1) hI(ID1, SAM2)) PS >net(MSGS) 
                     if PK := (second(SAM2) p* inv(first(SAM2))) .
 
     --- The public key is sent
@@ -290,9 +290,8 @@ mod BIKE is
     --- The public key is consumed to generate a shared key
     crl [Enc] : {ms(SAM1 CONT1) CONT3} < (ID2[publicKey(ID1, PK) ; KS2]peer(ID1) CONT2) PS >net(MSGS)
                 =>
-                {ms(CONT1) CONT3} < (ID2[sharedKey(ID1, SK) ; KS2]mI(ID2, SAM1) cI(ID1, Cs) peer(ID1) CONT2) PS >net(MSGS)
+                {ms(CONT1) CONT3} < (ID2[sharedKey(ID1, SK) ; KS2]peer(ID1) mI(ID2, SAM1) cI(ID1, Cs) CONT2) PS >net(MSGS)
                 if  ID1 =/= ID2 /\
-                    ID1 =/= none /\
                     Es := H(SAM1) /\
                     E0 := first(Es) /\
                     E1 := second(Es) /\
@@ -304,7 +303,6 @@ mod BIKE is
                         =>
                         {CONT3} < (ID2[KS2 ; sharedKey(ID1, SK)] peer(none) CONT2) PS >net(MSGS msg{(ID2, ID1)[sentC](Cs)}) 
                         if  ID1 =/= ID2 /\
-                            ID1 =/= none /\
                             (msg{(ID2, ID1)[sentC](Cs)}) in MSGS == false /\ 
                             (msg{(ID2, ID1)[receivedC](Cs)}) in MSGS == false .
     
@@ -330,7 +328,6 @@ mod BIKE is
                         {CONT3}< (Eve[publicKey(ID1,PK) ; KS1]peer(ID1) CONT1) PS >net(MSGS msg{(ID1,ID2)[sentPK](PK')}) 
                         if  ID1 =/= Eve /\
                             ID2 =/= Eve /\
-                            ID2 =/= none /\
                             ID1 =/= ID2 /\
                             PK =/= PK' /\
                             (publicKey(ID1,PK)) in KS1 == false .
