@@ -12,10 +12,15 @@ fmod DATA-TYPES is
     subsort Polynomial < Data .
 
     --- Operator addition of polynomials
-    op _p+_ : Polynomial Polynomial -> Polynomial [assoc comm prec 33] .
+    op _p+_ : Polynomial Polynomial -> Polynomial [id: 0 assoc comm prec 33] .
 
     --- --- Operator multiplication of polynomials
-    op _p*_ : Polynomial Polynomial -> Polynomial [assoc comm prec 31] .
+    op _p*_ : Polynomial Polynomial -> Polynomial [id: 1 assoc comm prec 31] .
+
+    vars P0 P1 P2 : Polynomial .
+
+    --- Distrivutive property of polynomial product over polynomial addition
+    eq (P0 p+ P1) p* P2 = (P0 p* P2) p+ (P1 p* P2) .
 
     --- Pair
     sort Pair .
@@ -36,6 +41,8 @@ fmod DATA-TYPES is
 
     --- Inverse operation over polynomials
     op inv : Polynomial -> Polynomial .
+
+    eq P0 p* inv(P0) = 1 .
 endfm
 
 --- Module to specify all the hash functions that are used in the steps of BIKE KEM
@@ -113,6 +120,7 @@ fmod BIKE-CPAPKE-DEC is
 
     --- We only consider the perfect case where the obtained errors are the originals
     eq decoder((P0 p+ P1 p* P2 p* inv(P3)) p* P3, P3, P2) = [P0, P1] .
+    eq decoder(P0 p* P1 p+ P2 p* P3, P1, P3) = [P0,P2] .
 endfm
 
 --- Specification of the system upon BIKE will work
