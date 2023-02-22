@@ -80,19 +80,13 @@ fmod ENCRYPTION is
     eq DECODE(ENCODE(E,T1),T2) = E .
 endfm
 
---- Module to represent the data and operations handled during KEYGEN
-fmod CM-CPAPKE-KEYGEN is
+--- Module to represent the data and operations handled during-KEYGEN
+fmod CM-KEYGEN is
     protecting DATA-TYPES .
+    protecting LIST{Data} .
 
     --- Constant values representing the sigma obtained in step 1
     ops delta1 delta2 : -> Polynomial .
-endfm
-
---- Module to represent the data and operations handled during SEEDED-KEYGEN
-fmod CM-CPAPKE-SEEDED-KEYGEN is
-    protecting DATA-TYPES .
-    protecting LIST{Data} .
-    protecting CM-CPAPKE-KEYGEN .
 
     --- Pseudorandom bit generator G
     op G : Polynomial -> Polynomial [ctor] .
@@ -156,9 +150,9 @@ endfm
 
 --- Module to represent the operations and data handled during ENC
 --- The module has to be system type to be able to have rules to represent indeterminism with the FIXEDWEIGHT algorithm
-fmod CM-CPAPKE-ENC is
+fmod CM-ENC is
     protecting DATA-TYPES .
-    protecting CM-CPAPKE-SEEDED-KEYGEN .
+    protecting CM-KEYGEN .
     protecting CM-HASH-OPERATIONS .
     protecting ENCRYPTION .
 
@@ -175,9 +169,9 @@ endfm
 --- Module to represent the operations and data handled during DEC
 --- Its main purpouse is to demonstrate that the computed key is
 --- the one that was computed in the other side using PK and C
-fmod CM-CPAPKE-DEC is
+fmod CM-DEC is
     protecting DATA-TYPES .
-    protecting CM-CPAPKE-ENC .
+    protecting CM-ENC .
     protecting CM-HASH-OPERATIONS .
 
     ops k k' : -> Polynomial [ctor] .
@@ -303,9 +297,9 @@ mod CM is
     protecting DATA-TYPES-EXT .
     protecting CM-HASH-OPERATIONS .
     protecting ENCRYPTION .
-    protecting CM-CPAPKE-SEEDED-KEYGEN .
-    protecting CM-CPAPKE-ENC .
-    protecting CM-CPAPKE-DEC .
+    protecting CM-KEYGEN .
+    protecting CM-ENC .
+    protecting CM-DEC .
     protecting MODEL-CONFIGURATION .
 
     --- Group of polynomials delta that can be sampled

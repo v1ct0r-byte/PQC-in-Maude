@@ -80,7 +80,7 @@ fmod ENCRYPTION is
 endfm
 
 --- Module to represent the data and operations handled during KEYGEN
-fmod BIKE-CPAPKE-KEYGEN is
+fmod BIKE-KEYGEN is
     protecting DATA-TYPES .
 
     --- Constant value representing the h_i sampled from the private key space H_w
@@ -91,7 +91,7 @@ fmod BIKE-CPAPKE-KEYGEN is
 endfm
 
 --- Module to represent the operations and data handled during ENC
-fmod BIKE-CPAPKE-ENC is
+fmod BIKE-ENC is
     protecting DATA-TYPES .
     protecting BIKE-HASH-OPERATIONS .
     protecting ENCRYPTION .
@@ -119,7 +119,7 @@ endfm
 --- Module to represent the operations and data handled during DEC
 --- Its main purpouse is to demonstrate that the computed key is
 --- the one that was computed in the other side using PK and C
-fmod BIKE-CPAPKE-DEC is
+fmod BIKE-DEC is
     protecting DATA-TYPES .
 
     --- Operator to represent the decoder used (Black-Gray-Flip)
@@ -243,9 +243,9 @@ mod BIKE is
     protecting DATA-TYPES .
     protecting BIKE-HASH-OPERATIONS .
     protecting ENCRYPTION .
-    protecting BIKE-CPAPKE-KEYGEN .
-    protecting BIKE-CPAPKE-ENC .
-    protecting BIKE-CPAPKE-DEC .
+    protecting BIKE-KEYGEN .
+    protecting BIKE-ENC .
+    protecting BIKE-DEC .
     protecting MODEL-CONFIGURATION .
 
     --- Group of polynomials sigma that can be sampled

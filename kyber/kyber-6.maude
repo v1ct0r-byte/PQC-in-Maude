@@ -76,7 +76,7 @@ fmod DATA-TYPES is
     op second : Pair -> Data .
     eq second([D1,D2]) = D2 .
 
-    --- du and dv are integer parameters of CPAPKE in ENC and DEC
+    --- du and dv are integer parameters of ENC and DEC
     ops du dv : -> NzNat .
 
     --- Rho and Sigma
@@ -132,7 +132,7 @@ fmod ENCRYPTION is
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN
-fmod KYBER-CPAPKE-KEYGEN is
+fmod KYBER-KEYGEN is
     protecting DATA-TYPES .
 
     --- Public Square matrix A
@@ -162,7 +162,7 @@ fmod KYBER-CPAPKE-KEYGEN is
 endfm
 
 --- Module to represent the operations and data handled during ENC
-fmod KYBER-CPAPKE-ENC is
+fmod KYBER-ENC is
     protecting DATA-TYPES .
     protecting ENCRYPTION .
 
@@ -196,7 +196,7 @@ endfm
 --- Module to represent the operations and data handled during DEC
 --- Its main purpouse is to demonstrate that the computed key is
 --- the one that originated c in Bob side using PK
-fmod KYBER-CPAPKE-DEC is
+fmod KYBER-DEC is
     protecting DATA-TYPES .
     
 endfm
@@ -311,9 +311,9 @@ mod KYBER is
     protecting DATA-TYPES .
     protecting KYBER-HASH-OPERATIONS .
     protecting ENCRYPTION .
-    protecting KYBER-CPAPKE-KEYGEN .
-    protecting KYBER-CPAPKE-ENC .
-    protecting KYBER-CPAPKE-DEC .
+    protecting KYBER-KEYGEN .
+    protecting KYBER-ENC .
+    protecting KYBER-DEC .
     protecting MODEL-CONFIGURATION .
 
     subsorts Vector Matrix < Content .
