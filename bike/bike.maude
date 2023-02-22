@@ -358,5 +358,3 @@ mod BIKE is
                             Cs =/= Cs' /\
                             (cI(ID1,Cs)) in CONT1 == false .
 endm
-
-red (e0 p+ (e1 p* (h1 p* inv(h0)))) p* h0 .
