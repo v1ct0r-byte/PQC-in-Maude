@@ -3,23 +3,32 @@
 
 --- Module specifying basic datatypes and its operations used in BIKE
 fmod DATA-TYPES is
+    protecting NAT .
+
     --- Supersort of all data
     sort Data . 
     --- Definition of type polynomial for our data
-    sort Polynomial .
+    --- Definition of type polynomial without identity element to avoid collision problem
+    sorts Polynomial .
 
-    --- We specify that polynomials are data
-    subsort Polynomial < Data .
+    --- Specify that polynomials are data
+    subsorts Polynomial < Data .
 
-    --- Operator addition of polynomials
-    op _p+_ : Polynomial Polynomial -> Polynomial [id: 0 assoc comm prec 33] .
-
-    --- --- Operator multiplication of polynomials
-    op _p*_ : Polynomial Polynomial -> Polynomial [id: 1 assoc comm prec 31] .
+    subsort Nat < Polynomial .
 
     vars P0 P1 P2 : Polynomial .
 
-    --- Distrivutive property of polynomial product over polynomial addition
+    --- Operator addition of polynomials
+    op _p+_ : Polynomial Polynomial -> Polynomial [assoc comm prec 33] .
+    --- Identity axiom as an equation to avoid colapsing
+    eq 0 p+ P0 = P0 .
+
+    --- Operator multiplication of polynomials
+    op _p*_ : Polynomial Polynomial -> Polynomial [assoc comm prec 31] .
+    --- Identity axiom as an equation to avoid colapsing
+    eq 1 p* P0 = P0 .
+
+    --- Distributive property of polynomial product over polynomial addition
     eq (P0 p+ P1) p* P2 = (P0 p* P2) p+ (P1 p* P2) .
 
     --- Pair
@@ -349,3 +358,5 @@ mod BIKE is
                             Cs =/= Cs' /\
                             (cI(ID1,Cs)) in CONT1 == false .
 endm
+
+red (e0 p+ (e1 p* (h1 p* inv(h0)))) p* h0 .
