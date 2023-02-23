@@ -173,8 +173,6 @@ fmod KYBER-ENC is
 endfm
 
 --- Module to represent the operations and data handled during DEC
---- Its main purpouse is to demonstrate that the computed key is
---- the one that originated c in Bob side using PK
 fmod KYBER-DEC is
     protecting DATA-TYPES .
     
