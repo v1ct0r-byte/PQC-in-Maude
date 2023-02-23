@@ -67,19 +67,6 @@ fmod CM-HASH-OPERATIONS is
     op H : Nat Polynomial Polynomial -> Polynomial [ctor] .
 endfm
 
---- Module to specifiy basic operations on data
-fmod ENCRYPTION is
-    protecting DATA-TYPES .
-    protecting NAT .
-
-    --- ENCODE & DECODE operations
-    ops ENCODE DECODE : Polynomial Polynomial -> Polynomial .
-    
-    --- Property of interest
-    vars E T1 T2 : Polynomial .
-    eq DECODE(ENCODE(E,T1),T2) = E .
-endfm
-
 --- Module to represent the data and operations handled during-KEYGEN
 fmod CM-KEYGEN is
     protecting DATA-TYPES .
@@ -153,8 +140,6 @@ endfm
 fmod CM-ENC is
     protecting DATA-TYPES .
     protecting CM-KEYGEN .
-    protecting CM-HASH-OPERATIONS .
-    protecting ENCRYPTION .
 
     --- In reality FIXEDWEIGHT does not have any parameters, but for the pourpose of modeling the diferent outcomes we
     --- differentiated both outputs depending on the public key used
@@ -176,10 +161,16 @@ fmod CM-DEC is
 
     ops k k' : -> Polynomial [ctor] .
 
-    var T : Polynomial .
+    var T T' : Polynomial .
 
     eq H(1, e, T) = k .
     eq H(1, e', T) = k' .
+
+    --- ENCODE & DECODE operations
+    ops ENCODE DECODE : Polynomial Polynomial -> Polynomial .
+    
+    --- Property of interest
+    eq DECODE(ENCODE(E,T),T') = E .
 endfm
 
 --- Specification of the system upon CM will work
@@ -296,7 +287,6 @@ mod CM is
     --- IMPORTS-------------------------------
     protecting DATA-TYPES-EXT .
     protecting CM-HASH-OPERATIONS .
-    protecting ENCRYPTION .
     protecting CM-KEYGEN .
     protecting CM-ENC .
     protecting CM-DEC .
