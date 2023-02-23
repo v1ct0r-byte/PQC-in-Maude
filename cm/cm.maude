@@ -161,7 +161,7 @@ fmod CM-DEC is
 
     ops k k' : -> Polynomial [ctor] .
 
-    var T T' : Polynomial .
+    var E T T' : Polynomial .
 
     eq H(1, e, T) = k .
     eq H(1, e', T) = k' .
