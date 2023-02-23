@@ -128,7 +128,6 @@ fmod BIKE-DEC is
     vars P0 P1 P2 P3 : Polynomial .
 
     --- We only consider the perfect case where the obtained errors are the originals
-    ---eq decoder((P0 p+ P1 p* P2 p* inv(P3)) p* P3, P3, P2) = [P0, P1] .
     eq decoder((P0 p* P1) p+ (P2 p* P3), P1, P3) = [P0,P2] .
 endfm
 
