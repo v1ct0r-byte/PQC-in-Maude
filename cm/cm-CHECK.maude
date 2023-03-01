@@ -9,7 +9,7 @@ mod CM-CHECK is
     ops initial1 initial2 : -> GlobalState .
 
     *** 3 participants and the necesary samples for 1 key exchange
-    eq initial1 = {deltas(delta1)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq initial1 = {deltas(delta1)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
     *** 3 participants and the necesary samples for 2 key exchanges
-    eq initial2 = {deltas(delta1 delta2)} < (Alice[emptyK]emptyC) (Eve[emptyK]emptyC) (Bob[emptyK]emptyC) >net(emptyM) .
+    eq initial2 = {deltas(delta1 delta2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 endm
