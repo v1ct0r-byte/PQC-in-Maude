@@ -27,10 +27,10 @@ COMMANDS
     red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
     red modelCheck(initial2, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
 
-    --- LIVENESS
-    red modelCheck(initial1, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
-    red modelCheck(initial2, []<> (wantsToShareKey(Alice,Bob) -> (<> sharedAKeyWith(Alice,Bob)))) .
-
+    --- KEY SHARING
+    red modelCheck(initial1, [](wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
+    red modelCheck(initial2, [](wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
+    
     --- SECRECY
     red modelCheck(initial1, ([] ~(stolenSharedKey(Alice,Eve)))) .
     red modelCheck(initial2, ([] ~(stolenSharedKey(Alice,Eve)))) .
