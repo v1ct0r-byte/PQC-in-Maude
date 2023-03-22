@@ -1,0 +1,25 @@
+mod NSPK is
+   sort Key .
+   sorts PubKey SecKey .
+
+   subsort PubKey < Key .
+   subsort SecKey < Key .
+
+   sort Identifier .
+   ops A B S : -> Identifier .
+
+   sort Content .
+   sort Nonce .
+   subsort Key < Content .
+   subsort Nonce < Content .
+
+   sort Participant .
+   op <_:_> : Identifier Content -> .
+
+   sorts Message Messages .
+   subsort Message < Messages .
+   op msg(_>_,_) : Identifier Identifier Key -> Message .
+
+   sort GlobalState .
+   op <_|_> : Participant Messages -> GlobalState .
+endm
