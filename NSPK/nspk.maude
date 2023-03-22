@@ -13,8 +13,19 @@ mod NSPK is
    subsort Key < Content .
    subsort Nonce < Content .
 
-   sort Participant .
-   op <_:_> : Identifier Content -> .
+   ---definition of nonces
+   op Na Nb : -> Nonce .
+
+   ---Definition of public keys for Alice, Bob and Server
+   op Kpa Kpb Kps : -> PubKey .
+   ---Definition of secret keys for Alice, Bob and Server
+   op Ksa Ksb Kss : -> SecKey .
+
+   sorts Participant Participants .
+   subsort Participant < Participants .
+
+   op <_:_> : Identifier Content -> Participant .
+   op __ : Participants Participants -> Participants . 
 
    sorts Message Messages .
    subsort Message < Messages .
@@ -22,4 +33,7 @@ mod NSPK is
 
    sort GlobalState .
    op <_|_> : Participant Messages -> GlobalState .
+
+   op init : -> GlobalState .
+   eq init = <<>  > .
 endm
