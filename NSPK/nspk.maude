@@ -6,34 +6,84 @@ mod NSPK is
    subsort SecKey < Key .
 
    sort Identifier .
-   ops A B S : -> Identifier .
+   ops A B S : -> Identifier [ctor] .
 
    sort Content .
    sort Nonce .
+   subsort Identifier < Content .
    subsort Key < Content .
    subsort Nonce < Content .
 
-   ---definition of nonces
-   op Na Nb : -> Nonce .
+   op empty : -> Content [ctor] .
+   op _,_ : Content Content -> Content [assoc comm id: empty].
+
+   vars C CS : Content .
+
+   op _in_ : Content Content -> Bool .
+   eq C in (C,CS) = true .
+   eq C in CS = false [owise] .
+
+   ---Definition of nonces for Alice and Bob
+   ops Na Nb : -> Nonce [ctor] .
 
    ---Definition of public keys for Alice, Bob and Server
-   op Kpa Kpb Kps : -> PubKey .
+   ops Kpa Kpb Kps : -> PubKey [ctor] .
    ---Definition of secret keys for Alice, Bob and Server
-   op Ksa Ksb Kss : -> SecKey .
+   ops Ksa Ksb Kss : -> SecKey [ctor] .
+
+   --- Operation to represent encryption
+   op {_}_ : Content PubKey -> Content .
+   --- Operation to represent signature
+   op {_}_ : Content SecKey -> Content .
 
    sorts Participant Participants .
    subsort Participant < Participants .
-
-   op <_:_> : Identifier Content -> Participant .
-   op __ : Participants Participants -> Participants . 
+   op p[_](_) : Identifier Content -> Participant [ctor] .
+   op empty : -> Participant .
+   op __ : Participant Participant -> Participants [assoc comm id: empty] . 
 
    sorts Message Messages .
    subsort Message < Messages .
-   op msg(_>_,_) : Identifier Identifier Key -> Message .
+   op msg(_->_,_) : Identifier Identifier Key -> Message [ctor] .
+   op none : -> Messages [ctor] .
+   op __ : Message Message -> Messages [id: none] .
 
    sort GlobalState .
-   op <_|_> : Participant Messages -> GlobalState .
+   op _|_ : Participants Messages -> GlobalState .
 
    op init : -> GlobalState .
-   eq init = <<>  > .
+   eq init = p[A](Na,Kpb,Kpa,Ksa) p[B](Nb,Kpa,Kpb,Ksb) | none .
+
+   var PS : Participants .
+   vars CSA CSB CSS : Content .
+   var N : Nonce .
+   var I : Identifier .
+
+   crl [1s] :  p[A](Kpb,Na,CSA) p[B](CSB) PS | none 
+               =>
+               p[A](Kpb,Na,CSA) p[B](CSB) PS | msg(A -> B, {A,Na}Kpb) 
+               if not Na in CSB .
+
+   rl [1r] :   p[B](Ksb,CSB) PS | msg(I -> B, {I,N}Kpb)
+               =>
+               p[B](N,Ksb,CSB) PS | none .
+
+   crl [2s] :  p[B](Na,Nb,Kpa,CSB) p[A](CSA) PS | none
+               =>
+               p[B](Na,Nb,CSB) p[A](CSA) PS | msg(B -> A, {Na,Nb}Kpa)
+               if not Nb in CSA .
+
+   rl [2r] :   p[A](Ksa,N,CSA) PS | msg(B -> A, {N,C}Kpa)
+               =>
+               p[A](C,N,CSA) PS | none .
+   
+   rl [3s] :   p[A](Nb,Kpb,CSA) PS | none 
+               =>
+               p[A](Nb,CSA) PS | msg(A -> B, {Nb}Kpb) .
+
+   rl [3r] :   p[B](N,Ksb,CSB) PS | msg(A -> B, {N}Kpb) 
+               =>
+               p[B](N,CSB) PS | none .
 endm
+
+search init =>! p[A](Na,Nb,CSA) p[B](Na,Nb,CSB) | M:Messages .
