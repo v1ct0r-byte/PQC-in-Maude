@@ -6,7 +6,7 @@ mod NSPK is
    subsort SecKey < Key .
 
    sort Identifier .
-   ops A B S : -> Identifier [ctor] .
+   ops A B E : -> Identifier [ctor] .
 
    sort Content .
    sort Nonce .
@@ -27,9 +27,14 @@ mod NSPK is
    ops Na Nb : -> Nonce [ctor] .
 
    ---Definition of public keys for Alice, Bob and Server
-   ops Kpa Kpb Kps : -> PubKey [ctor] .
+   ops Kpa Kpb Kpe : -> PubKey [ctor] .
    ---Definition of secret keys for Alice, Bob and Server
-   ops Ksa Ksb Kss : -> SecKey [ctor] .
+   ops Ksa Ksb Kse : -> SecKey [ctor] .
+
+   --- Operators to relate a public key with a participant's identifier
+   op pk : Identifier PubKey -> PubKey .
+   --- Operators to relate a secret key with a participant's identifier
+   op sk : Identifier SecKey -> SecKey .
 
    --- Operation to represent encryption
    op {_}_ : Content PubKey -> Content .
@@ -52,38 +57,65 @@ mod NSPK is
    op _|_ : Participants Messages -> GlobalState .
 
    op init : -> GlobalState .
-   eq init = p[A](Na,Kpb,Kpa,Ksa) p[B](Nb,Kpa,Kpb,Ksb) | none .
+   eq init =   p[A](Na,pk(B,Kpb),pk(E,Kpe),pk(A,Kpa),sk(A,Ksa)) 
+               p[B](Nb,pk(A,Kpa),pk(E,Kpe),pk(B,Kpb),sk(B,Ksb)) 
+               p[E](pk(A,Kpa),pk(B,Kpb),pk(E,Kpe),sk(E,Kse)) | none .
 
    var PS : Participants .
-   vars CSA CSB CSS : Content .
+   vars CSA CSB CSE : Content .
+   vars PK PK' : PubKey .
+   var SK : SecKey .
    var N : Nonce .
-   var I : Identifier .
+   vars I : Identifier .
 
-   crl [1s] :  p[A](Kpb,Na,CSA) p[B](CSB) PS | none 
+   crl [1s] :  p[A](pk(I,PK),Na,CSA) p[I](CSB) PS | none 
                =>
-               p[A](Kpb,Na,CSA) p[B](CSB) PS | msg(A -> B, {A,Na}Kpb) 
+               p[A](pk(I,PK),Na,CSA) p[I](CSB) PS | msg(A -> I, {Na,A}PK) 
                if not Na in CSB .
 
-   rl [1r] :   p[B](Ksb,CSB) PS | msg(I -> B, {I,N}Kpb)
+   rl [1r] :   p[B](sk(B,SK),pk(B,PK),CSB) PS | msg(I -> B, {N,I}PK)
                =>
-               p[B](N,Ksb,CSB) PS | none .
+               p[B](N,sk(B,SK),pk(B,PK),CSB) PS | none .
 
-   crl [2s] :  p[B](Na,Nb,Kpa,CSB) p[A](CSA) PS | none
+   crl [2s] :  p[B](Na,Nb,pk(A,PK),CSB) p[A](CSA) PS | none
                =>
-               p[B](Na,Nb,CSB) p[A](CSA) PS | msg(B -> A, {Na,Nb}Kpa)
+               p[B](Na,Nb,CSB) p[A](CSA) PS | msg(B -> A, {Na,Nb}PK)
                if not Nb in CSA .
 
-   rl [2r] :   p[A](Ksa,N,CSA) PS | msg(B -> A, {N,C}Kpa)
+   rl [2r] :   p[A](sk(A,SK),pk(A,PK),N,CSA) PS | msg(B -> A, {N,C}PK)
                =>
                p[A](C,N,CSA) PS | none .
    
-   rl [3s] :   p[A](Nb,Kpb,CSA) PS | none 
+   rl [3s] :   p[A](Nb,pk(B,PK),CSA) PS | none 
                =>
-               p[A](Nb,CSA) PS | msg(A -> B, {Nb}Kpb) .
+               p[A](Nb,CSA) PS | msg(A -> B, {Nb}PK) .
 
-   rl [3r] :   p[B](N,Ksb,CSB) PS | msg(A -> B, {N}Kpb) 
+   rl [3r] :   p[B](N,pk(B,PK),sk(B,SK),CSB) PS | msg(A -> B, {N}PK) 
                =>
                p[B](N,CSB) PS | none .
+
+   rl [E1] :   p[E](pk(E,PK),pk(B,PK'),sk(E,SK),CSE) PS | msg(A -> E, {N,A}PK)
+               =>
+               p[E](N,pk(E,PK),pk(B,PK'),sk(E,SK),CSE) PS | msg(A -> B, {N,A}PK') .
+   
+   rl [E2] :   p[E](CSE) PS | msg(B -> A, C)
+               =>
+               p[E](CSE) PS | msg(E -> A, C) .
+
+   rl [E3] :   p[A](pk(A,PK),sk(A,SK),N,CSA) PS | msg(E -> A, {N,C}PK)
+               =>
+               p[A](C,N,CSA) PS | none .
+
+   rl [E4] :   p[A](Nb,pk(E,PK),CSA) PS | none
+               =>
+               p[A](CSA) PS | msg(A -> E, {Nb}PK).
+
+   rl [E5] :   p[E](pk(E,PK),pk(B,PK'),sk(E,SK),CSE) PS | msg(A -> E, {N}PK)
+               =>
+               p[E](N,CSE) PS | msg(A -> B, {N}PK') .
 endm
 
-search init =>! p[A](Na,Nb,CSA) p[B](Na,Nb,CSB) | M:Messages .
+---Agreement search
+search init =>* p[A](Na,Nb,CSA) p[B](Na,Nb,CSB) PS | M:Messages .
+--- MITM search
+search init =>* p[E](Nb,CSE) PS | M:Messages .
