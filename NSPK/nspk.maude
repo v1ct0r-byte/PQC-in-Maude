@@ -115,7 +115,7 @@ mod NSPK is
                p[E](N,CSE) PS | msg(A -> B, {N}PK') .
 endm
 
----Agreement search
+--- Agreement search
 search init =>* p[A](Na,Nb,CSA) p[B](Na,Nb,CSB) PS | M:Messages .
 --- MITM search
 search init =>* p[E](Nb,CSE) PS | M:Messages .
