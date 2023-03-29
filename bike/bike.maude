@@ -61,7 +61,13 @@ fmod BIKE-HASH-OPERATIONS is
     --- H recieves a random polynomial and returns a hash of it (which is a pair of polynomials)
     op H : Polynomial -> Pair [ctor] .
     op K : Polynomial Pair -> Polynomial [ctor] .
-    op L : Pair -> Polynomial [ctor] .
+    op L : Polynomial -> Polynomial [ctor] .
+
+    vars P0 P1 : Polynomial .
+
+    --- Possible relation on how the concatenation for the computation of L is done
+    --- This possibility considers the case when the concatenation is doen throug addition
+    eq L([P0,P1]) = L(P0 p+ P1) .
 endfm
 
 --- Module to represent the data and operations handled during KEYGEN
@@ -349,4 +355,15 @@ mod BIKE is
                             ID1 =/= ID2 /\
                             Cs =/= Cs' /\
                             (cI(ID1,Cs)) in CONT1 == false .
+
+    crl [Step1-IdentityAttack] :    {CONT3}< (Eve[KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[sentPK](PK)})
+                                    =>
+                                    {CONT3}< (Eve[publicKey(Alice,PK) ; KS1]CONT1) PS >net(MSGS msg{(Alice,Bob)[sentPK](1)})
+                                    if PK =/= 1 .
+
+    crl [Step2-IdentityAttack] :    {CONT3}< (Eve[KS1]CONT1) PS >net(MSGS msg{(Bob,Alice)[sentC](Cs)})
+                                    =>
+                                    {CONT3}< (Eve[sharedKey(Bob, SK) ; KS1]CONT1) PS >net(MSGS msg{(Bob,Alice)[receivedC](Cs)}) 
+                                    if  M := (second(Cs)) xorD L(first(Cs)) /\
+                                        SK := K(M,Cs) .
 endm
