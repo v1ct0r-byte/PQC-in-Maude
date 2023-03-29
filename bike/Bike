@@ -4,14 +4,6 @@ This document is a collection of explanations and instructions on the proposed s
 Author: Víctor García Valero <vicgarv2@upv.es>
 
 ------------------------------------------------------------------------------------------------------------------------
-ACRONIMS
-
-MDPC codes: Moderate Density Parity Check codes 
-
----NOTATIONS
-Línea 20 debería ser eq P1 p+ neg(P1) = 0 .
-
-------------------------------------------------------------------------------------------------------------------------
 COMMANDS
 
     Loading modules:
