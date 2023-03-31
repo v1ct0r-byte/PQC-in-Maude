@@ -17,27 +17,26 @@ mod CM-PREDS is
     op stolenSharedKey : Identifier Identifier -> Prop .
 
     *** Variables for the equations
-    vars ID1 ID2 : Identifier .
+    vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
     var MSGS : Msgs .
-    vars K1 SK : SKey .
-    var PK : PKey .
-    vars KS1 KS2 : Keys .
-    vars CONT1 CONT2 CONT3 : Content .
+    var K : Key .
+    vars KS1 KS2 KS3 : Keys .
+    vars CONT1 CONT2 CONT3 CONT4 : Content .
     var GS : GlobalState .
     var P : Prop .
 
     *** Equations for the state's predicates
 
     *** Equations indicating two actors want to share a key
-    eq {CONT3} < (ID1[publicKey(ID1,PK) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]PK}) |= wantsToShareKey(ID1,ID2) = true .
+    eq {CONT3} < (ID1[publicKey(ID1,K) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]K}) |= wantsToShareKey(ID1,ID2) = true .
 
     *** Equations indicating two actors share a key
-    eq {CONT3} < (ID1[sharedKey(ID2,PK) ; KS1]CONT1) (ID2[sharedKey(ID1,PK) ; KS2]CONT2) PS >net(MSGS) |= sharedAKeyWith(ID1,ID2) = true .
+    eq {CONT3} < (ID1[sharedKey(ID2,K) ; KS1]CONT1) (ID2[sharedKey(ID1,K) ; KS2]CONT2) PS >net(MSGS) |= sharedAKeyWith(ID1,ID2) = true .
 
-    *** Equations indicating an actor learned the secret key from another one
-    eq {CONT3} < (ID1[secretKey(ID1,SK) ; KS1]CONT1) (ID2[secretKey(ID1,SK) ; KS2]CONT2) PS >net(MSGS) |= stolenSharedKey(ID1,ID2) = true .
-
+    *** Equation indicating an actor learned the shared key from another one (notice that ID3 does not need to have that shared key)
+    eq {CONT4} < (ID1[sharedKey(ID3,K) ; KS1]CONT1) (ID2[sharedKey(ID1,K) ; KS2]CONT2) (ID3[KS3]CONT3) >net(MSGS) |= stolenSharedKey(ID1,ID2) = true .
+    
     *** Equation to include any other cases as false
     eq GS |= P = false [owise] .
 endm
