@@ -86,13 +86,13 @@ mod NSPK is
                =>
                p[A](C,N,CSA) PS | none .
    
-   rl [3s] :   p[A](Nb,pk(B,PK),CSA) PS | none 
+   rl [3s] :   p[A](Na,Nb,pk(B,PK),CSA) PS | none 
                =>
-               p[A](Nb,CSA) PS | msg(A -> B, {Nb}PK) .
+               p[A](Na,Nb) PS | msg(A -> B, {Nb}PK) .
 
-   rl [3r] :   p[B](N,pk(B,PK),sk(B,SK),CSB) PS | msg(A -> B, {N}PK) 
+   rl [3r] :   p[B](N,Na,pk(B,PK),sk(B,SK),CSB) PS | msg(A -> B, {N}PK) 
                =>
-               p[B](N,CSB) PS | none .
+               p[B](N,Na) PS | none .
 
    rl [E1] :   p[E](pk(E,PK),pk(B,PK'),sk(E,SK),CSE) PS | msg(A -> E, {N,A}PK)
                =>
@@ -116,6 +116,6 @@ mod NSPK is
 endm
 
 --- Agreement search
-search init =>* p[A](Na,Nb,CSA) p[B](Na,Nb,CSB) PS | M:Messages .
+search init =>* p[A](Na,Nb) p[B](Na,Nb) PS | M:Messages .
 --- MITM search
-search init =>* p[E](Nb,CSE) PS | M:Messages .
+search init =>* p[E](Na,Nb,CSE) PS | M:Messages .
