@@ -12,13 +12,6 @@ fmod KYBER-HASH-OPERATIONS is
 
 endfm
 
---- Module to specifiy basic operations on data
-fmod ENCRYPTION is
-    protecting DATA-TYPES .
-
-    --- Maybe some property of interest might belong here
-endfm
-
 --- Module to represent the operations and data handled during KEYGEN step
 fmod KYBER-CPAPKE-KEYGEN is
     protecting DATA-TYPES .
@@ -38,18 +31,12 @@ fmod KYBER-CPAPKE-DEC is
 
 endfm
 
---- KEM behaviour
-mod PROTOCOL is
-    --- IMPORTS -------------------------------
-    ---protecting DATA-TYPES .
-    protecting KYBER-HASH-OPERATIONS .
-    protecting ENCRYPTION .
-    protecting KYBER-CPAPKE-KEYGEN .
-    protecting KYBER-CPAPKE-ENC .
+--- Module to set the foundations of our symbolic model
+fmod MODEL-CONFIGURATION is
+    protecting DATA-TYPES .
 
-    --- SORTS ---------------------------------
-    
-    sorts Identifier Principal Content Principals . 
+    --- SORTS---------------------------------
+    sorts Identifier Content Principal Principals . 
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
     subsort Principal < Principals .
@@ -61,18 +48,27 @@ mod PROTOCOL is
     sorts PKey SKey .
 
     ---We define keys as a type of content
-    subsorts Vector < PKey SKey < Key < Content .
+    subsorts Polynomial < PKey SKey < Key < Content .
 
     --- We also declare that a pair is content
     subsort Pair < Content .
 
+    --- Sort for the State of our system
     sort GlobalState .
-    
-    --- OPERATORS ----------------------------
+
+    --- OPERATORS----------------------------
     --- Empty group of keys
     op emptyK : -> Keys .
     --- Group of keys
-    op _;_ : Keys Keys -> Keys [assoc id: emptyK comm] .
+    op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
+
+    var K : Key .
+    vars KS1 KS2 : Keys .
+
+    --- Operation to check the precence of a key in a participant
+    op _in_ : Key Keys -> Bool .
+    eq K in (KS1 ; K ; KS2) = true .
+    eq K in (KS1) = false [owise] .
 
     --- Operator to represent the relation of a public key and a principal
     op publicKey : Identifier Key -> PKey .
@@ -81,78 +77,83 @@ mod PROTOCOL is
     op secretKey : Identifier Key -> SKey .
 
     --- Operator to represent the shared key with a participant
-    op sharedKey : Identifier Key -> SKey .
+    op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
     --- Posible states for a message delivering PK
-    ops sentPK receivedPK interceptedPK : -> MsgState .
+    ops sentPK receivedPK : -> MsgState .
     --- Posible states for a message delivering C
-    ops sentC receivedC interceptedC : -> MsgState .
+    ops sentC receivedC : -> MsgState .
 
     --- Empty content
     op emptyC : -> Content .
     --- Group of contents
-    op __ : Content Content -> Content [assoc id: emptyC comm] .
+    op __ : Content Content -> Content [assoc comm id: emptyC] .
 
-    --- We declare a sort for all the lists of samples
-    ---sorts Sample Samples .
-    ---subsorts Vector < Sample < Samples .
+    vars C CONT1 CONT2 : Content .
 
-    op emptyS : -> Content .
-
-    --- Group of vectors d that can be sampled
-    op ds : Content -> Content .
-
-    --- Group of messages m that can be sampled
-    op ms : Content -> Content .
-
-    --- Group of coins r that can be sampled
-    op rs : Content -> Content .
-
-    --- Operator to assign a vector 'd' to a participant
-    op dI : Identifier Vector -> Content .
-
-    --- Operator to assign a message to a participant
-    op mI : Identifier Vector -> Content .
-
-    --- Operator to assign a random coin to a participant
-    op rI : Identifier Vector -> Content .
-
-    --- Operator to assign a Ciphered text to a participant
-    op cI : Identifier Vector -> Content .
+    --- Operation to check the contents of a participant
+    op _in_ : Content Content -> Bool .
+    eq C in (CONT1 C CONT2) = true .
+    eq C in (CONT1) = false [owise] .
 
     --- Structure of a message
     --- Sender, Receiver, State, Content
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
-    op emptyM : -> Msgs .
-    op __ : Msgs Msgs -> Msgs [assoc id: emptyM] .
 
-    --- Operation to check the network
+    --- Group of messsages
+    op emptyM : -> Msgs .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
+
     var M : Msg .
     vars MS1 MS2 : Msgs .
-
+    
+    --- Operation to check the network
     op _in_ : Msg Msgs -> Bool .
 
     eq M in (MS1 M MS2) = true .
     eq M in (MS1) = false [owise] .
 
-    ops Alice Eve Bob : ->  Identifier .
+    --- Defintion of our three main participants followiing the literature
+    ops Alice Eve Bob : ->  Identifier [ctor] .
+
+    --- Definition of the default participant
+    op none : -> Identifier [ctor] .
+
+    --- Operator to assign a Ciphered text to a participant
+    op cI : Identifier Pair -> Content .
+
+    --- Operator to mark the current participant to whom the key exchange is happening
+    op peer : Identifier -> Content .
+
     --- Definition of the components of a Principal
-    --- (idenifier that can be Alice, Bob or Eve [keys received or generated] content that the principal stores)
-    op _[_]_ : Identifier Keys Content -> Principal .
+    --- (idenifier [keys] content)
+    op _[_]_ : Identifier Keys Content -> Principal [ctor] .
 
     --- Group of principals
-    op __ : Principal Principal -> Principals [assoc comm] .
+    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
 
     --- Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState .
-    op True : -> GlobalState .
+    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+endfm
 
-    --- RULES -------------------------------------------------------------------------------------------------------------
+--- KEM behaviour
+mod PROTOCOL is
+    --- IMPORTS -------------------------------
+    protecting DATA-TYPES .
+    protecting BIKE-HASH-OPERATIONS .
+    protecting BIKE-KEYGEN .
+    protecting BIKE-ENC .
+    protecting BIKE-DEC .
+    protecting MODEL-CONFIGURATION .
+
+    --- Samples ------------------------------------------------
+
+    --- Initial states------------------------------------------
+
+    --- RULES --------------------------------------------------
     
+    --- Honest participant behaviour----------------------------
 
-    --- Intruder behaviour
-    
-
-    --- Initial states -------------------------------------------------------------------------------------------------------------
+    --- Intruder behaviour--------------------------------------
     
 endm
