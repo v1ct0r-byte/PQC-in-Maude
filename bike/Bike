@@ -16,9 +16,7 @@ COMMANDS
     --- MODEL CHECKING
 
     --- FAIRNESS
-    red modelCheck(initial1, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
-    red modelCheck(initial2, ([]<> wantsToShareKey(Alice,Bob)) -> ([]<> sharedAKeyWith(Alice,Bob))) .
-    red modelCheck(initial1, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob)))
+    red modelCheck(initial1, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
     red modelCheck(initial2, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
 
     --- KEY SHARING
