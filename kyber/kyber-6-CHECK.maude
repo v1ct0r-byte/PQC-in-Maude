@@ -6,10 +6,10 @@ mod KYBER-CHECK is
     including LTL-SIMPLIFIER .
 
     *** GlobalState declarations
-    ops initial1 initial2 : -> GlobalState .
+    ops init1 init2 : -> GlobalState .
 
     *** 3 participants and the necesary samples for 1 key exchange
-    eq initial1 = {ds(d1) ms(m1) rs(r1)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init1 = {ds(d1) ms(m1) rs(r1)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
     *** 3 participants and the necesary samples for 2 key exchanges
-    eq initial2 = {ds(d1 d2) ms(m1 m2) rs(r1 r2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init2 = {ds(d1 d2) ms(m1 m2) rs(r1 r2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 endm
