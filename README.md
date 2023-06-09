@@ -10,6 +10,8 @@ Please check the corresponding [publication](https://ceur-ws.org/Vol-3280/paper3
 
 ## Structure
 
+==WIP==
+
 The repository is divided in three main folders, one for each of the specified KEMs. Each folder stores two kinds of files: one txt file and three maude files. The txt file contains basic information and a series of commands to load the corresponding symbolic model, invariant analyisis and perform model checking. The maude files are the symbolic model and the required modules to carry on model checking.
 
 ## Reproduction of experiments 
@@ -26,7 +28,9 @@ In order to perform invariant analysis and model checking one has to:
     1. Invariant analysis with the `search` commands.
     2. Model checking with the `reduce` commands.
 
-## Results[WIP]
+## Results
+
+==WIP==
 
 The following table summarizes the results on each of the analysis.
 
