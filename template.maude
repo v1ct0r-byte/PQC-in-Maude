@@ -1,5 +1,5 @@
 --- Tempalte for the specification of protocols with post-quantum capabilities
---- Author: Víctor García Valero <vicgarv2@upv.es>
+--- Author: Víctor García Valero <vicgarval@upv.es>
 
 --- Module specifying basic datatypes and the operations
 fmod DATA-TYPES is

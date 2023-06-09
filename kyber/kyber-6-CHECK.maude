@@ -1,4 +1,4 @@
---- Author: Víctor García Valero <vicgarv2@upv.es>
+--- Author: Víctor García Valero <vicgarval@upv.es>
 
 mod KYBER-CHECK is
     protecting KYBER-PREDS .

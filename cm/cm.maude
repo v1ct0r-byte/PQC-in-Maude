@@ -1,5 +1,5 @@
 --- Specification of CM
---- Author: Víctor García Valero <vicgarv2@upv.es>
+--- Author: Víctor García Valero <vicgarval@upv.es>
 
 --- Module specifying basic datatypes and its operations used in CM
 fmod DATA-TYPES is

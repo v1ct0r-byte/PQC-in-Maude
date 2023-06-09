@@ -1,5 +1,5 @@
 --- Specification of BIKE
---- Author: Víctor García Valero <vicgarv2@upv.es>
+--- Author: Víctor García Valero <vicgarval@upv.es>
 
 --- Module specifying basic datatypes and its operations used in BIKE
 fmod DATA-TYPES is

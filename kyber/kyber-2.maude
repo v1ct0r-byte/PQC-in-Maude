@@ -1,5 +1,5 @@
 --- Specification of CRYSTALS-KYBER till step 3
---- Author: Víctor García Valero <vicgarv2@upv.es>
+--- Author: Víctor García Valero <vicgarval@upv.es>
 
 --- Module specifying basic datatypes and its operations used in KYBER
 fmod DATA-TYPES is

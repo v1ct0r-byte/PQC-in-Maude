@@ -1,3 +1,6 @@
+--- Specification example of NSPK in Maude
+--- Author: Víctor García Valero <vicgarval@upv.es>
+
 mod NSPK is
    sort Key .
    sorts PubKey SecKey .
