@@ -26,7 +26,9 @@ In order to perform invariant analysis and model checking one has to:
     1. Invariant analysis with the `search` commands.
     2. Model checking with the `reduce` commands.
 
-## Results[WIP]
+## Results
+
+==WIP==
 
 The following table summarizes the results on each of the analysis.
 
