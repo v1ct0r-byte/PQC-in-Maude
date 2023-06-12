@@ -3,7 +3,7 @@
 
 --- Loading modules
 
-load cm/cm.maude
+load ./cm.maude
 
 --- SEARCH
 
@@ -21,8 +21,8 @@ search [1] init2 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1
 --- MODEL CHECKING
 
 load model-checker.maude
-load cm/cm-PREDS.maude
-load cm/cm-CHECK.maude
+load ./cm-PREDS.maude
+load ./cm-CHECK.maude
 
 --- FAIRNESS
 red modelCheck(init1, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
