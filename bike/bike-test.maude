@@ -3,7 +3,7 @@
 
 --- Loading modules
 
-load bike/bike.maude
+load ./bike.maude
 
 --- SEARCH
 
@@ -25,8 +25,8 @@ search init2 =>! {CONT4:Content} < (Eve[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob
 --- MODEL CHECKING
 
 load model-checker.maude
-load bike/bike-PREDS.maude
-load bike/bike-CHECK.maude
+load ./bike-PREDS.maude
+load ./bike-CHECK.maude
 
 --- FAIRNESS
 red modelCheck(init1, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .

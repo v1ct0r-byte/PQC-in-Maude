@@ -3,7 +3,7 @@
 
 --- Loading modules
 
-load kyber/kyber-6.maude
+load ./kyber-6.maude
 
 --- SEARCH
 
@@ -21,8 +21,8 @@ search [1] init2 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1
 --- MODEL CHECKING
 
 load model-checker.maude
-load kyber/kyber-6-PREDS.maude
-load kyber/kyber-6-CHECK.maude
+load ./kyber-6-PREDS.maude
+load ./kyber-6-CHECK.maude
 
 --- FAIRNESS
 red modelCheck(init1, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
