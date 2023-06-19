@@ -1,6 +1,6 @@
 # Post-Quantum Cryptography in Maude
 
-This repository stores Maude's system modules that construct the symbolic models of three postquantum cryptography schemes. Specifically, the selected schemes are Key Encapsulation Mechanisms (KEMs). The symbolic modules allow to perform invariant analysis, finding a MITM attack, and model checking of Liveness, Fairness and Security properties. The analyzed KEMs are:
+This repository stores Maude's system modules that construct the symbolic models of three postquantum cryptography schemes. Specifically, the selected schemes are Key Encapsulation Mechanisms (KEMs). The symbolic modules allow us to perform invariant analysis, find a MITM attack, and model checking of Liveness, Fairness and Security properties. The analyzed KEMs are:
 
 - [Kyber](https://pq-crystals.org/kyber/)
 - [Bike](https://bikesuite.org/)
@@ -12,17 +12,17 @@ Please check the corresponding [publication](https://ceur-ws.org/Vol-3280/paper3
 
 The repository is divided in three main folders, one for each of the specified KEMs. Each folder stores two kinds of files: one `txt` file and four `maude` files. The `txt` file contains basic information and a series of notations on the specified KEM. The `maude` files are:
 
-- `KEM.maude`: Containts the full specification using the framework.
+- `KEM.maude`: Contains the full specification using the framework.
 - `KEM-PREDS` & `KEM-CHECK`: Contain the necessary modules to perform model checking with Maude. 
 - `KEM-test.maude`: Stores a series of commands to (i) perform invariant analysis through the `search` command and (ii) verify three properties with the LTL Model Checker.
 
-where `KEM` is either `kyber`, `bike` or `cm` repsectively for each of the selected protocols.
+where `KEM` is either `kyber`, `bike` or `cm` respectively for each of the selected protocols.
 
 ## Reproduction of experiments 
 
 In order to perform invariant analysis and model checking one has to:
 
-1. Have Maude 3.3 installed. It can be downloaded from the oficial [download](http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation) page.
+1. Have Maude 3.3 installed. It can be downloaded from the official [download](http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation) page.
 2. Download [this](https://github.com/v1ct0r-byte/PQC-in-Maude) repository and extract the contents.
 3. Open a terminal in the parent folder of the downloaded repository.
 4. Start Maude by following the [instructions](https://maude.lcc.uma.es/maude-manual/maude-manualch2.html#x13-220002.2). Maude can be initiated by running the `./maude.darwin64`
