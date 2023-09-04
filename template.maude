@@ -7,26 +7,25 @@ fmod DATA-TYPES is
 endfm
 
 --- Module to specify all the hash functions used during the protocol
-fmod KYBER-HASH-OPERATIONS is
+fmod PROTOCOL-HASH-OPERATIONS is
     protecting DATA-TYPES .
 
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN step
-fmod KYBER-CPAPKE-KEYGEN is
+fmod PROTOCOL-KEYGEN is
     protecting DATA-TYPES .
 
 endfm
 
 --- Module to represent the operations and data handled during ENC
-fmod KYBER-CPAPKE-ENC is
+fmod PROTOCOL-ENC is
     protecting DATA-TYPES .
-    protecting ENCRYPTION .
 
 endfm
 
 --- Module to represent the operations and data handled during DEC
-fmod KYBER-CPAPKE-DEC is
+fmod PROTOCOL-DEC is
     protecting DATA-TYPES .
 
 endfm
@@ -140,10 +139,10 @@ endfm
 mod PROTOCOL is
     --- IMPORTS -------------------------------
     protecting DATA-TYPES .
-    protecting BIKE-HASH-OPERATIONS .
-    protecting BIKE-KEYGEN .
-    protecting BIKE-ENC .
-    protecting BIKE-DEC .
+    protecting PROTOCOL-HASH-OPERATIONS .
+    protecting PROTOCOL-KEYGEN .
+    protecting PROTOCOL-ENC .
+    protecting PROTOCOL-DEC .
     protecting MODEL-CONFIGURATION .
 
     --- Samples ------------------------------------------------
