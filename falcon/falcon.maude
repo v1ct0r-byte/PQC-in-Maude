@@ -9,7 +9,10 @@ fmod DATA-TYPES is
     --- Definitions of types of data
      sort Polynomial .
 
-     --- Pair
+    --- We specify that polynomials are data
+    subsort Polynomial < Data .
+
+    --- Pair
     sort Pair .
 
     --- A Pair can be seen as a Polynomial divided in two parts
@@ -36,6 +39,15 @@ endfm
 --- Module to represent the operations and data handled during KEYGEN step
 fmod PROTOCOL-KEYGEN is
     protecting DATA-TYPES .
+
+    op phi : -> polynomial .
+    op q : -> Nat .
+
+    --- Fast Fourier Transformation
+    op FFT : Polynomial -> Polynomial .
+
+    --- Fast Fourier Sampling
+    op ffLDL : Polynomial -> Polynomial .
 
 endfm
 
