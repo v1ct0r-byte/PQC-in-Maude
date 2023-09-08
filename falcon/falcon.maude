@@ -3,14 +3,23 @@
 
 --- Module specifying basic datatypes and the operations
 fmod DATA-TYPES is
-     --- Supersort of all data
-     sort Data .
+    protecting NAT .
+    protecting STRING .
+
+    --- Supersort of all data
+    sort Data .
 
     --- Definitions of types of data
      sort Polynomial .
 
     --- We specify that polynomials are data
     subsort Polynomial < Data .
+    --- Furthermore, natural numbers can be seen as polynomials
+    subsort Nat < Polynomial .
+
+    --- Concatenation operation between polynomials
+    op _||_ : String Nat -> String .
+    op _||_ : Nat String -> String .
 
     --- Pair
     sort Pair .
@@ -34,13 +43,14 @@ endfm
 fmod PROTOCOL-HASH-OPERATIONS is
     protecting DATA-TYPES .
 
+    op HashToPoint : String Nat Nat -> Polynomial .
 endfm
 
 --- Module to represent the operations and data handled during KEYGEN step
 fmod PROTOCOL-KEYGEN is
     protecting DATA-TYPES .
 
-    op phi : -> polynomial .
+    op phi : -> Polynomial .
     op q : -> Nat .
 
     --- Fast Fourier Transformation
