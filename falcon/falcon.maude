@@ -10,14 +10,17 @@ fmod DATA-TYPES is
     sort Data .
 
     --- Definitions of types of data
-     sort Polynomial .
+    sort Polynomial .
+    sort Matrix .
 
     --- We specify that polynomials are data
     subsort Polynomial < Data .
     --- Furthermore, natural numbers can be seen as polynomials
     subsort Nat < Polynomial .
+    --- We specify that matrices are data
+    subsort Matrix < Data .
 
-    --- Concatenation operation between polynomials
+    --- Concatenation operation between Strings and natural numbers
     op _||_ : String Nat -> String .
     op _||_ : Nat String -> String .
 
@@ -39,6 +42,30 @@ fmod DATA-TYPES is
     eq second([D1,D2]) = D2 .
 endfm
 
+--- View to associate Data as elements of view TRIV, later used in LIST
+view Polynomial from TRIV to DATA-TYPES is
+  sort Elt to Polynomial .
+endv
+
+---Module to extend add operations and concepts of DATA-TYPES regarding lists of data
+mod DATA-TYPES-EXT is
+    protecting DATA-TYPES .
+    protecting LIST{Polynomial} .
+
+    --- Ground operator
+    op ground : -> Polynomial [ctor] .
+
+    var L : List{Polynomial} .
+    var N : Nat .
+    
+    --- Operation to access an element in a List of Polynomials
+    op elem : Nat List{Polynomial} -> Polynomial .
+    eq elem(N, nil) = ground .
+    eq elem(0, L) = ground .
+    eq elem(1, L) = head(L) .
+    eq elem(s(N), L) = elem(N, tail(L)) .
+endm
+
 --- Module to specify all the hash functions used during the protocol
 fmod PROTOCOL-HASH-OPERATIONS is
     protecting DATA-TYPES .
@@ -49,9 +76,19 @@ endfm
 --- Module to represent the operations and data handled during KEYGEN step
 fmod PROTOCOL-KEYGEN is
     protecting DATA-TYPES .
+    protecting LIST{Polynomial} * (op __ to _,_) .
 
     op phi : -> Polynomial .
     op q : -> Nat .
+    ops f g F G : -> Polynomial .
+
+    --- Sampler of values f, g, F and G
+    op NTRUGen : Polynomial Nat -> List{Polynomial} .
+
+    eq NTRUGen(phi, q) = f, g, F, G .
+
+    --- Matrix of a set of polynomials (this is to construct B)
+    op matrix : List{Polynomial} -> Polynomial .
 
     --- Fast Fourier Transformation
     op FFT : Polynomial -> Polynomial .
