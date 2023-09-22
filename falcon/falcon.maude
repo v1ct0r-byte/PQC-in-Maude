@@ -17,8 +17,11 @@ fmod DATA-TYPES is
     subsort Polynomial < Data .
     --- Furthermore, natural numbers can be seen as polynomials
     subsort Nat < Polynomial .
-    --- We specify that matrices are data
-    subsort Matrix < Data .
+    --- We specify that matrices are polynomials and data
+    subsort Matrix < Polynomial Data .
+
+    --- Operator to encapsulate strings as Data
+    op str : String -> Data .
 
     --- Concatenation operation between Strings and natural numbers
     op _||_ : String Nat -> String .
@@ -176,8 +179,8 @@ fmod MODEL-CONFIGURATION is
     --- We also declare that a pair is content
     subsort Pair < Content .
 
-    --- Declare Natural numbers and Strings as content
-    subsorts Nat String < Content .
+    --- Declare Data as content
+    subsorts Data < Content .
 
     --- Sort for the State of our system
     sort GlobalState .
@@ -213,10 +216,8 @@ fmod MODEL-CONFIGURATION is
     --- Lists of data elements are content that can be stored
     subsort List{Data} < Content .
 
-    --- Empty content
-    op emptyC : -> Content .
     --- Group of contents
-    op _/_ : Content Content -> Content [assoc comm id: emptyC] .
+    op __ : Content Content -> Content [ditto] .
 
     vars C CONT1 CONT2 : Content .
 
@@ -299,7 +300,7 @@ mod FALCON is
 
     --- Initial states------------------------------------------
     op init1 : -> GlobalState .
-    eq init1 = {phis(phi) qs(q) ms(m) rs(r)}< (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init1 = {phis(phi) qs(q) ms(str(m)) rs(r)}< (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 
     --- RULES --------------------------------------------------
 
@@ -317,6 +318,7 @@ mod FALCON is
     var L : List{Data} .
     vars c t : Polynomial .
     vars SAM1 SAM2 : Data .
+    var STR : String .
     var Q : Nat .
     vars CONT1 CONT2 CONT3 CONT4 : Content .
 
@@ -325,18 +327,17 @@ mod FALCON is
     --- Generation of pair of keys by a participant
     crl [KeyGen] :  {phis(SAM1 CONT1) qs(SAM2 CONT2) CONT3}< (ID1[emptyK]peer(none)) PS >net(emptyM)
                     =>
-                    {phis(CONT1) qs(CONT2) CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2) / peer(none)) PS >net(emptyM)
+                    {phis(CONT1) qs(CONT2) CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2) phiI(ID1,SAM1) peer(none)) PS >net(emptyM)
                     if  L := NTRUGen(SAM1,SAM2) /\
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 .
 
-
     --- Signing process of a message created by a participant
-    crl [Sign] :    {ms(SAM1 CONT1) rs(SAM2 CONT2) CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q) / peer(none)) PS >net(emptyM)
+    crl [Sign] :    {ms(str(STR) CONT1) rs(SAM1 CONT2) CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q) peer(none)) PS >net(emptyM)
                     =>
-                    {ms(SAM1 CONT1) rs(SAM2 CONT2) CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q) / peer(none)) PS >net(emptyM)
-                    if  c := HashToPoint(SAM2||SAM1, Q, n) /\
-                        t := (FFT(c), FFT(0)) * first(SK) .
+                    {ms(CONT1) rs(CONT2) CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q) peer(none)) PS >net(emptyM)
+                    if  c := HashToPoint(SAM1 || STR, Q, n) /\
+                        t := ([FFT(c), FFT(0)]) * first(SK) .
 
 
     --- Intruder behaviour--------------------------------------
