@@ -208,16 +208,15 @@ fmod MODEL-CONFIGURATION is
     --- Operator to represent the shared key with a participant
     op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
-    --- Posible states for a message delivering PK
-    ops sentPK receivedPK : -> MsgState .
-    --- Posible states for a message delivering C
-    ops sentC receivedC : -> MsgState .
+    --- Posible states for a message delivering M
+    ops sent received : -> MsgState .
 
     --- Lists of data elements are content that can be stored
     subsort List{Data} < Content .
 
+    op emptyC : -> Content .
     --- Group of contents
-    op __ : Content Content -> Content [ditto] .
+    op _,_ : Content Content -> Content [assoc comm id: emptyC] .
 
     vars C CONT1 CONT2 : Content .
 
@@ -298,48 +297,68 @@ mod FALCON is
     --- Operator to bind a q to an Identifier
     op rI : Identifier Nat -> Content .
 
+    --- Operator to store the SIGNATURE
+    op sig : Nat Polynomial -> Content .
+
     --- Initial states------------------------------------------
     op init1 : -> GlobalState .
-    eq init1 = {phis(phi) qs(q) ms(str(m)) rs(r)}< (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init1 = {phis(phi), qs(q), ms(str(m)), rs(r)}< (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 
     --- RULES --------------------------------------------------
 
     vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
     vars MSGS MSGS' : Msgs .
+    var MSG : Msg .
     vars K1 K2 : SKey .
     vars PK PK' : PKey .
-    vars GAMMA GAMMA' : Pair .
+    vars Ss Sig SK : Pair .
     vars D' S E ER C C' ALPHAQ : Polynomial .
-    var M : Polynomial .
     vars KS1 KS2 KS3 : Keys .
-    vars AUX ALPHA : List{Data} .
-    var SK : Pair .
     var L : List{Data} .
-    vars c t : Polynomial .
+    vars c t z s P : Polynomial .
     vars SAM1 SAM2 : Data .
     var STR : String .
-    var Q : Nat .
+    vars Q R : Nat .
     vars CONT1 CONT2 CONT3 CONT4 : Content .
 
     --- Honest participant behaviour----------------------------
 
     --- Generation of pair of keys by a participant
-    crl [KeyGen] :  {phis(SAM1 CONT1) qs(SAM2 CONT2) CONT3}< (ID1[emptyK]peer(none)) PS >net(emptyM)
+    crl [KeyGen] :  {phis(SAM1, CONT1), qs(SAM2, CONT2), CONT3}< (ID1[emptyK]peer(none)) PS >net(MSGS)
                     =>
-                    {phis(CONT1) qs(CONT2) CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2) phiI(ID1,SAM1) peer(none)) PS >net(emptyM)
+                    {phis(CONT1), qs(CONT2), CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2), phiI(ID1,SAM1), peer(none)) PS >net(MSGS)
                     if  L := NTRUGen(SAM1,SAM2) /\
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 .
 
     --- Signing process of a message created by a participant
-    crl [Sign] :    {ms(str(STR) CONT1) rs(SAM1 CONT2) CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q) peer(none)) PS >net(emptyM)
+    crl [Sign] :    {ms(str(STR), CONT1), rs(SAM1, CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q), CONT4) PS >net(emptyM)
                     =>
-                    {ms(CONT1) rs(CONT2) CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q) peer(none)) PS >net(emptyM)
+                    {ms(CONT1), rs(CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]sig(SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), CONT4) PS >net(emptyM)
                     if  c := HashToPoint(SAM1 || STR, Q, n) /\
-                        t := ([FFT(c), FFT(0)]) * first(SK) .
+                        t := [FFT(mat(c)), FFT(mat(0))] p* inv(first(SK)) /\
+                        z := ffSampling(t, second(SK)) /\
+                        s := (t p- z) p* first(SK) /\
+                        Ss := invFFT(s) .
 
+    --- Sending a message to some random participant
+    crl [sendMsg] : {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]mI(ID1,STR), sig(R,P), CONT2, peer(none)) (ID2[KS2]CONT3, peer(none)) PS >net(MSGS) 
+                    =>
+                    {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]CONT2, peer(ID2)) (ID2[KS2]CONT3, peer(ID1)) PS >net(MSGS MSG)
+                    if  MSG := msg{(ID1,ID2)[sent](str(STR),[R,P],PK)} /\
+                        MSG in MSGS == false .
+
+    --- Receiving a message
+    rl [recvMsg] :  {CONT1}< (ID1[KS1]CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig, PK)})
+                    =>
+                    {CONT1}< (ID1[publicKey(ID2,PK) ; KS1]mI(ID2,STR), sig(first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig, PK)}) .
+
+    --- Validation process of a message received from a participant
+    
 
     --- Intruder behaviour--------------------------------------
     
 endm
+
+rew init1 .
