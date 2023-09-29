@@ -302,7 +302,7 @@ mod FALCON is
 
     --- Initial states------------------------------------------
     op init1 : -> GlobalState .
-    eq init1 = {phis(phi), qs(q), ms(str(m)), rs(r)}< (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init1 = {phis(phi), qs(q), ms(str(m)), rs(r)}< (Alice[emptyK]peer(Bob)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 
     --- RULES --------------------------------------------------
 
@@ -313,10 +313,9 @@ mod FALCON is
     vars K1 K2 : SKey .
     vars PK PK' : PKey .
     vars Ss Sig SK : Pair .
-    vars D' S E ER C C' ALPHAQ : Polynomial .
     vars KS1 KS2 KS3 : Keys .
     var L : List{Data} .
-    vars c t z s P : Polynomial .
+    vars p c t z s P S1 S2 : Polynomial .
     vars SAM1 SAM2 : Data .
     var STR : String .
     vars Q R : Nat .
@@ -325,12 +324,13 @@ mod FALCON is
     --- Honest participant behaviour----------------------------
 
     --- Generation of pair of keys by a participant
-    crl [KeyGen] :  {phis(SAM1, CONT1), qs(SAM2, CONT2), CONT3}< (ID1[emptyK]peer(none)) PS >net(MSGS)
+    crl [KeyGen] :  {phis(SAM1, CONT1), qs(SAM2, CONT2), CONT3}< (ID1[emptyK]peer(ID2)) PS >net(MSGS)
                     =>
-                    {phis(CONT1), qs(CONT2), CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2), phiI(ID1,SAM1), peer(none)) PS >net(MSGS)
+                    {phis(CONT1), qs(CONT2), CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2)) PS >net(MSGS)
                     if  L := NTRUGen(SAM1,SAM2) /\
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
-                        PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 .
+                        PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
+                        ID1 =/= ID2 .
 
     --- Signing process of a message created by a participant
     crl [Sign] :    {ms(str(STR), CONT1), rs(SAM1, CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q), CONT4) PS >net(emptyM)
@@ -343,19 +343,24 @@ mod FALCON is
                         Ss := invFFT(s) .
 
     --- Sending a message to some random participant
-    crl [sendMsg] : {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]mI(ID1,STR), sig(R,P), CONT2, peer(none)) (ID2[KS2]CONT3, peer(none)) PS >net(MSGS) 
+    crl [sendMsg] : {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]mI(ID1,STR), sig(R,P), peer(ID2), CONT2) (ID2[KS2]peer(none), CONT3) PS >net(MSGS) 
                     =>
-                    {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]CONT2, peer(ID2)) (ID2[KS2]CONT3, peer(ID1)) PS >net(MSGS MSG)
+                    {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]peer(none), CONT2) (ID2[KS2]peer(none), CONT3) PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent](str(STR),[R,P],PK)} /\
                         MSG in MSGS == false .
 
     --- Receiving a message
-    rl [recvMsg] :  {CONT1}< (ID1[KS1]CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig, PK)})
+    rl [recvMsg] :  {CONT1}< (ID1[KS1]peer(none), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig, PK)})
                     =>
                     {CONT1}< (ID1[publicKey(ID2,PK) ; KS1]mI(ID2,STR), sig(first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig, PK)}) .
 
     --- Validation process of a message received from a participant
-    
+    crl [Validate] :    {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(R,P), peer(ID2), CONT2) PS >net(MSGS)
+                        =>
+                        {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
+                        if  c := HashToPoint(R || STR, Q, n) /\
+                            S2 := Decompress(P,SBYTELEN) /\
+                            S1 := ((c p- S2) p* (p mod Q)) mod Q .
 
     --- Intruder behaviour--------------------------------------
     
