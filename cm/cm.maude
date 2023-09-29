@@ -301,7 +301,7 @@ mod CM is
     --- Initial state-------------------------------------------------------------------------------------------------------------
     ops init1 init2 : -> GlobalState .
     eq init1 = {deltas(delta1)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
-    eq init2 = {deltas(delta1 delta2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init2 = {deltas(delta1 | delta2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 
     --- RULES-------------------------------------------------------------------------------------------------------------
     
@@ -318,9 +318,9 @@ mod CM is
     vars SAM1 SAM2 : Data .
     vars CONT1 CONT2 CONT3 : Content .
 
-    crl [KeyGen] :  {deltas(SAM1 CONT1) CONT3} < (ID1[emptyK]peer(none)) PS >net(MSGS) 
+    crl [KeyGen] :  {deltas(SAM1 | CONT1) | CONT3} < (ID1[emptyK]peer(none)) PS >net(MSGS) 
                     => 
-                    {deltas(CONT1) CONT3} < (ID1[publicKey(ID1, PK) ; secretKey(ID1,SK)]peer(none) | deltaI(ID1,SAM1)) PS >net(MSGS) 
+                    {deltas(CONT1) | CONT3} < (ID1[publicKey(ID1, PK) ; secretKey(ID1,SK)]peer(none) | deltaI(ID1,SAM1)) PS >net(MSGS) 
                     if  E := G(SAM1) /\
                         D' := lastL(E) /\
                         S := firstN(E) /\
