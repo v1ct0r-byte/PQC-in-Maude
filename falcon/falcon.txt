@@ -2,3 +2,9 @@
 
 This document is a collection of explanations and instructions on the proposed solution to model and analyze the protocol.
 Author: Víctor García Valero <vicgarval@upv.es>
+
+ASSUMPTIONS
+
+We assume:  
+    - Correctness of the encodings of s1 and s2, thus signatures are never rejected during Validate algorithm
+    - We assume mod q equals mod (phi,q)
