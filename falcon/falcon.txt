@@ -6,5 +6,7 @@ Author: Víctor García Valero <vicgarval@upv.es>
 ASSUMPTIONS
 
 We assume:  
-    - Correctness of the encodings of s1 and s2, thus signatures are never rejected during Validate algorithm
-    - We assume mod q equals mod (phi,q)
+    - Correctness of the encodings of s1 and s2, thus signatures are never rejected during Validate algorithm.
+    - We assume mod q equals mod (phi,q). This is a hot take, should provide more mathematical evidence.
+    - Any generated polynomials f g F & G always satisfy the equation fG-gF = q mod phi.
+    - The signature and verification algorithms apply always in the bound given by their parameter Beta, thus it is not deemed necesary in the specification.

@@ -30,14 +30,17 @@ fmod DATA-TYPES is
     --- Substraction between Polynomials
     op _p-_ : Polynomial Polynomial -> Polynomial .
 
+    --- Addition between Polynomials
+    op _p+_ : Polynomial Polynomial -> Polynomial .
+
     --- Product between Polynomials
     op _p*_ : Polynomial Polynomial -> Polynomial .
 
     --- Inverse notation of a polynomial
     op inv : Polynomial -> Polynomial .
 
-    --- Modulus operation
-    op _mod_ : Polynomial Nat -> Polynomial .
+    --- Modulus operation (not necessary due to assumption)
+    op _mod_ : Polynomial Nat -> Polynomial [prec 34] .
 
     --- Symbolic constant to represent the length of a polynomial S
     op SBYTELEN : -> Nat .
@@ -45,6 +48,7 @@ fmod DATA-TYPES is
     --- Compress and decompress operations
     ops Compress Decompress : Polynomial Nat -> Polynomial .
     eq Compress(Decompress(P:Polynomial,N:Nat),N:Nat) = P:Polynomial .
+    eq Decompress(Compress(P:Polynomial,N:Nat),N:Nat) = P:Polynomial .
 
     --- Pair
     sort Pair .
@@ -148,8 +152,8 @@ fmod FALCON-SIGN is
     op invFFT : Polynomial -> Pair .
     eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(M1:Matrix)) = ([s1,s2]) .
 
-    --- Equation specifiyng equality
-    eq s1 p+ s2 p* P1:Polynomial = P2:Polynomial mod q
+    --- Equation specifiyng equality "s1 + s2h = c mod (phi,q)"
+    eq (P1:Polynomial p- (s2 p* P2:Polynomial)) mod N:Nat = s1 .
 endfm
 
 --- Module to represent the operations and data handled during VERIFY
@@ -299,12 +303,12 @@ mod FALCON is
     --- Operator to bind a q to an Identifier
     op rI : Identifier Nat -> Content .
 
-    --- Operator to store the SIGNATURE
-    op sig : Nat Polynomial -> Content .
+    --- Operator to store the SIGNATURE of a message
+    op sig : String Nat Polynomial -> Content .
 
     --- Initial states------------------------------------------
     op init1 : -> GlobalState .
-    eq init1 = {phis(phi), qs(q), ms(str(m)), rs(r)}< (Alice[emptyK]peer(Bob)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init1 = {phis(phi), qs(q), ms(str(m)), rs(r)}< (Alice[emptyK]peer(Bob)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(Alice)) >net(emptyM) .
 
     --- RULES --------------------------------------------------
 
@@ -333,36 +337,49 @@ mod FALCON is
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
                         ID1 =/= ID2 .
+    
+    --- Sending the public key to the peer
+    crl [sendPK] :  {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]peer(ID2), CONT2) (ID2[KS2]CONT3) PS >net(MSGS)
+                    =>
+                    {CONT1}< (ID1[KS1]peer(ID2), CONT2) (ID2[KS2]CONT3) PS >net(MSGS MSG)
+                    if  MSG := msg{(ID1,ID2)[sent](PK)} /\ 
+                        MSG in MSGS == false .
+
+    --- Receiving the public key from the peer
+    rl [recvPK] :   {CONT1}< (ID1[KS1]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
+                    =>
+                    {CONT1}< (ID1[KS1 ; publicKey(ID2,PK)]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
 
     --- Signing process of a message created by a participant
-    crl [Sign] :    {ms(str(STR), CONT1), rs(SAM1, CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q), CONT4) PS >net(emptyM)
+    crl [Sign] :    {ms(str(STR), CONT1), rs(SAM1, CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q), CONT4) PS >net(MSGS)
                     =>
-                    {ms(CONT1), rs(CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]sig(SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), CONT4) PS >net(emptyM)
+                    {ms(CONT1), rs(CONT2), CONT3}< (ID1[KS1]sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), CONT4) PS >net(MSGS)
                     if  c := HashToPoint(SAM1 || STR, Q, n) /\
                         t := [FFT(mat(c)), FFT(mat(0))] p* inv(first(SK)) /\
                         z := ffSampling(t, second(SK)) /\
                         s := (t p- z) p* first(SK) /\
                         Ss := invFFT(s) .
 
-    --- Sending a message to some random participant
-    crl [sendMsg] : {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]mI(ID1,STR), sig(R,P), peer(ID2), CONT2) (ID2[KS2]peer(none), CONT3) PS >net(MSGS) 
+    --- Sending the message to the peer
+    crl [sendMsg] : {CONT1}< (ID1[KS1]mI(ID1,STR), sig(STR,R,P), peer(ID2), CONT2) (ID2[KS2]peer(ID1), CONT3) PS >net(MSGS) 
                     =>
-                    {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]peer(none), CONT2) (ID2[KS2]peer(none), CONT3) PS >net(MSGS MSG)
-                    if  MSG := msg{(ID1,ID2)[sent](str(STR),[R,P],PK)} /\
+                    {CONT1}< (ID1[KS1]peer(none), CONT2) (ID2[KS2]peer(ID1), CONT3) PS >net(MSGS MSG)
+                    if  MSG := msg{(ID1,ID2)[sent](str(STR),[R,P])} /\
                         MSG in MSGS == false .
 
-    --- Receiving a message
-    rl [recvMsg] :  {CONT1}< (ID1[KS1]peer(none), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig, PK)})
+    --- Receiving the message from the peer
+    rl [recvMsg] :  {CONT1}< (ID1[KS1]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig)})
                     =>
-                    {CONT1}< (ID1[publicKey(ID2,PK) ; KS1]mI(ID2,STR), sig(first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig, PK)}) .
+                    {CONT1}< (ID1[KS1]mI(ID2,STR), sig(STR,first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig)}) .
 
     --- Validation process of a message received from a participant
-    crl [Validate] :    {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(R,P), peer(ID2), CONT2) PS >net(MSGS)
+    crl [Validate] :    {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(STR,R,P), peer(ID2), CONT2) PS >net(MSGS)
                         =>
                         {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
                         if  c := HashToPoint(R || STR, Q, n) /\
-                            S2 := Decompress(P,SBYTELEN) /\
-                            S1 := ((c p- S2) p* (p mod Q)) mod Q .
+                            S2 := Decompress(P, SBYTELEN) /\
+                            S1 := (c p- (S2 p* p mod Q)) mod Q /\
+                            (S1 == s1) /\ (S2 == s2) .
 
     --- Intruder behaviour--------------------------------------
     
