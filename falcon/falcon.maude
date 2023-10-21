@@ -372,14 +372,14 @@ mod FALCON is
                     =>
                     {CONT1}< (ID1[KS1]mI(ID2,STR), sig(STR,first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig)}) .
 
-    --- Validation process of a message received from a participant
-    crl [Validate] :    {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(STR,R,P), peer(ID2), CONT2) PS >net(MSGS)
-                        =>
-                        {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
-                        if  c := HashToPoint(R || STR, Q, n) /\
-                            S2 := Decompress(P, SBYTELEN) /\
-                            S1 := (c p- (S2 p* p mod Q)) mod Q /\
-                            (S1 == s1) /\ (S2 == s2) .
+    --- Verification process of a message signature received from a participant
+    crl [Verify] :  {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(STR,R,P), peer(ID2), CONT2) PS >net(MSGS)
+                    =>
+                    {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
+                    if  c := HashToPoint(R || STR, Q, n) /\
+                        S2 := Decompress(P, SBYTELEN) /\
+                        S1 := (c p- (S2 p* p mod Q)) mod Q /\
+                        (S1 == s1) /\ (S2 == s2) .
 
     --- Intruder behaviour--------------------------------------
     
