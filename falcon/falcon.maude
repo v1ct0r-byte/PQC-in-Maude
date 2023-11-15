@@ -123,6 +123,7 @@ fmod FALCON-KEYGEN is
 
     --- Fast Fourier Transformation
     op FFT : Matrix -> Polynomial .
+    op FFT : Polynomial -> Polynomial .
 
     --- Matrix product
     op _x_ : Polynomial Polynomial -> Matrix .
@@ -321,7 +322,7 @@ mod FALCON is
     vars Ss Sig SK : Pair .
     vars KS1 KS2 KS3 : Keys .
     var L : List{Data} .
-    vars p c t z s P S1 S2 : Polynomial .
+    vars p h c t z s P S1 S2 : Polynomial .
     vars SAM1 SAM2 : Data .
     var STR : String .
     vars Q R : Nat .
@@ -355,7 +356,7 @@ mod FALCON is
                     =>
                     {ms(CONT1), rs(CONT2), CONT3}< (ID1[KS1]sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), CONT4) PS >net(MSGS)
                     if  c := HashToPoint(SAM1 || STR, Q, n) /\
-                        t := [FFT(mat(c)), FFT(mat(0))] p* inv(first(SK)) /\
+                        t := [FFT(c), FFT(0)] p* inv(first(SK)) /\
                         z := ffSampling(t, second(SK)) /\
                         s := (t p- z) p* first(SK) /\
                         Ss := invFFT(s) .
@@ -378,7 +379,8 @@ mod FALCON is
                     {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
                     if  c := HashToPoint(R || STR, Q, n) /\
                         S2 := Decompress(P, SBYTELEN) /\
-                        S1 := (c p- (S2 p* p mod Q)) mod Q /\
+                        h := p mod Q /\
+                        S1 := (c p- (S2 p* h)) mod Q /\
                         (S1 == s1) /\ (S2 == s2) .
 
     --- Intruder behaviour--------------------------------------
