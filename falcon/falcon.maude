@@ -153,7 +153,7 @@ fmod FALCON-SIGN is
     op invFFT : Polynomial -> Pair .
     eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(M1:Matrix)) = ([s1,s2]) .
 
-    --- Equation specifiyng equality "s1 + s2h = c mod (phi,q)"
+    --- Equation specifiyng equality "s1 + s2h = c mod q"
     eq (P1:Polynomial p- (s2 p* P2:Polynomial)) mod N:Nat = s1 .
 endfm
 
