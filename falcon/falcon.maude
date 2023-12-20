@@ -309,7 +309,11 @@ mod FALCON is
 
     --- Initial states------------------------------------------
     op init1 : -> GlobalState .
-    eq init1 = {phis(phi), qs(q), ms(str(m)), rs(r)}< (Alice[emptyK]peer(Bob)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(Alice)) >net(emptyM) .
+    eq init1 =  {phis(phi), qs(q), ms(str(m)), rs(r)}
+                <   (Alice[emptyK]peer(Bob)) 
+                    (Eve[emptyK]peer(none)) 
+                    (Bob[emptyK]peer(Alice)) 
+                >net(emptyM) .
 
     --- RULES --------------------------------------------------
 
@@ -387,4 +391,8 @@ mod FALCON is
     
 endm
 
+*** Proof of the executability of the rules
 rew init1 .
+
+*** Termination proof of the system
+search init1 =>! {CONT1:Content}<(ID1:Identifier[KS1:Keys] mI(ID2:Identifier,STR:String) , peer(none)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
