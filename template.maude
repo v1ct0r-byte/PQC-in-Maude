@@ -146,6 +146,7 @@ mod PROTOCOL is
     ***
     *** IMPORTS
     ***
+    
     protecting DATA-TYPES .
     protecting PROTOCOL-HASH-OPERATIONS .
     protecting PROTOCOL-KEYGEN .
@@ -153,10 +154,6 @@ mod PROTOCOL is
     protecting PROTOCOL-DEC .
     protecting MODEL-CONFIGURATION .
 
-    ***
-    *** SAMPLES 
-    ***
-    
     ***
     *** INITIAL STATES
     ***

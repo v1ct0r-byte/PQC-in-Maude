@@ -1,90 +1,90 @@
---- Specification of FALCON
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Specification of FALCON
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
---- Module specifying basic datatypes and the operations
+*** Module specifying basic datatypes and the operations
 fmod DATA-TYPES is
     protecting NAT .
     protecting STRING .
 
-    --- Supersort of all data
+    *** Supersort of all data
     sort Data .
 
-    --- Definitions of types of data
+    *** Definitions of types of data
     sort Polynomial .
     sort Matrix .
 
-    --- We specify that polynomials are data
+    *** We specify that polynomials are data
     subsort Polynomial < Data .
-    --- Furthermore, natural numbers can be seen as polynomials
+    *** Furthermore, natural numbers can be seen as polynomials
     subsort Nat < Polynomial .
-    --- We specify that matrices are polynomials and data
+    *** We specify that matrices are polynomials and data
     subsort Matrix < Polynomial Data .
 
-    --- Operator to encapsulate strings as Data
+    *** Operator to encapsulate strings as Data
     op str : String -> Data .
 
-    --- Concatenation operation between Strings and natural numbers
+    *** Concatenation operation between Strings and natural numbers
     op _||_ : String Nat -> String .
     op _||_ : Nat String -> String .
 
-    --- Substraction between Polynomials
+    *** Substraction between Polynomials
     op _p-_ : Polynomial Polynomial -> Polynomial .
 
-    --- Addition between Polynomials
+    *** Addition between Polynomials
     op _p+_ : Polynomial Polynomial -> Polynomial .
 
-    --- Product between Polynomials
+    *** Product between Polynomials
     op _p*_ : Polynomial Polynomial -> Polynomial .
 
-    --- Inverse notation of a polynomial
+    *** Inverse notation of a polynomial
     op inv : Polynomial -> Polynomial .
 
-    --- Modulus operation (not necessary due to assumption)
+    *** Modulus operation (not necessary due to assumption)
     op _mod_ : Polynomial Nat -> Polynomial [prec 34] .
 
-    --- Symbolic constant to represent the length of a polynomial S
+    *** Symbolic constant to represent the length of a polynomial S
     op SBYTELEN : -> Nat .
 
-    --- Compress and decompress operations
+    *** Compress and decompress operations
     ops Compress Decompress : Polynomial Nat -> Polynomial .
     eq Compress(Decompress(P:Polynomial,N:Nat),N:Nat) = P:Polynomial .
     eq Decompress(Compress(P:Polynomial,N:Nat),N:Nat) = P:Polynomial .
 
-    --- Pair
+    *** Pair
     sort Pair .
 
-    --- A Pair can be seen as a Polynomial divided in two parts
+    *** A Pair can be seen as a Polynomial divided in two parts
     subsort Pair < Polynomial .
 
     op [_,_] : Data Data -> Pair [ctor] .
 
     vars D1 D2 : Data .
 
-    --- First element of Pair
+    *** First element of Pair
     op first : Pair -> Data .
     eq first([D1,D2]) = D1 .
-    --- Second element of Pair
+    *** Second element of Pair
     op second : Pair -> Data .
     eq second([D1,D2]) = D2 .
 endfm
 
---- View to associate Data as elements of view TRIV, later used in LIST
+*** View to associate Data as elements of view TRIV, later used in LIST
 view Data from TRIV to DATA-TYPES is
   sort Elt to Data .
 endv
 
----Module to extend add operations and concepts of DATA-TYPES regarding lists of data
+***Module to extend add operations and concepts of DATA-TYPES regarding lists of data
 mod DATA-TYPES-EXT is
     protecting DATA-TYPES .
     protecting LIST{Data} .
 
-    --- Ground operator
+    *** Ground operator
     op ground : -> Polynomial [ctor] .
 
     var L : List{Data} .
     var N : Nat .
     
-    --- Operation to access an element in a List of Polynomials
+    *** Operation to access an element in a List of Polynomials
     op elem : Nat List{Data} -> Data .
     eq elem(N, nil) = ground .
     eq elem(0, L) = ground .
@@ -92,83 +92,86 @@ mod DATA-TYPES-EXT is
     eq elem(s(N), L) = elem(N, tail(L)) .
 endm
 
---- Module to specify all the hash functions used during the protocol
+*** Module to specify all the hash functions used during the protocol
 fmod FALCON-HASH-OPERATIONS is
     protecting DATA-TYPES .
 
-    --- Symbolic natural constant to represent any degree given of a polynomial
+    *** Symbolic natural constant to represent any degree given of a polynomial
     op n : -> Nat .
 
-    --- Hash operation that receives a string to hash, a modulus and a degree
+    *** Hash operation that receives a string to hash, a modulus and a degree
     op HashToPoint : String Nat Nat -> Polynomial .
 endfm
 
---- Module to represent the operations and data handled during KEYGEN step
+*** Module to represent the operations and data handled during KEYGEN step
 fmod FALCON-KEYGEN is
     protecting DATA-TYPES .
     protecting LIST{Data} .
 
-    --- Sample values for KeyGeneration
+    *** Sample values for KeyGeneration
     op phi : -> Polynomial .
     op q : -> Nat .
 
-    --- Sampler of values f, g, F and G
+    *** Sampler of values f, g, F and G
     op NTRUGen : Polynomial Nat -> List{Data} .
     ops f g F G : -> Polynomial .
 
     eq NTRUGen(phi, q) = (f g F G) .
 
-    --- Matrix of a set of polynomials (this is to construct B)
+    *** Matrix of a set of polynomials (this is to construct B)
     op mat : List{Data} -> Matrix .
 
-    --- Fast Fourier Transformation
+    *** Fast Fourier Transformation
     op FFT : Matrix -> Polynomial .
     op FFT : Polynomial -> Polynomial .
 
-    --- Matrix product
+    *** Matrix product
     op _x_ : Polynomial Polynomial -> Matrix .
 
-    --- Fast Fourier LDL
+    *** Fast Fourier LDL
     op ffLDL : Matrix -> Polynomial .
 endfm
 
---- Module to represent the operations and data handled during SIGN
+*** Module to represent the operations and data handled during SIGN
 fmod FALCON-SIGN is
     protecting DATA-TYPES .
     protecting FALCON-KEYGEN .
 
-    --- Sample values for r
+    *** Sample values for r
     op r : -> Nat .
 
-    --- Sample values for messages
+    *** Sample values for messages
     op m : -> String .
 
-    --- Fast Fourier Sampling
+    *** Fast Fourier Sampling
     op ffSampling : Polynomial Polynomial -> Polynomial .
 
-    --- Constant values to represent an instance of s_1 and s_2
+    *** Constant values to represent an instance of s_1 and s_2
     ops s1 s2 : -> Polynomial .
 
-    --- Inverse Fast Fourier Transformation
+    *** Inverse Fast Fourier Transformation
     op invFFT : Polynomial -> Pair .
     eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(M1:Matrix)) = ([s1,s2]) .
 
-    --- Equation specifiyng equality "s1 + s2h = c mod q"
+    *** Equation specifiyng equality "s1 + s2h = c mod q"
     eq (P1:Polynomial p- (s2 p* P2:Polynomial)) mod N:Nat = s1 .
 endfm
 
---- Module to represent the operations and data handled during VERIFY
+*** Module to represent the operations and data handled during VERIFY
 fmod FALCON-VERIFY is
     protecting DATA-TYPES .
 
 endfm
 
---- Module to set the foundations of our symbolic model
+*** Module to set the foundations of our symbolic model
 fmod MODEL-CONFIGURATION is
     protecting DATA-TYPES .
     protecting LIST{Data} .
 
-    --- SORTS---------------------------------
+    ***
+    *** SORTS
+    ***
+
     sorts Identifier Content Principal Principals . 
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
@@ -177,137 +180,144 @@ fmod MODEL-CONFIGURATION is
     sorts Key Keys .
     subsort Key < Keys .
 
-    --- We distinguish between public and secret keys, both being keys in the end
+    *** We distinguish between public and secret keys, both being keys in the end
     sorts PKey SKey .
 
-    ---We define keys as a type of content
+    ***We define keys as a type of content
     subsorts Polynomial < PKey SKey < Key < Content .
 
-    --- We also declare that a pair is content
+    *** We also declare that a pair is content
     subsort Pair < Content .
 
-    --- Declare Data as content
+    *** Declare Data as content
     subsorts Data < Content .
 
-    --- Sort for the State of our system
+    *** Sort for the State of our system
     sort GlobalState .
+    
+    ***
+    *** OPERATORS
+    ***
 
-    --- OPERATORS----------------------------
-    --- Empty group of keys
+    *** Empty group of keys
     op emptyK : -> Keys .
-    --- Group of keys
+    *** Group of keys
     op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
 
     var K : Key .
     vars KS1 KS2 : Keys .
 
-    --- Operation to check the precence of a key in a participant
+    *** Operation to check the precence of a key in a participant
     op _in_ : Key Keys -> Bool .
     eq K in (KS1 ; K ; KS2) = true .
     eq K in (KS1) = false [owise] .
 
-    --- Operator to represent the relation of a public key and a principal
+    *** Operator to represent the relation of a public key and a principal
     op publicKey : Identifier Key -> PKey .
 
-    --- Operator to represent the relation of a secret key and a principal
+    *** Operator to represent the relation of a secret key and a principal
     op secretKey : Identifier Key -> SKey .
 
-    --- Operator to represent the shared key with a participant
+    *** Operator to represent the shared key with a participant
     op sharedKey : Identifier Key -> SKey [format (g! o)] .
 
-    --- Posible states for a message delivering M
+    *** Posible states for a message delivering M
     ops sent received : -> MsgState .
 
-    --- Lists of data elements are content that can be stored
+    *** Lists of data elements are content that can be stored
     subsort List{Data} < Content .
 
     op emptyC : -> Content .
-    --- Group of contents
+    *** Group of contents
     op _,_ : Content Content -> Content [assoc comm id: emptyC] .
 
     vars C CONT1 CONT2 : Content .
 
-    --- Operation to check the contents of a participant
+    *** Operation to check the contents of a participant
     op _in_ : Content Content -> Bool .
     eq C in (CONT1 C CONT2) = true .
     eq C in (CONT1) = false [owise] .
 
-    --- Structure of a message
-    --- Sender, Receiver, State, Content
+    *** Structure of a message
+    *** Sender, Receiver, State, Content
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
 
-    --- Group of messsages
+    *** Group of messsages
     op emptyM : -> Msgs .
     op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
 
     var M : Msg .
     vars MS1 MS2 : Msgs .
     
-    --- Operation to check the network
+    *** Operation to check the network
     op _in_ : Msg Msgs -> Bool .
 
     eq M in (MS1 M MS2) = true .
     eq M in (MS1) = false [owise] .
 
-    --- Defintion of our three main participants followiing the literature
+    *** Defintion of our three main participants followiing the literature
     ops Alice Eve Bob : ->  Identifier [ctor] .
 
-    --- Definition of the default participant
+    *** Definition of the default participant
     op none : -> Identifier [ctor] .
 
-    --- Operator to assign a Ciphered text to a participant
+    *** Operator to assign a Ciphered text to a participant
     op cI : Identifier Pair -> Content .
 
-    --- Operator to mark the current participant to whom the key exchange is happening
+    *** Operator to mark the current participant to whom the key exchange is happening
     op peer : Identifier -> Content .
 
-    --- Definition of the components of a Principal
-    --- (idenifier [keys] content)
+    *** Definition of the components of a Principal
+    *** (idenifier [keys] content)
     op _[_]_ : Identifier Keys Content -> Principal [ctor] .
 
-    --- Group of principals
+    *** Group of principals
     op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
 
-    --- Global state composed by Samples, Principals and a Network with messages
+    *** Global state composed by Samples, Principals and a Network with messages
     op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
---- SIGNATURE scheme behaviour
+*** SIGNATURE scheme behaviour
 mod FALCON is
-    --- IMPORTS -------------------------------
+    ***
+    *** IMPORTS
+    ***
+
     protecting DATA-TYPES-EXT .
     protecting FALCON-HASH-OPERATIONS .
     protecting FALCON-KEYGEN .
     protecting FALCON-SIGN .
     protecting FALCON-VERIFY .
     protecting MODEL-CONFIGURATION .
-
-    --- Samples ------------------------------------------------
     
-    --- Sample group for phi
+    *** Sample group for phi
     op phis : Content -> Content .
-    --- Operator to bind a phi to an Identifier
+    *** Operator to bind a phi to an Identifier
     op phiI : Identifier Polynomial -> Content .
 
-    --- Sample group for q
+    *** Sample group for q
     op qs : Content -> Content .
-    --- Operator to bind a q to an Identifier
+    *** Operator to bind a q to an Identifier
     op qI : Identifier Nat -> Content .
 
-    --- Sample group for m
+    *** Sample group for m
     op ms : Content -> Content .
-    --- Operator to bind an m to an Identifier
+    *** Operator to bind an m to an Identifier
     op mI : Identifier String -> Content .
 
-    --- Sample group for r
+    *** Sample group for r
     op rs : Content -> Content .
-    --- Operator to bind a q to an Identifier
+    *** Operator to bind a q to an Identifier
     op rI : Identifier Nat -> Content .
 
-    --- Operator to store the SIGNATURE of a message
+    *** Operator to store the SIGNATURE of a message
     op sig : String Nat Polynomial -> Content .
 
-    --- Initial states------------------------------------------
+    ***
+    *** INITIAL STATES
+    ***
+
     op init1 : -> GlobalState .
     eq init1 =  {phis(phi), qs(q), ms(str(m)), rs(r)}
                 <   (Alice[emptyK]peer(Bob)) 
@@ -315,7 +325,9 @@ mod FALCON is
                     (Bob[emptyK]peer(Alice)) 
                 >net(emptyM) .
 
-    --- RULES --------------------------------------------------
+    ***
+    *** RULES 
+    ***
 
     vars ID1 ID2 ID3 : Identifier .
     var PS : Principals .
@@ -332,9 +344,11 @@ mod FALCON is
     vars Q R : Nat .
     vars CONT1 CONT2 CONT3 CONT4 : Content .
 
-    --- Honest participant behaviour----------------------------
+    ***
+    *** HONEST PARTICIPANT BEHAVIOUR
+    ***
 
-    --- Generation of pair of keys by a participant
+    *** Generation of pair of keys by a participant
     crl [KeyGen] :  {phis(SAM1, CONT1), qs(SAM2, CONT2), CONT3}< (ID1[emptyK]peer(ID2)) PS >net(MSGS)
                     =>
                     {phis(CONT1), qs(CONT2), CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2)) PS >net(MSGS)
@@ -343,19 +357,19 @@ mod FALCON is
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
                         ID1 =/= ID2 .
     
-    --- Sending the public key to the peer
+    *** Sending the public key to the peer
     crl [sendPK] :  {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]peer(ID2), CONT2) (ID2[KS2]CONT3) PS >net(MSGS)
                     =>
                     {CONT1}< (ID1[KS1]peer(ID2), CONT2) (ID2[KS2]CONT3) PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent](PK)} /\ 
                         MSG in MSGS == false .
 
-    --- Receiving the public key from the peer
+    *** Receiving the public key from the peer
     rl [recvPK] :   {CONT1}< (ID1[KS1]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
                     =>
                     {CONT1}< (ID1[KS1 ; publicKey(ID2,PK)]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
 
-    --- Signing process of a message created by a participant
+    *** Signing process of a message created by a participant
     crl [Sign] :    {ms(str(STR), CONT1), rs(SAM1, CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q), CONT4) PS >net(MSGS)
                     =>
                     {ms(CONT1), rs(CONT2), CONT3}< (ID1[KS1]sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), CONT4) PS >net(MSGS)
@@ -365,19 +379,19 @@ mod FALCON is
                         s := (t p- z) p* first(SK) /\
                         Ss := invFFT(s) .
 
-    --- Sending the message to the peer
+    *** Sending the message to the peer
     crl [sendMsg] : {CONT1}< (ID1[KS1]mI(ID1,STR), sig(STR,R,P), peer(ID2), CONT2) (ID2[KS2]peer(ID1), CONT3) PS >net(MSGS) 
                     =>
                     {CONT1}< (ID1[KS1]peer(none), CONT2) (ID2[KS2]peer(ID1), CONT3) PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent](str(STR),[R,P])} /\
                         MSG in MSGS == false .
 
-    --- Receiving the message from the peer
+    *** Receiving the message from the peer
     rl [recvMsg] :  {CONT1}< (ID1[KS1]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig)})
                     =>
                     {CONT1}< (ID1[KS1]mI(ID2,STR), sig(STR,first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig)}) .
 
-    --- Verification process of a message signature received from a participant
+    *** Verification process of a message signature received from a participant
     crl [Verify] :  {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(STR,R,P), peer(ID2), CONT2) PS >net(MSGS)
                     =>
                     {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
@@ -387,8 +401,9 @@ mod FALCON is
                         S1 := (c p- (S2 p* h)) mod Q /\
                         (S1 == s1) /\ (S2 == s2) .
 
-    --- Intruder behaviour--------------------------------------
-    
+    ***
+    *** INTRUDER BEHAVIOUR
+    ***
 endm
 
 *** Proof of the executability of the rules
