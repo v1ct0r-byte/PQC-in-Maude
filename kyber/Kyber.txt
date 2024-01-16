@@ -2,7 +2,8 @@
 
 This document is a collection of explanations on the proposed solution to model and analyze the protocol.
 Author: Víctor García Valero <vicgarval@upv.es>
-------------------------------------------------------------------------------------------------------------------------
+
+
 ACRONIMS
 
     CPA: Chosen plaintext attack
@@ -17,26 +18,24 @@ ACRONIMS
     IND: Indistinguishability
     IND-CPA: Indistinguishability chosen plaintext attack
 
-------------------------------------------------------------------------------------------------------------------------
+
 IMPORTANT MATHEMATICAL NOTATION (BACKGROUND)
 
--> Beta es un conjunto de números enteros que abarca de 0 a 255, por ejemplo el conjunto de enteros de 8-bit sin signo.
--> Beta^k es el conjunto de cadenas de bytes con longitud k.
--> Beta^* es el conjunto de cadenas de bytes con longitud arbitraria.
--> Dadas dos cadenas de bytes a y b, (a||b) representa la concatenación de a y b.
--> El anillo de enteros mod q es Zq, donde los enteros se encuentran en el rango [0,q).
--> R es el anillo de polinomios (algo muy profundo).
--> En KYBER los valores de n = 7681 y q = 256.
+-> Beta is a set of whole numbers from 0 to 255. One example would be the set of unsigned 8-bit whole numbers.
+-> Beta^k is the set of byte strings of length k.
+-> Beta^* is the set of byte strings of arbitrary length.
+-> Given two byte strings a and b, (a||b) depicts the concatenation of a and b.
+-> The ring of whole numbers module q is Zq, where whole numbers are in the range [0,q].
+-> R is the polynomial ring.
+-> In KYBER the value of n = 7681 and q = 256.
 
--> Existen dos funciones hash:
-    H : B^* -> B^32, es una función que recibe enteros de longitud arbitraria y devuelve un entero de longitud 32 (o un vector de dicha longitud).
-    G : B^* -> B^32 x B^3, es una función que recibe también enteros de longitud arbitraria pero devuelve una matriz de tamaño 32x32.
+-> There are two hash functions:
+    H : B^* -> B^32, is a function that receives as input arbitrary length whole numbers and returns as output a whole number of length 32 (or a vector of such length).
+    G : B^* -> B^32 x B^3, is a function that receives as input arbitrary length whole numbers and returns a matrix of size 32x32.
 -> KDF (key derivation function) : B^* -> B^32.
--> Q son los números racionales (son aquellos números que pueden representarse como el cociente de dos números enteros).
--> [x] indica la aproximación al entero mas cercano (por techo o suelo) cuando x pertence a Q.
--> Siendo x un número del anillo de enteros hasta q = 256, y sea d < [log2q]:
-    La función de compresión sobre q recibe la x y un d
-    La función de decpmpresión sobre q recibe la x y un d
--> CBD significa Centered binomial distribution. Representa el dominio de donde son sacadas las muestras de forma pseudoaleatorias para los vectores/arrays de bytes u y v.
-
-------------------------------------------------------------------------------------------------------------------------
+-> Q are the rational numbers (numbers that can be represented and yield from the division of two other numbers).
+-> [x] indicates the aproimation to the closest whole number (either by ceiling or floor) when x is from Q.
+-> Let x be a number from the ring of whole numbers till q = 256, and let d < [log2q]:
+    Compression function over q receives x and d
+    Decrompression function over q receives x and d
+-> CBD stands for Centered binomial distribution. It represents the domain from where some sunmbers are sampled from in a pseudo-random manner for byte arrays/vectors u and v.
