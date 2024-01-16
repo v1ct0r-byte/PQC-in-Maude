@@ -1,4 +1,4 @@
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
 mod KYBER-PREDS is
     protecting KYBER .
@@ -28,10 +28,10 @@ mod KYBER-PREDS is
 
     *** Equations for the state's predicates
 
-    *** Equations indicating two actors want to share a key
+    *** Equation indicating two actors want to share a key
     eq {CONT3} < (ID1[publicKey(ID1,K) ; KS1]CONT1) (ID2[KS2]CONT2) PS >net(MSGS msg{(ID1,ID2)[sentPK]K}) |= wantsToShareKey(ID1,ID2) = true .
 
-    *** Equations indicating two actors share a key
+    *** Equation indicating two actors share a key
     eq {CONT3} < (ID1[sharedKey(ID2,K) ; KS1]CONT1) (ID2[sharedKey(ID1,K) ; KS2]CONT2) PS >net(MSGS) |= sharedAKeyWith(ID1,ID2) = true .
 
     *** Equation indicating an actor learned the shared key from another one (notice that ID3 does not need to have that shared key)
