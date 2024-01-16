@@ -1,4 +1,4 @@
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
 mod BIKE-PREDS is
     protecting BIKE .
