@@ -1,11 +1,11 @@
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
 mod CM-CHECK is
     protecting CM-PREDS .
     including MODEL-CHECKER .
     including LTL-SIMPLIFIER .
 
-    *** GlobalState declarations
+    *** GlobalState constants
     ops init1 init2 : -> GlobalState .
 
     *** 3 participants and the necesary samples for 1 key exchange
