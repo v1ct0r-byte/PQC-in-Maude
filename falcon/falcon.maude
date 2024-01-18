@@ -4,7 +4,6 @@
 *** Module specifying basic datatypes and the operations
 fmod DATA-TYPES is
     protecting NAT .
-    protecting STRING .
 
     *** Supersort of all data
     sort Data .
@@ -12,16 +11,15 @@ fmod DATA-TYPES is
     *** Definitions of types of data
     sort Polynomial .
     sort Matrix .
+    sort String .
 
     *** We specify that polynomials are data
     subsort Polynomial < Data .
+    subsort String < Data .
     *** Furthermore, natural numbers can be seen as polynomials
     subsort Nat < Polynomial .
     *** We specify that matrices are polynomials and data
     subsort Matrix < Polynomial Data .
-
-    *** Operator to encapsulate strings as Data
-    op str : String -> Data .
 
     *** Concatenation operation between Strings and natural numbers
     op _||_ : String Nat -> String .
@@ -73,13 +71,13 @@ view Data from TRIV to DATA-TYPES is
   sort Elt to Data .
 endv
 
-***Module to extend add operations and concepts of DATA-TYPES regarding lists of data
+*** Module to extend operations and concepts of DATA-TYPES regarding lists of data
 mod DATA-TYPES-EXT is
     protecting DATA-TYPES .
     protecting LIST{Data} .
 
     *** Ground operator
-    op ground : -> Polynomial [ctor] .
+    op ground : -> Data [ctor] .
 
     var L : List{Data} .
     var N : Nat .
@@ -163,34 +161,57 @@ fmod FALCON-VERIFY is
 
 endfm
 
+fmod MODEL-CONFIGURATION-BASE is
+    sorts Sample Key Attribute .
+endfm
+
+view Sample from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Sample .
+endv
+
+view Key from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Key .
+endv
+
+view Attribute from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Attribute .
+endv
+
 *** Module to set the foundations of our symbolic model
 fmod MODEL-CONFIGURATION is
     protecting DATA-TYPES .
     protecting LIST{Data} .
+    including MODEL-CONFIGURATION-BASE .
+    protecting SET{Sample} * (op empty to emptyS) .
+    protecting SET{Key} * (op empty to emptyK) .
+    protecting SET{Attribute} * (op empty to emptyA) .
 
     ***
     *** SORTS
     ***
 
-    sorts Identifier Content Principal Principals . 
+    sorts Identifier Content Principal Principals .
+    subsort Principal < Principals .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
-    subsort Principal < Principals .
 
-    sorts Key Keys .
-    subsort Key < Keys .
+    sort SamplePool .
+    subsort Set{Sample} < SamplePool .
 
-    *** We distinguish between public and secret keys, both being keys in the end
+    op empty : -> SamplePool .
+    op _,_ : SamplePool SamplePool -> SamplePool [ditto] .
+
+    *** We distinguish between public and secret keys
     sorts PKey SKey .
 
-    ***We define keys as a type of content
-    subsorts Polynomial < PKey SKey < Key < Content .
+    *** We define Public and Secret keys to be Keys 
+    subsorts PKey SKey < Key .
 
-    *** We also declare that a pair is content
-    subsort Pair < Content .
+    *** Define polynomials as samples
+    subsort Polynomial < Sample .
 
-    *** Declare Data as content
-    subsorts Data < Content .
+    *** Define Strings as samples
+    subsort String < Sample .
 
     *** Sort for the State of our system
     sort GlobalState .
@@ -199,48 +220,24 @@ fmod MODEL-CONFIGURATION is
     *** OPERATORS
     ***
 
-    *** Empty group of keys
-    op emptyK : -> Keys .
-    *** Group of keys
-    op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
-
-    var K : Key .
-    vars KS1 KS2 : Keys .
-
-    *** Operation to check the precence of a key in a participant
-    op _in_ : Key Keys -> Bool .
-    eq K in (KS1 ; K ; KS2) = true .
-    eq K in (KS1) = false [owise] .
-
     *** Operator to represent the relation of a public key and a principal
-    op publicKey : Identifier Key -> PKey .
+    op publicKey : Identifier Polynomial -> PKey .
 
     *** Operator to represent the relation of a secret key and a principal
-    op secretKey : Identifier Key -> SKey .
+    op secretKey : Identifier Polynomial -> SKey .
 
     *** Operator to represent the shared key with a participant
-    op sharedKey : Identifier Key -> SKey [format (g! o)] .
+    op sharedKey : Identifier Polynomial -> SKey [format (g! o)] .
 
     *** Posible states for a message delivering M
     ops sent received : -> MsgState .
 
-    *** Lists of data elements are content that can be stored
-    subsort List{Data} < Content .
-
-    op emptyC : -> Content .
-    *** Group of contents
-    op _,_ : Content Content -> Content [assoc comm id: emptyC] .
-
-    vars C CONT1 CONT2 : Content .
-
-    *** Operation to check the contents of a participant
-    op _in_ : Content Content -> Bool .
-    eq C in (CONT1 C CONT2) = true .
-    eq C in (CONT1) = false [owise] .
-
     *** Structure of a message
     *** Sender, Receiver, State, Content
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
+
+    subsort Polynomial < Content .
+    subsort String < Content .
 
     *** Group of messsages
     op emptyM : -> Msgs .
@@ -255,27 +252,26 @@ fmod MODEL-CONFIGURATION is
     eq M in (MS1 M MS2) = true .
     eq M in (MS1) = false [owise] .
 
-    *** Defintion of our three main participants followiing the literature
-    ops Alice Eve Bob : ->  Identifier [ctor] .
-
     *** Definition of the default participant
     op none : -> Identifier [ctor] .
+    *** Defintion of our three main participants following the literature
+    ops Alice Eve Bob : ->  Identifier [ctor] .
 
     *** Operator to assign a Ciphered text to a participant
-    op cI : Identifier Pair -> Content .
+    op cI : Identifier Pair -> Attribute .
 
     *** Operator to mark the current participant to whom the key exchange is happening
-    op peer : Identifier -> Content .
+    op peer : Identifier -> Attribute .
 
     *** Definition of the components of a Principal
     *** (idenifier [keys] content)
-    op _[_]_ : Identifier Keys Content -> Principal [ctor] .
+    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Principal [ctor] .
 
     *** Group of principals
-    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
+    op __ : Principals Principals -> Principals [assoc comm format (d n d)] .
 
     *** Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+    op {_}<_>net(_) : SamplePool Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
 *** SIGNATURE scheme behaviour
@@ -283,7 +279,6 @@ mod FALCON is
     ***
     *** IMPORTS
     ***
-
     protecting DATA-TYPES-EXT .
     protecting FALCON-HASH-OPERATIONS .
     protecting FALCON-KEYGEN .
@@ -292,34 +287,37 @@ mod FALCON is
     protecting MODEL-CONFIGURATION .
     
     *** Sample group for phi
-    op phis : Content -> Content .
+    op phis : Set{Sample} -> SamplePool .
     *** Operator to bind a phi to an Identifier
-    op phiI : Identifier Polynomial -> Content .
+    op phiI : Identifier Polynomial -> Attribute .
 
     *** Sample group for q
-    op qs : Content -> Content .
+    op qs : Set{Sample} -> SamplePool .
     *** Operator to bind a q to an Identifier
-    op qI : Identifier Nat -> Content .
+    op qI : Identifier Nat -> Attribute .
 
     *** Sample group for m
-    op ms : Content -> Content .
+    op ms : Set{Sample} -> SamplePool .
     *** Operator to bind an m to an Identifier
-    op mI : Identifier String -> Content .
+    op mI : Identifier String -> Attribute .
 
     *** Sample group for r
-    op rs : Content -> Content .
+    op rs : Set{Sample} -> SamplePool .
     *** Operator to bind a q to an Identifier
-    op rI : Identifier Nat -> Content .
+    op rI : Identifier Nat -> Attribute .
 
     *** Operator to store the SIGNATURE of a message
-    op sig : String Nat Polynomial -> Content .
+    op sig : String Nat Polynomial -> Attribute .
+
+    *** Operator to store the message and its signature in a message
+    op sig : String Pair -> Content .
 
     ***
     *** INITIAL STATES
     ***
 
     op init1 : -> GlobalState .
-    eq init1 =  {phis(phi), qs(q), ms(str(m)), rs(r)}
+    eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
                 <   (Alice[emptyK]peer(Bob)) 
                     (Eve[emptyK]peer(none)) 
                     (Bob[emptyK]peer(Alice)) 
@@ -333,46 +331,48 @@ mod FALCON is
     var PS : Principals .
     vars MSGS MSGS' : Msgs .
     var MSG : Msg .
-    vars K1 K2 : SKey .
-    vars PK PK' : PKey .
+    vars K1 K2 : Polynomial .
+    vars PK PK' : Polynomial .
     vars Ss Sig SK : Pair .
-    vars KS1 KS2 KS3 : Keys .
+    vars KS1 KS2 KS3 : Set{Key} .
     var L : List{Data} .
     vars p h c t z s P S1 S2 : Polynomial .
     vars SAM1 SAM2 : Data .
     var STR : String .
     vars Q R : Nat .
-    vars CONT1 CONT2 CONT3 CONT4 : Content .
+    var ATTS ATTS' ATTS'' : Set{Attribute} .
+    vars SS1 SS2 : Set{Sample} .
+    var SSS : SamplePool .
 
     ***
     *** HONEST PARTICIPANT BEHAVIOUR
     ***
 
     *** Generation of pair of keys by a participant
-    crl [KeyGen] :  {phis(SAM1, CONT1), qs(SAM2, CONT2), CONT3}< (ID1[emptyK]peer(ID2)) PS >net(MSGS)
+    crl [KeyGen] :  {phis((SAM1, SS1)), qs((SAM2, SS2)), SSS}< (ID1[emptyK]peer(ID2)) PS >net(MSGS)
                     =>
-                    {phis(CONT1), qs(CONT2), CONT3}< (ID1[publicKey(ID1,PK) ; secretKey(ID1,SK)]qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2)) PS >net(MSGS)
+                    {phis(SS1), qs(SS2), SSS}< (ID1[publicKey(ID1,PK), secretKey(ID1,SK)](qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2))) PS >net(MSGS)
                     if  L := NTRUGen(SAM1,SAM2) /\
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
                         ID1 =/= ID2 .
     
     *** Sending the public key to the peer
-    crl [sendPK] :  {CONT1}< (ID1[publicKey(ID1,PK) ; KS1]peer(ID2), CONT2) (ID2[KS2]CONT3) PS >net(MSGS)
+    crl [sendPK] :  {SSS}< (ID1[publicKey(ID1,PK), KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS)
                     =>
-                    {CONT1}< (ID1[KS1]peer(ID2), CONT2) (ID2[KS2]CONT3) PS >net(MSGS MSG)
+                    {SSS}< (ID1[KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent](PK)} /\ 
                         MSG in MSGS == false .
 
     *** Receiving the public key from the peer
-    rl [recvPK] :   {CONT1}< (ID1[KS1]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
+    rl [recvPK] :   {SSS}< (ID1[KS1](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
                     =>
-                    {CONT1}< (ID1[KS1 ; publicKey(ID2,PK)]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
+                    {SSS}< (ID1[KS1, publicKey(ID2,PK)](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
 
     *** Signing process of a message created by a participant
-    crl [Sign] :    {ms(str(STR), CONT1), rs(SAM1, CONT2), CONT3}< (ID1[secretKey(ID1,SK) ; KS1]qI(ID1,Q), CONT4) PS >net(MSGS)
+    crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](qI(ID1,Q), ATTS)) PS >net(MSGS)
                     =>
-                    {ms(CONT1), rs(CONT2), CONT3}< (ID1[KS1]sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), CONT4) PS >net(MSGS)
+                    {ms(SS1), rs(SS2), SSS}< (ID1[KS1](sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), ATTS)) PS >net(MSGS)
                     if  c := HashToPoint(SAM1 || STR, Q, n) /\
                         t := [FFT(c), FFT(0)] p* inv(first(SK)) /\
                         z := ffSampling(t, second(SK)) /\
@@ -380,21 +380,21 @@ mod FALCON is
                         Ss := invFFT(s) .
 
     *** Sending the message to the peer
-    crl [sendMsg] : {CONT1}< (ID1[KS1]mI(ID1,STR), sig(STR,R,P), peer(ID2), CONT2) (ID2[KS2]peer(ID1), CONT3) PS >net(MSGS) 
+    crl [sendMsg] : {SSS}< (ID1[KS1](mI(ID1,STR), sig(STR,R,P), peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) 
                     =>
-                    {CONT1}< (ID1[KS1]peer(none), CONT2) (ID2[KS2]peer(ID1), CONT3) PS >net(MSGS MSG)
-                    if  MSG := msg{(ID1,ID2)[sent](str(STR),[R,P])} /\
+                    {SSS}< (ID1[KS1](peer(none), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS MSG)
+                    if  MSG := msg{(ID1,ID2)[sent]sig(STR,[R,P])} /\
                         MSG in MSGS == false .
 
     *** Receiving the message from the peer
-    rl [recvMsg] :  {CONT1}< (ID1[KS1]peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[sent](str(STR), Sig)})
+    rl [recvMsg] :  {SSS}< (ID1[KS1](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)})
                     =>
-                    {CONT1}< (ID1[KS1]mI(ID2,STR), sig(STR,first(Sig),second(Sig)), peer(ID2), CONT2) PS >net(MSGS msg{(ID2,ID1)[received](str(STR), Sig)}) .
+                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)}) .
 
     *** Verification process of a message signature received from a participant
-    crl [Verify] :  {CONT1}< (ID1[publicKey(ID2, p mod Q) ; KS1]mI(ID2,STR), sig(STR,R,P), peer(ID2), CONT2) PS >net(MSGS)
+    crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), peer(ID2), ATTS)) PS >net(MSGS)
                     =>
-                    {CONT1}< (ID1[KS1]mI(ID2,STR), peer(none), CONT2) PS >net(MSGS) 
+                    {SSS}< (ID1[KS1](mI(ID2,STR), peer(none), ATTS)) PS >net(MSGS) 
                     if  c := HashToPoint(R || STR, Q, n) /\
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\
@@ -410,4 +410,4 @@ endm
 rew init1 .
 
 *** Termination proof of the system
-search init1 =>! {CONT1:Content}<(ID1:Identifier[KS1:Keys] mI(ID2:Identifier,STR:String) , peer(none)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mI(ID2:Identifier,STR:String), peer(none))) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
