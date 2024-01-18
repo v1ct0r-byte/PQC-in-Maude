@@ -16,8 +16,9 @@ fmod DATA-TYPES is
     *** We specify that polynomials are data
     subsort Polynomial < Data .
     subsort String < Data .
-    *** Furthermore, natural numbers can be seen as polynomials
-    subsort Nat < Polynomial .
+    *** Furthermore, natural numbers and strings can be seen as polynomials
+    *** Such subsort relation for Strings fixes the preregularity issue with if_then_else_fi for tuple (Bool,Polynomial,String)
+    subsort Nat String < Polynomial .
     *** We specify that matrices are polynomials and data
     subsort Matrix < Polynomial Data .
 
@@ -107,14 +108,17 @@ fmod FALCON-KEYGEN is
     protecting LIST{Data} .
 
     *** Sample values for KeyGeneration
-    op phi : -> Polynomial .
-    op q : -> Nat .
+    ops phi phi' : -> Polynomial .
+    ops q q' : -> Nat .
 
     *** Sampler of values f, g, F and G
     op NTRUGen : Polynomial Nat -> List{Data} .
-    ops f g F G : -> Polynomial .
 
+    ops f g F G : -> Polynomial .
     eq NTRUGen(phi, q) = (f g F G) .
+
+    ops f' g' F' G' : -> Polynomial .
+    eq NTRUGen(phi', q') = (f' g' F' G') .
 
     *** Matrix of a set of polynomials (this is to construct B)
     op mat : List{Data} -> Matrix .
@@ -136,10 +140,10 @@ fmod FALCON-SIGN is
     protecting FALCON-KEYGEN .
 
     *** Sample values for r
-    op r : -> Nat .
+    ops r r' : -> Nat .
 
     *** Sample values for messages
-    op m : -> String .
+    ops m m' : -> String .
 
     *** Fast Fourier Sampling
     op ffSampling : Polynomial Polynomial -> Polynomial .
@@ -316,8 +320,15 @@ mod FALCON is
     *** INITIAL STATES
     ***
 
-    op init1 : -> GlobalState .
+    ops init1 init2 : -> GlobalState .
+    
     eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
+                <   (Alice[emptyK]peer(Bob)) 
+                    (Eve[emptyK]peer(none)) 
+                    (Bob[emptyK]peer(Alice)) 
+                >net(emptyM) .
+
+    eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
                 <   (Alice[emptyK]peer(Bob)) 
                     (Eve[emptyK]peer(none)) 
                     (Bob[emptyK]peer(Alice)) 
@@ -365,9 +376,9 @@ mod FALCON is
                         MSG in MSGS == false .
 
     *** Receiving the public key from the peer
-    rl [recvPK] :   {SSS}< (ID1[KS1](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
+    rl [recvPK] :   {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
                     =>
-                    {SSS}< (ID1[KS1, publicKey(ID2,PK)](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
+                    {SSS}< (ID1[KS1, publicKey(ID2,PK)]ATTS) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
 
     *** Signing process of a message created by a participant
     crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](qI(ID1,Q), ATTS)) PS >net(MSGS)
@@ -387,14 +398,14 @@ mod FALCON is
                         MSG in MSGS == false .
 
     *** Receiving the message from the peer
-    rl [recvMsg] :  {SSS}< (ID1[KS1](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)})
+    rl [recvMsg] :  {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)})
                     =>
-                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)}) .
+                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)}) .
 
     *** Verification process of a message signature received from a participant
-    crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), peer(ID2), ATTS)) PS >net(MSGS)
+    crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), ATTS)) PS >net(MSGS)
                     =>
-                    {SSS}< (ID1[KS1](mI(ID2,STR), peer(none), ATTS)) PS >net(MSGS) 
+                    {SSS}< (ID1[KS1](mI(ID2,STR), ATTS)) PS >net(MSGS) 
                     if  c := HashToPoint(R || STR, Q, n) /\
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\
@@ -405,9 +416,3 @@ mod FALCON is
     *** INTRUDER BEHAVIOUR
     ***
 endm
-
-*** Proof of the executability of the rules
-rew init1 .
-
-*** Termination proof of the system
-search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mI(ID2:Identifier,STR:String), peer(none))) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .

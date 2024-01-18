@@ -1,0 +1,36 @@
+*** Commands to reproduce the experiments over the FALCON PQ-SIG.
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+***
+*** LOADING MODULES
+***
+
+load ./falcon.maude
+
+***
+*** SEARCH
+***
+
+*** Signature search on init1
+search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mI(ID2:Identifier,STR:String), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier /\ ((sig(STR:String,R:Nat,P:Polynomial) in (ATTS)) == false) .
+*** Key recovery attack on init1
+
+*** Signature search on init2
+search init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mI(ID2:Identifier,STR:String), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+*** Key recovery attack on init2
+
+***
+*** MODEL CHECKING
+***
+
+load model-checker.maude
+load ./falcon-PREDS.maude
+load ./falcon-CHECK.maude
+
+*** TERMINATION?
+
+
+*** FAIRNESS
+
+
+*** SECRECY

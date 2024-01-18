@@ -1,0 +1,34 @@
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+mod FALCON-PREDS is
+    protecting FALCON .
+    including SATISFACTION .
+
+    *** Definition of GlobalState as subtype of State
+    subsort GlobalState < State .
+
+    *** Declaration of predicate to represent a principal starting the protocol
+    op wantsToSignAndSendTo : Identifier Identifier -> Prop .
+
+    *** Declaration of predicate to represent a principal verified a message
+    op verifiedSignatureFrom : Identifier Identifier -> Prop .
+
+    *** Variables for the equations
+    vars ID1 ID2 : Identifier .
+    var PS : Principals .
+    var MSGS : Msgs .
+    vars KS1 KS2 : Set{Key} .
+    vars ATTS ATTS' : Set{Attribute} .
+    var PK : Polynomial .
+    vars SK Sig : Pair .
+    var SSS : SamplePool .
+    var STR : String .
+
+    *** Equations for the state's predicates
+
+    *** Equation indicating an actors start the signature procedure
+    eq {SSS}< (ID1[KS1, publicKey(ID1,PK), secretKey(ID1,SK)](peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) |= wantsToSignAndSendTo(ID1,ID2) = true .
+
+    *** Equation indicating an actors has verified a message
+    eq {SSS}< (ID1[KS1](mI(ID2,STR), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS) |= verifiedSignatureFrom(ID1,ID2) = true . ---if ((sig(STR,Sig) in ATTS) == false) .
+endm
