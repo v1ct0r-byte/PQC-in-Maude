@@ -11,20 +11,20 @@ fmod DATA-TYPES is
     *** Definitions of types of data
     sort Polynomial .
     sort Matrix .
-    sort String .
+    sort StringMSG .
 
     *** We specify that polynomials are data
     subsort Polynomial < Data .
-    subsort String < Data .
+    subsort StringMSG < Data .
     *** Furthermore, natural numbers and strings can be seen as polynomials
-    *** Such subsort relation for Strings fixes the preregularity issue with if_then_else_fi for tuple (Bool,Polynomial,String)
-    subsort Nat String < Polynomial .
+    *** Such subsort relation for Strings fixes the preregularity issue with if_then_else_fi for tuple (Bool,Polynomial,StringMSG)
+    subsort Nat StringMSG < Polynomial .
     *** We specify that matrices are polynomials and data
     subsort Matrix < Polynomial Data .
 
     *** Concatenation operation between Strings and natural numbers
-    op _||_ : String Nat -> String .
-    op _||_ : Nat String -> String .
+    op _||_ : StringMSG Nat -> StringMSG .
+    op _||_ : Nat StringMSG -> StringMSG .
 
     *** Substraction between Polynomials
     op _p-_ : Polynomial Polynomial -> Polynomial .
@@ -99,7 +99,7 @@ fmod FALCON-HASH-OPERATIONS is
     op n : -> Nat .
 
     *** Hash operation that receives a string to hash, a modulus and a degree
-    op HashToPoint : String Nat Nat -> Polynomial .
+    op HashToPoint : StringMSG Nat Nat -> Polynomial .
 endfm
 
 *** Module to represent the operations and data handled during KEYGEN step
@@ -143,7 +143,7 @@ fmod FALCON-SIGN is
     ops r r' : -> Nat .
 
     *** Sample values for messages
-    ops m m' : -> String .
+    ops m m' : -> StringMSG .
 
     *** Fast Fourier Sampling
     op ffSampling : Polynomial Polynomial -> Polynomial .
@@ -215,7 +215,7 @@ fmod MODEL-CONFIGURATION is
     subsort Polynomial < Sample .
 
     *** Define Strings as samples
-    subsort String < Sample .
+    subsort StringMSG < Sample .
 
     *** Sort for the State of our system
     sort GlobalState .
@@ -241,7 +241,7 @@ fmod MODEL-CONFIGURATION is
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
 
     subsort Polynomial < Content .
-    subsort String < Content .
+    subsort StringMSG < Content .
 
     *** Group of messsages
     op emptyM : -> Msgs .
@@ -303,7 +303,10 @@ mod FALCON is
     *** Sample group for m
     op ms : Set{Sample} -> SamplePool .
     *** Operator to bind an m to an Identifier
-    op mI : Identifier String -> Attribute .
+    op mI : Identifier StringMSG -> Attribute .
+
+    *** Operator to bind a verified m to an Identifier
+    op mIv : Identifier StringMSG -> Attribute .
 
     *** Sample group for r
     op rs : Set{Sample} -> SamplePool .
@@ -311,10 +314,10 @@ mod FALCON is
     op rI : Identifier Nat -> Attribute .
 
     *** Operator to store the SIGNATURE of a message
-    op sig : String Nat Polynomial -> Attribute .
+    op sig : StringMSG Nat Polynomial -> Attribute .
 
     *** Operator to store the message and its signature in a message
-    op sig : String Pair -> Content .
+    op sig : StringMSG Pair -> Content .
 
     ***
     *** INITIAL STATES
@@ -349,7 +352,7 @@ mod FALCON is
     var L : List{Data} .
     vars p h c t z s P S1 S2 : Polynomial .
     vars SAM1 SAM2 : Data .
-    var STR : String .
+    var STR : StringMSG .
     vars Q R : Nat .
     var ATTS ATTS' ATTS'' : Set{Attribute} .
     vars SS1 SS2 : Set{Sample} .
@@ -405,7 +408,7 @@ mod FALCON is
     *** Verification process of a message signature received from a participant
     crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), ATTS)) PS >net(MSGS)
                     =>
-                    {SSS}< (ID1[KS1](mI(ID2,STR), ATTS)) PS >net(MSGS) 
+                    {SSS}< (ID1[KS1](mIv(ID2,STR), ATTS)) PS >net(MSGS) 
                     if  c := HashToPoint(R || STR, Q, n) /\
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\

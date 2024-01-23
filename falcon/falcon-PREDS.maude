@@ -22,7 +22,7 @@ mod FALCON-PREDS is
     var PK : Polynomial .
     vars SK Sig : Pair .
     var SSS : SamplePool .
-    var STR : String .
+    var STR : StringMSG .
 
     *** Equations for the state's predicates
 
@@ -30,5 +30,5 @@ mod FALCON-PREDS is
     eq {SSS}< (ID1[KS1, publicKey(ID1,PK), secretKey(ID1,SK)](peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) |= wantsToSignAndSendTo(ID1,ID2) = true .
 
     *** Equation indicating an actors has verified a message
-    eq {SSS}< (ID1[KS1](mI(ID2,STR), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS) |= verifiedSignatureFrom(ID1,ID2) = true . ---if ((sig(STR,Sig) in ATTS) == false) .
+    eq {SSS}< (ID1[KS1](mIv(ID2,STR), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS) |= verifiedSignatureFrom(ID1,ID2) = true .
 endm
