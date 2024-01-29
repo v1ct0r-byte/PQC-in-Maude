@@ -379,9 +379,9 @@ mod FALCON is
                         MSG in MSGS == false .
 
     *** Receiving the public key from the peer
-    rl [recvPK] :   {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent](PK)})
+    rl [recvPK] :   {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent](PK)} MSGS')
                     =>
-                    {SSS}< (ID1[KS1, publicKey(ID2,PK)]ATTS) PS >net(MSGS msg{(ID2,ID1)[received](PK)}) .
+                    {SSS}< (ID1[KS1, publicKey(ID2,PK)]ATTS) PS >net(MSGS msg{(ID2,ID1)[received](PK)} MSGS') .
 
     *** Signing process of a message created by a participant
     crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](qI(ID1,Q), ATTS)) PS >net(MSGS)
@@ -396,14 +396,14 @@ mod FALCON is
     *** Sending the message to the peer
     crl [sendMsg] : {SSS}< (ID1[KS1](mI(ID1,STR), sig(STR,R,P), peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) 
                     =>
-                    {SSS}< (ID1[KS1](peer(none), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS MSG)
+                    {SSS}< (ID1[KS1](peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent]sig(STR,[R,P])} /\
                         MSG in MSGS == false .
 
     *** Receiving the message from the peer
-    rl [recvMsg] :  {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)})
+    rl [recvMsg] :  {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)} MSGS')
                     =>
-                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)}) .
+                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)} MSGS') .
 
     *** Verification process of a message signature received from a participant
     crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), ATTS)) PS >net(MSGS)
@@ -413,7 +413,8 @@ mod FALCON is
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\
                         S1 := (c p- (S2 p* h)) mod Q /\
-                        (S1 == s1) /\ (S2 == s2) .
+                        (S1 == s1) /\ (S2 == s2) /\ 
+                        ID1 =/= ID2 .
 
     ***
     *** INTRUDER BEHAVIOUR

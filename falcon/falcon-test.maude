@@ -12,11 +12,11 @@ load ./falcon.maude
 ***
 
 *** Signature search on init1
-search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIv(ID2:Identifier,STR:StringMSG), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+---search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIv(ID2:Identifier,STR:StringMSG), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 *** Key recovery attack on init1
 
 *** Signature search on init2
-search init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIv(ID2:Identifier,STR:StringMSG), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+---search init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIv(ID2:Identifier,STR:StringMSG), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 *** Key recovery attack on init2
 
 ***
@@ -29,9 +29,10 @@ load ./falcon-CHECK.maude
 
 *** TERMINATION
 red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
 
 *** FAIRNESS
----red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> [] (<> verifiedSignatureFrom(Bob, Alice)))) .
+red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> [] (<> verifiedSignatureFrom(Bob, Alice)))) .
 
 *** AUTHENTICATION
 
