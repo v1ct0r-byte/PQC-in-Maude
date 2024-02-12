@@ -305,8 +305,8 @@ mod FALCON is
     *** Operator to bind an m to an Identifier
     op mI : Identifier StringMSG -> Attribute .
 
-    *** Operator to bind a verified m to an Identifier
-    op mIv : Identifier StringMSG -> Attribute .
+    *** Operator to bind a verified M with signature S to an Identifier
+    op mIvS : Identifier StringMSG Pair -> Attribute .
 
     *** Sample group for r
     op rs : Set{Sample} -> SamplePool .
@@ -315,6 +315,9 @@ mod FALCON is
 
     *** Operator to store the SIGNATURE of a message
     op sig : StringMSG Nat Polynomial -> Attribute .
+
+    *** Operator to record signatures for messages by participant
+    op sigRecord : Identifier Set{Attribute} -> Attribute .
 
     *** Operator to store the message and its signature in a message
     op sig : StringMSG Pair -> Content .
@@ -326,15 +329,15 @@ mod FALCON is
     ops init1 init2 : -> GlobalState .
     
     eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
-                <   (Alice[emptyK]peer(Bob)) 
-                    (Eve[emptyK]peer(none)) 
-                    (Bob[emptyK]peer(Alice)) 
+                <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA)))
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA))) 
+                    (Bob[emptyK](peer(Alice), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
     eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
-                <   (Alice[emptyK]peer(Bob)) 
-                    (Eve[emptyK]peer(none)) 
-                    (Bob[emptyK]peer(Alice)) 
+                <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA))) 
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA))) 
+                    (Bob[emptyK](peer(Alice), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
     ***
@@ -357,15 +360,16 @@ mod FALCON is
     var ATTS ATTS' ATTS'' : Set{Attribute} .
     vars SS1 SS2 : Set{Sample} .
     var SSS : SamplePool .
+    var SIGS : Set{Attribute} .
 
     ***
     *** HONEST PARTICIPANT BEHAVIOUR
     ***
 
     *** Generation of pair of keys by a participant
-    crl [KeyGen] :  {phis((SAM1, SS1)), qs((SAM2, SS2)), SSS}< (ID1[emptyK]peer(ID2)) PS >net(MSGS)
+    crl [KeyGen] :  {phis((SAM1, SS1)), qs((SAM2, SS2)), SSS}< (ID1[emptyK](peer(ID2), ATTS)) PS >net(MSGS)
                     =>
-                    {phis(SS1), qs(SS2), SSS}< (ID1[publicKey(ID1,PK), secretKey(ID1,SK)](qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2))) PS >net(MSGS)
+                    {phis(SS1), qs(SS2), SSS}< (ID1[publicKey(ID1,PK), secretKey(ID1,SK)](qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2), ATTS)) PS >net(MSGS)
                     if  L := NTRUGen(SAM1,SAM2) /\
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
@@ -384,9 +388,9 @@ mod FALCON is
                     {SSS}< (ID1[KS1, publicKey(ID2,PK)]ATTS) PS >net(MSGS msg{(ID2,ID1)[received](PK)} MSGS') .
 
     *** Signing process of a message created by a participant
-    crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](qI(ID1,Q), ATTS)) PS >net(MSGS)
+    crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](sigRecord(ID1, SIGS), qI(ID1,Q), ATTS)) PS >net(MSGS)
                     =>
-                    {ms(SS1), rs(SS2), SSS}< (ID1[KS1](sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), qI(ID1,Q), ATTS)) PS >net(MSGS)
+                    {ms(SS1), rs(SS2), SSS}< (ID1[KS1](sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), sigRecord(ID1, insert(sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), SIGS)), qI(ID1,Q), ATTS)) PS >net(MSGS)
                     if  c := HashToPoint(SAM1 || STR, Q, n) /\
                         t := [FFT(c), FFT(0)] p* inv(first(SK)) /\
                         z := ffSampling(t, second(SK)) /\
@@ -396,7 +400,7 @@ mod FALCON is
     *** Sending the message to the peer
     crl [sendMsg] : {SSS}< (ID1[KS1](mI(ID1,STR), sig(STR,R,P), peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) 
                     =>
-                    {SSS}< (ID1[KS1](peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS MSG)
+                    {SSS}< (ID1[KS1](mI(ID1,STR), peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent]sig(STR,[R,P])} /\
                         MSG in MSGS == false .
 
@@ -408,7 +412,7 @@ mod FALCON is
     *** Verification process of a message signature received from a participant
     crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), ATTS)) PS >net(MSGS)
                     =>
-                    {SSS}< (ID1[KS1](mIv(ID2,STR), ATTS)) PS >net(MSGS) 
+                    {SSS}< (ID1[KS1](mIvS(ID2,STR,[R,P]), ATTS)) PS >net(MSGS) 
                     if  c := HashToPoint(R || STR, Q, n) /\
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\

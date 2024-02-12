@@ -13,6 +13,15 @@ mod FALCON-PREDS is
     *** Declaration of predicate to represent a principal verified a message
     op verifiedSignatureFrom : Identifier Identifier -> Prop .
 
+    *** Declaration of predicate to represent a principal knows the received message is from the peer
+    ---op communicatesWith : Identifier Identifier -> Prop .
+
+    *** Declaration of predicate to represent a principal possess a secret key of its own
+    op hasOwnSecretKey : Identifier -> Prop .
+
+    *** Declaration of predicate to represent a principal signs a message with a private key
+    op signedMsg : Identifier StringMSG -> Prop .
+
     *** Variables for the equations
     vars ID1 ID2 : Identifier .
     var PS : Principals .
@@ -20,9 +29,14 @@ mod FALCON-PREDS is
     vars KS1 KS2 : Set{Key} .
     vars ATTS ATTS' : Set{Attribute} .
     var PK : Polynomial .
-    vars SK Sig : Pair .
+    var SecKey : SKey .
+    vars Ss SK Sig : Pair .
     var SSS : SamplePool .
     var STR : StringMSG .
+    var GS : GlobalState .
+    var P : Prop .
+    var SAM1 : Data .
+    var SIG : Pair .
 
     *** Equations for the state's predicates
 
@@ -30,5 +44,17 @@ mod FALCON-PREDS is
     eq {SSS}< (ID1[KS1, publicKey(ID1,PK), secretKey(ID1,SK)](peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) |= wantsToSignAndSendTo(ID1,ID2) = true .
 
     *** Equation indicating an actors has verified a message
-    eq {SSS}< (ID1[KS1](mIv(ID2,STR), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS) |= verifiedSignatureFrom(ID1,ID2) = true .
+    eq {SSS}< (ID1[KS1](mIvS(ID2,STR,SIG), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS) |= verifiedSignatureFrom(ID1,ID2) = true .
+
+    *** Equation indicating an actor received a message from its peer
+    ---eq {SSS}< >net() |= true .
+
+    *** Equation indicating an actor has generated his own secret key
+    eq {SSS}< (ID1[secretKey(ID1,SK) , KS1]ATTS) PS >net(MSGS) |= hasOwnSecretKey(ID1) = true .
+
+    *** Equation indicating an actor signed a message with its private key
+    eq {SSS}< (ID1[KS1](sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), ATTS)) PS >net(MSGS) |= signedMsg(ID1,STR) = true .
+
+    *** Equation to include any other cases as false
+    eq GS |= P = false [owise] .
 endm
