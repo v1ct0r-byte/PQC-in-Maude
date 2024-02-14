@@ -166,7 +166,7 @@ fmod FALCON-VERIFY is
 endfm
 
 fmod MODEL-CONFIGURATION-BASE is
-    sorts Sample Key Attribute .
+    sorts Sample Key Attribute Content .
 endfm
 
 view Sample from TRIV to MODEL-CONFIGURATION-BASE is
@@ -181,6 +181,10 @@ view Attribute from TRIV to MODEL-CONFIGURATION-BASE is
     sort Elt to Attribute .
 endv
 
+view Content from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Content .
+endv
+
 *** Module to set the foundations of our symbolic model
 fmod MODEL-CONFIGURATION is
     protecting DATA-TYPES .
@@ -189,12 +193,17 @@ fmod MODEL-CONFIGURATION is
     protecting SET{Sample} * (op empty to emptyS) .
     protecting SET{Key} * (op empty to emptyK) .
     protecting SET{Attribute} * (op empty to emptyA) .
+    protecting SET{Content} * (op empty to emptyC) .
 
     ***
     *** SORTS
     ***
 
-    sorts Identifier Content Principal Principals .
+    *** This subsort relation only changes the pregularity tuple.
+    ---subsort Sample < Content .
+    subsort Set{Content} < Sample .
+
+    sorts Identifier Principal Principals .
     subsort Principal < Principals .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
@@ -202,7 +211,6 @@ fmod MODEL-CONFIGURATION is
     sort SamplePool .
     subsort Set{Sample} < SamplePool .
 
-    op empty : -> SamplePool .
     op _,_ : SamplePool SamplePool -> SamplePool [ditto] .
 
     *** We distinguish between public and secret keys
@@ -322,6 +330,9 @@ mod FALCON is
     *** Operator to store the message and its signature in a message
     op sig : StringMSG Pair -> Content .
 
+    *** Intruder knowledge
+    op knowledge : Set{Content} -> Attribute .
+
     ***
     *** INITIAL STATES
     ***
@@ -330,13 +341,13 @@ mod FALCON is
     
     eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
                 <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA)))
-                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA))) 
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
                     (Bob[emptyK](peer(Alice), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
     eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
                 <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA))) 
-                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA))) 
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
                     (Bob[emptyK](peer(Alice), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
@@ -361,6 +372,8 @@ mod FALCON is
     vars SS1 SS2 : Set{Sample} .
     var SSS : SamplePool .
     var SIGS : Set{Attribute} .
+    var KNG : Set{Content} .
+    var CONT : Content .
 
     ***
     *** HONEST PARTICIPANT BEHAVIOUR
@@ -423,4 +436,18 @@ mod FALCON is
     ***
     *** INTRUDER BEHAVIOUR
     ***
+
+    *** The intruder stores any message it sees on the network if it has not been already stored
+    crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                    =>
+                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                    if  not (CONT in KNG) /\
+                                        ID1 =/= Eve /\
+                                        ID2 =/= Eve .
+    crl [Intruder-Collect-Received] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                        =>
+                                        {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                        if  (not (CONT in KNG)) /\
+                                            ID1 =/= Eve /\
+                                            ID2 =/= Eve .
 endm
