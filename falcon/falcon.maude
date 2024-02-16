@@ -150,13 +150,16 @@ fmod FALCON-SIGN is
 
     *** Constant values to represent an instance of s_1 and s_2
     ops s1 s2 : -> Polynomial .
+    ops s1' s2' : -> Polynomial .
 
     *** Inverse Fast Fourier Transformation
     op invFFT : Polynomial -> Pair .
-    eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(M1:Matrix)) = ([s1,s2]) .
+    eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(mat(f g F G))) = ([s1,s2]) .
+    eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(mat(f' g' F' G'))) = ([s1',s2']) .
 
     *** Equation specifiyng equality "s1 + s2h = c mod q"
     eq (P1:Polynomial p- (s2 p* P2:Polynomial)) mod N:Nat = s1 .
+    eq (P1:Polynomial p- (s2' p* P2:Polynomial)) mod N:Nat = s1' .
 endfm
 
 *** Module to represent the operations and data handled during VERIFY
@@ -430,7 +433,8 @@ mod FALCON is
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\
                         S1 := (c p- (S2 p* h)) mod Q /\
-                        (S1 == s1) /\ (S2 == s2) /\ 
+                        (S1 == s1 or S1 == s1') /\ 
+                        (S2 == s2 or S2 == s2') /\
                         ID1 =/= ID2 .
 
     ***
