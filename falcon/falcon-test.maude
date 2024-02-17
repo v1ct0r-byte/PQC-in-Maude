@@ -12,12 +12,10 @@ load ./falcon.maude
 ***
 
 *** Signature search on init1
----search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
-*** Key recovery attack on init1
+search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 
 *** Signature search on init2
----search init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
-*** Key recovery attack on init2
+search init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 
 ***
 *** MODEL CHECKING
@@ -40,8 +38,6 @@ red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> [] (<> verifiedSig
 *** Natural language: There is no path in which a message has been verified without it being signed at first by the other participant.
 search init1 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}]ATTS:Set{Attribute}) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier,STR:StringMSG,SIG:Pair), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((mI(ID1:Identifier,STR:StringMSG) in ATTS:Set{Attribute}) == false) .
 search init2 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}]ATTS:Set{Attribute}) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier,STR:StringMSG,SIG:Pair), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((mI(ID1:Identifier,STR:StringMSG) in ATTS:Set{Attribute}) == false) .
----red modelCheck(init1, [] (hasOwnSecretKey(Alice) -> [](<> (signedMsg(Alice,m))))) .
----red modelCheck(init2, [] (hasOwnSecretKey(Alice) -> [](<> (signedMsg(Alice,m))))) .
 
 *** A way to prove authentication could be to prove that whenever a messgae is singed by someone 
 *** then the receiver will verify it using the appropiate public key, proving the authenticity of the signature.
