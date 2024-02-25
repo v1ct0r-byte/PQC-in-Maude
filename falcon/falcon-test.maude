@@ -12,10 +12,10 @@ load ./falcon.maude
 ***
 
 *** Signature search on init1
-search init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+search [4] init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 
 *** Signature search on init2
-search init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+search [4] init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 
 ***
 *** MODEL CHECKING
@@ -26,12 +26,16 @@ load ./falcon-PREDS.maude
 load ./falcon-CHECK.maude
 
 *** TERMINATION
-red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
-red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+---red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+---red modelCheck(init1, [] <> verifiedSignatureFrom(Bob, Alice)) .
+red modelCheck(init1, <> verifiedSignatureFrom(Bob, Alice)) .
+---red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+---red modelCheck(init2, [] <> verifiedSignatureFrom(Bob, Alice)) .
+red modelCheck(init2, <> verifiedSignatureFrom(Bob, Alice)) .
 
 *** FAIRNESS
-red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> [] (<> verifiedSignatureFrom(Bob, Alice)))) .
-red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> [] (<> verifiedSignatureFrom(Bob, Alice)))) .
+red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
 
 *** AUTHENTICATION
 *** Definiton: Proof that the sender has the private key and signed the message.

@@ -345,13 +345,13 @@ mod FALCON is
     eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
                 <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA)))
                     (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
-                    (Bob[emptyK](peer(Alice), sigRecord(Bob, emptyA))) 
+                    (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
     eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
                 <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA))) 
                     (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
-                    (Bob[emptyK](peer(Alice), sigRecord(Bob, emptyA))) 
+                    (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
     ***
@@ -389,7 +389,9 @@ mod FALCON is
                     if  L := NTRUGen(SAM1,SAM2) /\
                         SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
                         PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
-                        ID1 =/= ID2 .
+                        ID1 =/= ID2 /\
+                        ID1 =/= Eve /\
+                        ID2 =/= none .
     
     *** Sending the public key to the peer
     crl [sendPK] :  {SSS}< (ID1[publicKey(ID1,PK), KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS)
@@ -399,9 +401,9 @@ mod FALCON is
                         MSG in MSGS == false .
 
     *** Receiving the public key from the peer
-    rl [recvPK] :   {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent](PK)} MSGS')
+    rl [recvPK] :   {SSS}< (ID1[KS1](peer(none), ATTS)) PS >net(MSGS msg{(ID2,ID1)[sent](PK)} MSGS')
                     =>
-                    {SSS}< (ID1[KS1, publicKey(ID2,PK)]ATTS) PS >net(MSGS msg{(ID2,ID1)[received](PK)} MSGS') .
+                    {SSS}< (ID1[KS1, publicKey(ID2,PK)](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received](PK)} MSGS') .
 
     *** Signing process of a message created by a participant
     crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](sigRecord(ID1, SIGS), qI(ID1,Q), ATTS)) PS >net(MSGS)
