@@ -26,11 +26,7 @@ load ./falcon-PREDS.maude
 load ./falcon-CHECK.maude
 
 *** TERMINATION
----red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
----red modelCheck(init1, [] <> verifiedSignatureFrom(Bob, Alice)) .
 red modelCheck(init1, <> verifiedSignatureFrom(Bob, Alice)) .
----red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
----red modelCheck(init2, [] <> verifiedSignatureFrom(Bob, Alice)) .
 red modelCheck(init2, <> verifiedSignatureFrom(Bob, Alice)) .
 
 *** FAIRNESS
