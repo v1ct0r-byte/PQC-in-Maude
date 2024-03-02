@@ -1,0 +1,107 @@
+*** Specification example of DSA (Digital Signature Algorithm) in Maude
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+*** Module representing the sample values, data-types and operations for DSA
+fmod DATA-DSA is
+    sort BitString .
+    
+    *** Declaration of all symbolic values for DSA
+
+    *** Key generation
+    ops p q g : -> BitString .
+
+    *** Signing
+    ops k r s : -> BitString .
+    op m : -> BitString .
+
+    *** Verification
+    op v : -> BitString .
+    eq v = r .
+endfm
+
+*** Module representing the syntax for actors, messages and the global state
+mod CONF-DSA is
+    protecting DATA-DSA .
+
+    sorts Key PubKey SecKey .
+    subsorts PubKey SecKey < Key .
+
+    sort Id .
+    ops A B : -> Id .
+
+    sorts Actor Msg GlobalState .
+    
+    sorts Attribute AttributeSet .
+    subsort Attribute < AttributeSet .
+    op emptyA : -> AttributeSet .
+    op _,_ : AttributeSet AttributeSet -> AttributeSet [comm assoc id: emptyA] .
+
+    *** Attribute to hold a set of parameters
+    op param : BitString BitString BitString -> Attribute .
+
+    *** Attribute to hold a signature for a given message
+    op sig : BitString BitString BitString -> Attribute .
+
+    *** Attribute to hold a message string
+    op ms : BitString -> Attribute .
+
+    *** Actor syntax
+    op <_:_> : Id AttributeSet -> Actor .
+
+    *** Attributes of an actors
+    op pk : PubKey -> Attribute .
+    op sk : SecKey -> Attribute .
+    
+    *** Definition of public and secret keys
+    op x : -> SecKey .
+    op y : -> PubKey .
+
+    sort Content .
+
+    *** Message syntax
+    op from_to_:_ : Id Id Content -> Msg .
+    
+    *** Operator to concatenate natural numbers
+    op _;_ : BitString BitString -> BitString .
+
+    *** Subsort relation to link natural numbers be content for messsages
+    subsort BitString < Content .
+    subsorts SecKey PubKey < Content .
+
+    subsorts Actor Msg < GlobalState .
+
+    *** Global State
+    op __ : GlobalState GlobalState -> GlobalState [assoc comm] .
+endm
+
+*** Module representing the actions for participants in DSA
+mod DSA is
+    protecting CONF-DSA .
+
+    *** Variables
+    var ATTS : AttributeSet .
+
+    *** Rule modelling the keys generation algorithm
+    rl [KeyGeneration] : < A : (param(p, q, g), ATTS) > => < A : (pk(y), sk(x), ATTS) > .
+
+    *** Rule modelling shipment of a public key
+    rl [SendPK] : < A : (pk(y), ATTS) > => < A : (ATTS) > (from A to B : (y)) .
+
+    *** Rule modelling reception of a public key
+    rl [RecvPK] : < B : ATTS > (from A to B : y) => < B : (pk(y), ATTS) > .
+
+    *** Rule modelling the signing of a message
+    rl [Signing] : < A : (ms(m), sk(x), ATTS) > => < A : (sig(m, r, s), ATTS) > .
+
+    *** Rule modelling shipment of a signature and message
+    rl [SendSIG] : < A : (sig(m, r, s), ATTS) > => < A : (ATTS) > (from A to B : (m ; (r ; s))) .
+
+    *** Rule modelling reception of a signature and message
+    rl [RecvSIG] : < B : ATTS > (from A to B : (m ; (r ; s))) => < B : (sig(m, r, s), ATTS) > .
+
+    *** Conditional rule to verify a signature
+    crl [Verification] : < B : (sig(m, r, s), pk(y), ATTS) > => < B : ms(m) > if v == r .
+endm
+
+*** Rewrite
+rew < A : (param(p, q, g), ms(m)) > < B : emptyA > .
