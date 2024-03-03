@@ -105,3 +105,4 @@ endm
 
 *** Rewrite
 rew < A : (param(p, q, g), ms(m)) > < B : emptyA > .
+search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(m), ATTS:AttributeSet) > GS:GlobalState .
