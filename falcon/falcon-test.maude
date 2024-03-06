@@ -18,7 +18,7 @@ search [4] init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Ide
 search [4] init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
 
 ***
-*** MODEL CHECKING
+*** MODEL CHECKING & INVARIANT ANALYSIS
 ***
 
 load model-checker.maude
