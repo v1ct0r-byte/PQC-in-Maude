@@ -106,3 +106,4 @@ endm
 *** Rewrite
 rew < A : (param(p, q, g), ms(m)) > < B : emptyA > .
 search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(m), ATTS:AttributeSet) > GS:GlobalState .
+search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(M:BitString), ATTS:AttributeSet) > GS:GlobalState such that (M:BitString =/= m) .
