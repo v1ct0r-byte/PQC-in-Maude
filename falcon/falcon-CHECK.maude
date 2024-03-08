@@ -1,0 +1,24 @@
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+mod FALCON-CHECK is
+    protecting FALCON-PREDS .
+    including MODEL-CHECKER .
+    including LTL-SIMPLIFIER .
+
+    *** GlobalState constants
+    ops init1 init2 : -> GlobalState .
+
+    *** 3 participants and the necessary samples for 1 key exchange
+    eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
+                <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA)))
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA))) 
+                    (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
+                >net(emptyM) .
+
+    *** 3 participants and the necessary samples for 2 key exchanges
+    eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
+                <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA))) 
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA))) 
+                    (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
+                >net(emptyM) .
+endm

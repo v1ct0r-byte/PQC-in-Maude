@@ -1,0 +1,58 @@
+*** Commands to reproduce the experiments over the FALCON PQ-SIG.
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+***
+*** LOADING MODULES
+***
+
+load ./falcon.maude
+
+***
+*** SEARCH
+***
+
+*** Signature search on init1
+search [4] init1 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+
+*** Signature search on init2
+search [4] init2 =>! {SSS:SamplePool}<(ID1:Identifier[KS1:Set{Key}](mIvS(ID2:Identifier,STR:StringMSG,SIG:Pair), ATTS)) PS:Principals >net(MSGS:Msgs) such that ID1:Identifier =/= ID2:Identifier .
+
+***
+*** MODEL CHECKING & INVARIANT ANALYSIS
+***
+
+load model-checker.maude
+load ./falcon-PREDS.maude
+load ./falcon-CHECK.maude
+
+*** TERMINATION
+red modelCheck(init1, <> verifiedSignatureFrom(Bob, Alice)) .
+red modelCheck(init2, <> verifiedSignatureFrom(Bob, Alice)) .
+
+*** FAIRNESS
+red modelCheck(init1, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+red modelCheck(init2, [] (wantsToSignAndSendTo(Alice, Bob) -> <> verifiedSignatureFrom(Bob, Alice))) .
+
+*** AUTHENTICATION
+*** Definiton: Proof that the sender has the private key and signed the message.
+*** Natural language: There is no path in which a message has been verified without it being signed at first by the other participant.
+search init1 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}]ATTS:Set{Attribute}) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier,STR:StringMSG,SIG:Pair), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((mI(ID1:Identifier,STR:StringMSG) in ATTS:Set{Attribute}) == false) .
+search init2 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}]ATTS:Set{Attribute}) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier,STR:StringMSG,SIG:Pair), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((mI(ID1:Identifier,STR:StringMSG) in ATTS:Set{Attribute}) == false) .
+
+*** A way to prove authentication could be to prove that whenever a messgae is singed by someone 
+*** then the receiver will verify it using the appropiate public key, proving the authenticity of the signature.
+
+*** INTEGRITY
+*** Definition: Proof that the message was not modified after the sign.
+*** Natural language: There is no path of execution in which a message is different from the one used in the signature procedure.
+search init1 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}](sigRecord(ID1:Identifier, (sig(STR:StringMSG,R:Nat,P:Polynomial), SIGREC:Set{Attribute})), ATTS:Set{Attribute})) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier, STR':StringMSG,[R:Nat,P:Polynomial]), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((STR:StringMSG =/= STR':StringMSG) == true) .
+search init2 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}](sigRecord(ID1:Identifier, (sig(STR:StringMSG,R:Nat,P:Polynomial), SIGREC:Set{Attribute})), ATTS:Set{Attribute})) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier, STR':StringMSG,[R:Nat,P:Polynomial]), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((STR:StringMSG =/= STR':StringMSG) == true) .
+
+*** Prove using model checking as from a given point forward the pair message/signature is not modified.
+
+*** NON-REPUDIATION
+*** Definition: Once the signature is made, the signer can not deny it.
+*** Invariant: Store messages and signatures done by Alice. 
+*** Check whenever a message has Alice's signature, then it was actually previously signed (there exist that signature in Alice's repository of signatures).
+search init1 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}](sigRecord(ID1:Identifier, (sig(STR:StringMSG,R:Nat,P:Polynomial), SIGREC:Set{Attribute})), ATTS:Set{Attribute})) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier, STR:StringMSG,[R':Nat,P':Polynomial]), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((R:Nat =/= R':Nat) or (P:Polynomial =/= P':Polynomial)) .
+search init2 =>* {SSS:SamplePool}< (ID1:Identifier[KS1:Set{Key}](sigRecord(ID1:Identifier, (sig(STR:StringMSG,R:Nat,P:Polynomial), SIGREC:Set{Attribute})), ATTS:Set{Attribute})) (ID2:Identifier[KS2:Set{Key}](mIvS(ID1:Identifier, STR:StringMSG,[R':Nat,P':Polynomial]), ATTS':Set{Attribute})) PS:Principals >net(MSGS:Msgs) such that ((R:Nat =/= R':Nat) or (P:Polynomial =/= P':Polynomial)) .

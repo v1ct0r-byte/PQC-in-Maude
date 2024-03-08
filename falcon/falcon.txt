@@ -1,0 +1,13 @@
+                                    NOTES ON FALCON SIGNATURE
+
+This document is a collection of explanations and instructions on the proposed solution to model and analyze the protocol.
+Author: Víctor García Valero <vicgarval@upv.es>
+
+ASSUMPTIONS
+
+We assume:  
+    - Correctness of the encodings of s1 and s2, thus signatures are never rejected during the Verify algorithm.
+    - We assume mod q equals mod (phi,q).
+    - Any generated polynomials f g F & G always satisfy the equation fG-gF = q mod phi.
+    - The signature and verification algorithms apply always in the bound given by their parameter Beta, 
+      thus it is not deemed necesary in the specification of the corresponding rules.

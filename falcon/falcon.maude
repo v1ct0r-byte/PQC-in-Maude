@@ -1,0 +1,459 @@
+*** Specification of FALCON
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+*** Module specifying basic datatypes and the operations
+fmod DATA-TYPES is
+    protecting NAT .
+
+    *** Supersort of all data
+    sort Data .
+
+    *** Definitions of types of data
+    sort Polynomial .
+    sort Matrix .
+    sort StringMSG .
+
+    *** We specify that polynomials are data
+    subsort Polynomial < Data .
+    subsort StringMSG < Data .
+    *** Furthermore, natural numbers and strings can be seen as polynomials
+    *** Such subsort relation for Strings fixes the preregularity issue with if_then_else_fi for tuple (Bool,Polynomial,StringMSG)
+    subsort Nat StringMSG < Polynomial .
+    *** We specify that matrices are polynomials and data
+    subsort Matrix < Polynomial Data .
+
+    *** Concatenation operation between Strings and natural numbers
+    op _||_ : StringMSG Nat -> StringMSG .
+    op _||_ : Nat StringMSG -> StringMSG .
+
+    *** Substraction between Polynomials
+    op _p-_ : Polynomial Polynomial -> Polynomial .
+
+    *** Addition between Polynomials
+    op _p+_ : Polynomial Polynomial -> Polynomial .
+
+    *** Product between Polynomials
+    op _p*_ : Polynomial Polynomial -> Polynomial .
+
+    *** Inverse notation of a polynomial
+    op inv : Polynomial -> Polynomial .
+
+    *** Modulus operation (not necessary due to assumption)
+    op _mod_ : Polynomial Nat -> Polynomial [prec 34] .
+
+    *** Symbolic constant to represent the length of a polynomial S
+    op SBYTELEN : -> Nat .
+
+    *** Compress and decompress operations
+    ops Compress Decompress : Polynomial Nat -> Polynomial .
+    eq Compress(Decompress(P:Polynomial,N:Nat),N:Nat) = P:Polynomial .
+    eq Decompress(Compress(P:Polynomial,N:Nat),N:Nat) = P:Polynomial .
+
+    *** Pair
+    sort Pair .
+
+    *** A Pair can be seen as a Polynomial divided in two parts
+    subsort Pair < Polynomial .
+
+    op [_,_] : Data Data -> Pair [ctor] .
+
+    vars D1 D2 : Data .
+
+    *** First element of Pair
+    op first : Pair -> Data .
+    eq first([D1,D2]) = D1 .
+    *** Second element of Pair
+    op second : Pair -> Data .
+    eq second([D1,D2]) = D2 .
+endfm
+
+*** View to associate Data as elements of view TRIV, later used in LIST
+view Data from TRIV to DATA-TYPES is
+  sort Elt to Data .
+endv
+
+*** Module to extend operations and concepts of DATA-TYPES regarding lists of data
+mod DATA-TYPES-EXT is
+    protecting DATA-TYPES .
+    protecting LIST{Data} .
+
+    *** Ground operator
+    op ground : -> Data [ctor] .
+
+    var L : List{Data} .
+    var N : Nat .
+    
+    *** Operation to access an element in a List of Polynomials
+    op elem : Nat List{Data} -> Data .
+    eq elem(N, nil) = ground .
+    eq elem(0, L) = ground .
+    eq elem(1, L) = head(L) .
+    eq elem(s(N), L) = elem(N, tail(L)) .
+endm
+
+*** Module to specify all the hash functions used during the protocol
+fmod FALCON-HASH-OPERATIONS is
+    protecting DATA-TYPES .
+
+    *** Symbolic natural constant to represent any degree given of a polynomial
+    op n : -> Nat .
+
+    *** Hash operation that receives a string to hash, a modulus and a degree
+    op HashToPoint : StringMSG Nat Nat -> Polynomial .
+endfm
+
+*** Module to represent the operations and data handled during KEYGEN step
+fmod FALCON-KEYGEN is
+    protecting DATA-TYPES .
+    protecting LIST{Data} .
+
+    *** Sample values for KeyGeneration
+    ops phi phi' : -> Polynomial .
+    ops q q' : -> Nat .
+
+    *** Sampler of values f, g, F and G
+    op NTRUGen : Polynomial Nat -> List{Data} .
+
+    ops f g F G : -> Polynomial .
+    eq NTRUGen(phi, q) = (f g F G) .
+
+    ops f' g' F' G' : -> Polynomial .
+    eq NTRUGen(phi', q') = (f' g' F' G') .
+
+    *** Matrix of a set of polynomials (this is to construct B)
+    op mat : List{Data} -> Matrix .
+
+    *** Fast Fourier Transformation
+    op FFT : Matrix -> Polynomial .
+    op FFT : Polynomial -> Polynomial .
+
+    *** Matrix product
+    op _x_ : Polynomial Polynomial -> Matrix .
+
+    *** Fast Fourier LDL
+    op ffLDL : Matrix -> Polynomial .
+endfm
+
+*** Module to represent the operations and data handled during SIGN
+fmod FALCON-SIGN is
+    protecting DATA-TYPES .
+    protecting FALCON-KEYGEN .
+
+    *** Sample values for r
+    ops r r' : -> Nat .
+
+    *** Sample values for messages
+    ops m m' : -> StringMSG .
+
+    *** Fast Fourier Sampling
+    op ffSampling : Polynomial Polynomial -> Polynomial .
+
+    *** Constant values to represent an instance of s_1 and s_2
+    ops s1 s2 : -> Polynomial .
+    ops s1' s2' : -> Polynomial .
+
+    *** Inverse Fast Fourier Transformation
+    op invFFT : Polynomial -> Pair .
+    eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(mat(f g F G))) = ([s1,s2]) .
+    eq invFFT((P1:Polynomial p- P2:Polynomial) p* FFT(mat(f' g' F' G'))) = ([s1',s2']) .
+
+    *** Equation specifiyng equality "s1 + s2h = c mod q"
+    eq (P1:Polynomial p- (s2 p* P2:Polynomial)) mod N:Nat = s1 .
+    eq (P1:Polynomial p- (s2' p* P2:Polynomial)) mod N:Nat = s1' .
+endfm
+
+*** Module to represent the operations and data handled during VERIFY
+fmod FALCON-VERIFY is
+    protecting DATA-TYPES .
+
+endfm
+
+fmod MODEL-CONFIGURATION-BASE is
+    sorts Sample Key Attribute Content .
+endfm
+
+view Sample from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Sample .
+endv
+
+view Key from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Key .
+endv
+
+view Attribute from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Attribute .
+endv
+
+view Content from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Content .
+endv
+
+*** Module to set the foundations of our symbolic model
+fmod MODEL-CONFIGURATION is
+    protecting DATA-TYPES .
+    protecting LIST{Data} .
+    including MODEL-CONFIGURATION-BASE .
+    protecting SET{Sample} * (op empty to emptyS) .
+    protecting SET{Key} * (op empty to emptyK) .
+    protecting SET{Attribute} * (op empty to emptyA) .
+    protecting SET{Content} * (op empty to emptyC) .
+
+    ***
+    *** SORTS
+    ***
+
+    *** This subsort relation only changes the pregularity tuple.
+    ---subsort Sample < Content .
+    subsort Set{Content} < Sample .
+
+    sorts Identifier Principal Principals .
+    subsort Principal < Principals .
+    sorts MsgState Msg Msgs .
+    subsort Msg < Msgs .
+
+    sort SamplePool .
+    subsort Set{Sample} < SamplePool .
+
+    op _,_ : SamplePool SamplePool -> SamplePool [ditto] .
+
+    *** We distinguish between public and secret keys
+    sorts PKey SKey .
+
+    *** We define Public and Secret keys to be Keys 
+    subsorts PKey SKey < Key .
+
+    *** Define polynomials as samples
+    subsort Polynomial < Sample .
+
+    *** Define Strings as samples
+    subsort StringMSG < Sample .
+
+    *** Sort for the State of our system
+    sort GlobalState .
+    
+    ***
+    *** OPERATORS
+    ***
+
+    *** Operator to represent the relation of a public key and a principal
+    op publicKey : Identifier Polynomial -> PKey .
+
+    *** Operator to represent the relation of a secret key and a principal
+    op secretKey : Identifier Polynomial -> SKey .
+
+    *** Operator to represent the shared key with a participant
+    op sharedKey : Identifier Polynomial -> SKey [format (g! o)] .
+
+    *** Posible states for a message delivering M
+    ops sent received : -> MsgState .
+
+    *** Structure of a message
+    *** Sender, Receiver, State, Content
+    op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
+
+    subsort Polynomial < Content .
+    subsort StringMSG < Content .
+
+    *** Group of messsages
+    op emptyM : -> Msgs .
+    op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
+
+    var M : Msg .
+    vars MS1 MS2 : Msgs .
+    
+    *** Operation to check the network
+    op _in_ : Msg Msgs -> Bool .
+
+    eq M in (MS1 M MS2) = true .
+    eq M in (MS1) = false [owise] .
+
+    *** Definition of the default participant
+    op none : -> Identifier [ctor] .
+    *** Defintion of our three main participants following the literature
+    ops Alice Eve Bob : ->  Identifier [ctor] .
+
+    *** Operator to assign a Ciphered text to a participant
+    op cI : Identifier Pair -> Attribute .
+
+    *** Operator to mark the current participant to whom the key exchange is happening
+    op peer : Identifier -> Attribute .
+
+    *** Definition of the components of a Principal
+    *** (idenifier [keys] content)
+    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Principal [ctor] .
+
+    *** Group of principals
+    op __ : Principals Principals -> Principals [assoc comm format (d n d)] .
+
+    *** Global state composed by Samples, Principals and a Network with messages
+    op {_}<_>net(_) : SamplePool Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+endfm
+
+*** SIGNATURE scheme behaviour
+mod FALCON is
+    ***
+    *** IMPORTS
+    ***
+    protecting DATA-TYPES-EXT .
+    protecting FALCON-HASH-OPERATIONS .
+    protecting FALCON-KEYGEN .
+    protecting FALCON-SIGN .
+    protecting FALCON-VERIFY .
+    protecting MODEL-CONFIGURATION .
+    
+    *** Sample group for phi
+    op phis : Set{Sample} -> SamplePool .
+    *** Operator to bind a phi to an Identifier
+    op phiI : Identifier Polynomial -> Attribute .
+
+    *** Sample group for q
+    op qs : Set{Sample} -> SamplePool .
+    *** Operator to bind a q to an Identifier
+    op qI : Identifier Nat -> Attribute .
+
+    *** Sample group for m
+    op ms : Set{Sample} -> SamplePool .
+    *** Operator to bind an m to an Identifier
+    op mI : Identifier StringMSG -> Attribute .
+
+    *** Operator to bind a verified M with signature S to an Identifier
+    op mIvS : Identifier StringMSG Pair -> Attribute .
+
+    *** Sample group for r
+    op rs : Set{Sample} -> SamplePool .
+    *** Operator to bind a q to an Identifier
+    op rI : Identifier Nat -> Attribute .
+
+    *** Operator to store the SIGNATURE of a message
+    op sig : StringMSG Nat Polynomial -> Attribute .
+
+    *** Operator to record signatures for messages by participant
+    op sigRecord : Identifier Set{Attribute} -> Attribute .
+
+    *** Operator to store the message and its signature in a message
+    op sig : StringMSG Pair -> Content .
+
+    *** Intruder knowledge
+    op knowledge : Set{Content} -> Attribute .
+
+    ***
+    *** INITIAL STATES
+    ***
+
+    ops init1 init2 : -> GlobalState .
+    
+    eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
+                <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA)))
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
+                    (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
+                >net(emptyM) .
+
+    eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
+                <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA))) 
+                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
+                    (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
+                >net(emptyM) .
+
+    ***
+    *** RULES 
+    ***
+
+    vars ID1 ID2 ID3 : Identifier .
+    var PS : Principals .
+    vars MSGS MSGS' : Msgs .
+    var MSG : Msg .
+    vars K1 K2 : Polynomial .
+    vars PK PK' : Polynomial .
+    vars Ss Sig SK : Pair .
+    vars KS1 KS2 KS3 : Set{Key} .
+    var L : List{Data} .
+    vars p h c t z s P S1 S2 : Polynomial .
+    vars SAM1 SAM2 : Data .
+    var STR : StringMSG .
+    vars Q R : Nat .
+    var ATTS ATTS' ATTS'' : Set{Attribute} .
+    vars SS1 SS2 : Set{Sample} .
+    var SSS : SamplePool .
+    var SIGS : Set{Attribute} .
+    var KNG : Set{Content} .
+    var CONT : Content .
+
+    ***
+    *** HONEST PARTICIPANT BEHAVIOUR
+    ***
+
+    *** Generation of pair of keys by a participant
+    crl [KeyGen] :  {phis((SAM1, SS1)), qs((SAM2, SS2)), SSS}< (ID1[emptyK](peer(ID2), ATTS)) PS >net(MSGS)
+                    =>
+                    {phis(SS1), qs(SS2), SSS}< (ID1[publicKey(ID1,PK), secretKey(ID1,SK)](qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2), ATTS)) PS >net(MSGS)
+                    if  L := NTRUGen(SAM1,SAM2) /\
+                        SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
+                        PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
+                        ID1 =/= ID2 /\
+                        ID1 =/= Eve /\
+                        ID2 =/= none .
+    
+    *** Sending the public key to the peer
+    crl [sendPK] :  {SSS}< (ID1[publicKey(ID1,PK), KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS)
+                    =>
+                    {SSS}< (ID1[KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS MSG)
+                    if  MSG := msg{(ID1,ID2)[sent](PK)} /\ 
+                        MSG in MSGS == false .
+
+    *** Receiving the public key from the peer
+    rl [recvPK] :   {SSS}< (ID1[KS1](peer(none), ATTS)) PS >net(MSGS msg{(ID2,ID1)[sent](PK)} MSGS')
+                    =>
+                    {SSS}< (ID1[KS1, publicKey(ID2,PK)](peer(ID2), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received](PK)} MSGS') .
+
+    *** Signing process of a message created by a participant
+    crl [Sign] :    {ms((STR, SS1)), rs((SAM1, SS2)), SSS}< (ID1[secretKey(ID1,SK), KS1](sigRecord(ID1, SIGS), qI(ID1,Q), ATTS)) PS >net(MSGS)
+                    =>
+                    {ms(SS1), rs(SS2), SSS}< (ID1[KS1](sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), mI(ID1,STR), sigRecord(ID1, insert(sig(STR,SAM1,Compress(second(Ss),SBYTELEN)), SIGS)), qI(ID1,Q), ATTS)) PS >net(MSGS)
+                    if  c := HashToPoint(SAM1 || STR, Q, n) /\
+                        t := [FFT(c), FFT(0)] p* inv(first(SK)) /\
+                        z := ffSampling(t, second(SK)) /\
+                        s := (t p- z) p* first(SK) /\
+                        Ss := invFFT(s) .
+
+    *** Sending the message to the peer
+    crl [sendMsg] : {SSS}< (ID1[KS1](mI(ID1,STR), sig(STR,R,P), peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS) 
+                    =>
+                    {SSS}< (ID1[KS1](mI(ID1,STR), peer(ID2), ATTS)) (ID2[KS2](peer(ID1), ATTS')) PS >net(MSGS MSG)
+                    if  MSG := msg{(ID1,ID2)[sent]sig(STR,[R,P])} /\
+                        MSG in MSGS == false .
+
+    *** Receiving the message from the peer
+    rl [recvMsg] :  {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)} MSGS')
+                    =>
+                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)} MSGS') .
+
+    *** Verification process of a message signature received from a participant
+    crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), ATTS)) PS >net(MSGS)
+                    =>
+                    {SSS}< (ID1[KS1](mIvS(ID2,STR,[R,P]), ATTS)) PS >net(MSGS) 
+                    if  c := HashToPoint(R || STR, Q, n) /\
+                        S2 := Decompress(P, SBYTELEN) /\
+                        h := p mod Q /\
+                        S1 := (c p- (S2 p* h)) mod Q /\
+                        (S1 == s1 or S1 == s1') /\ 
+                        (S2 == s2 or S2 == s2') /\
+                        ID1 =/= ID2 .
+
+    ***
+    *** INTRUDER BEHAVIOUR
+    ***
+
+    *** The intruder stores any message it sees on the network if it has not been already stored
+    crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                    =>
+                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                    if  not (CONT in KNG) /\
+                                        ID1 =/= Eve /\
+                                        ID2 =/= Eve .
+    crl [Intruder-Collect-Received] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                        =>
+                                        {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                        if  (not (CONT in KNG)) /\
+                                            ID1 =/= Eve /\
+                                            ID2 =/= Eve .
+endm
