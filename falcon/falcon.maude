@@ -444,9 +444,9 @@ mod FALCON is
     ***
 
     *** The intruder stores any message it sees on the network if it has not been already stored
-    crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+    crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
                                     =>
-                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
                                     if  not (CONT in KNG) /\
                                         ID1 =/= Eve /\
                                         ID2 =/= Eve .
