@@ -1,0 +1,39 @@
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+mod DSA-PREDS is
+    protecting DSA .
+    including SATISFACTION .
+
+    *** Definition of GlobalState as subtype of State
+    subsort GlobalState < State .
+
+    *** Declaration of predicate to represent a principal starting the protocol
+    op wantsToSignAndSendTo : Id Id -> Prop .
+
+    *** Declaration of predicate to represent a principal verified a message
+    op verifiedSignatureFrom : Id BitString Id -> Prop .
+
+    *** Declaration of predicate to represent a principal sent a signature
+    op assetSentTo : BitString Id -> Prop .
+
+    *** Variables for the equations
+    vars ID1 ID2 : Id .
+    vars X Y : BitString .
+    var ATTS : AttributeSet .
+    var GS : GlobalState .
+    var P : Prop .
+
+    *** Equations for state predicates
+
+    *** Equation indicating an actor starts the signature procedure by generating a pair of keys
+    eq < ID1 : (sk(X), ATTS) > (from ID1 to ID2 : (Y)) |= wantsToSignAndSendTo(ID1,ID2) = true .
+
+    *** Equation indicating an actors sends a message with the signature
+    eq < ID2 : (ATTS) > (from ID2 to ID1 : (X ; Y)) |= assetSentTo(X,ID1) = true .
+
+    *** Equation indicating an actor has verified a message
+    eq < ID1 : emptyA > < ID2 : ms(X) > |= verifiedSignatureFrom(ID2,X,ID1) = true .
+
+    *** Equation to include any other cases as false
+    eq GS |= P = false [owise] .
+endm
