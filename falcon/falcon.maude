@@ -447,7 +447,7 @@ mod FALCON is
     crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
                                     =>
                                     {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
-                                    if  not (CONT in KNG) /\
+                                    if  (not (CONT in KNG)) /\
                                         ID1 =/= Eve /\
                                         ID2 =/= Eve .
     crl [Intruder-Collect-Received] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
@@ -456,4 +456,11 @@ mod FALCON is
                                         if  (not (CONT in KNG)) /\
                                             ID1 =/= Eve /\
                                             ID2 =/= Eve .
+
+    crl [Intruder-Intercept-PK] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]PK}) MSGS') 
+                                    =>
+                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
+                                    if  (not (CONT in KNG)) /\
+                                        ID1 =/= Eve /\
+                                        ID2 =/= Eve .
 endm
