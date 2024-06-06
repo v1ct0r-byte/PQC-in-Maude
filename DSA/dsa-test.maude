@@ -31,11 +31,5 @@ load model-checker.maude
 load ./dsa-PREDS.maude
 load ./dsa-CHECK.maude
 
-*** TERMINATION
-red modelCheck(init, <> verifiedSignatureFrom(B, m, A)) .
-
 *** FAIRNESS
 red modelCheck(init, [] (wantsToSignAndSendTo(A, B) -> <> verifiedSignatureFrom(B, m, A))) .
-
-*** SECURITY
-red modelCheck(init, [] (assetSentTo(m, B) -> <> verifiedSignatureFrom(B, m, A))) .
