@@ -8,7 +8,7 @@ This repository stores Maude's system modules that construct the symbolic models
 
 Please check the corresponding [publication](https://ceur-ws.org/Vol-3280/paper3.pdf) for further insights on the symbolic specification and verification of Kyber.
 
-For a complete detailed explanation of the framework along with three use cases with the above mechanisms, please see the [journal paper]() of PeerJ Computer Science.
+For a complete detailed explanation of the framework along with three use cases on the above mechanisms, please see the [journal paper]() of PeerJ Computer Science.
 
 ## Structure
 
@@ -28,9 +28,10 @@ In order to perform invariant analysis and model checking one has to:
 2. Download [this](https://github.com/v1ct0r-byte/PQC-in-Maude) repository and extract the contents.
 3. Open a terminal in the parent folder of the downloaded repository.
 4. Start Maude by following the [instructions](https://maude.lcc.uma.es/maude-manual/maude-manualch2.html#x13-220002.2). Maude can be initiated by running the `./maude.darwin64`
-5. Load an instruction file with the command `load KEM-instructions.maude`, where `KEM` has to be either `kyber`, `bike` or `cm`. The instructions inside that file will perform the following:
-    1. Invariant analysis with the `search` commands.
-    2. Model checking with the `reduce` commands.
+5. Load a testing file with the command `load KEM-test.maude`, where `KEM` has to be either `kyber`, `bike` or `cm`. The code inside that file will perform the following commands.
+    1. Invariant analysis with `search` commands.
+    2. Model checking with `reduce` commands.
+6. You can now check the results and compare them to ours.
 
 <!---
 ## Results
