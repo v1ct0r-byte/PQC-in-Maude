@@ -29,7 +29,7 @@ mod CONF-DSA is
     sort Id .
     ops A B : -> Id .
 
-    sorts Actor Msg GlobalState .
+    sorts Participant Msg GlobalState .
     
     sorts Attribute AttributeSet .
     subsort Attribute < AttributeSet .
@@ -45,10 +45,10 @@ mod CONF-DSA is
     *** Attribute to hold a message string
     op ms : BitString -> Attribute [ctor] .
 
-    *** Actor syntax
-    op <_:_> : Id AttributeSet -> Actor [ctor] .
+    *** Participant syntax
+    op <_:_> : Id AttributeSet -> Participant [ctor] .
 
-    *** Attributes of an actors
+    *** Attributes of a participant
     op pk : PubKey -> Attribute [ctor] .
     op sk : SecKey -> Attribute [ctor] .
     
@@ -68,7 +68,7 @@ mod CONF-DSA is
     subsort BitString < Content .
     subsorts SecKey PubKey < Content .
 
-    subsorts Actor Msg < GlobalState .
+    subsorts Participant Msg < GlobalState .
 
     *** Global State
     op __ : GlobalState GlobalState -> GlobalState [ctor assoc comm] .
