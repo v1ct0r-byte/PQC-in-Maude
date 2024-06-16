@@ -11,5 +11,5 @@ mod CM-CHECK is
     *** 3 participants and the necesary samples for 1 key exchange
     eq init1 = {deltas(delta1)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
     *** 3 participants and the necesary samples for 2 key exchanges
-    eq init2 = {deltas(delta1 delta2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
+    eq init2 = {deltas(delta1 | delta2)} < (Alice[emptyK]peer(none)) (Eve[emptyK]peer(none)) (Bob[emptyK]peer(none)) >net(emptyM) .
 endm
