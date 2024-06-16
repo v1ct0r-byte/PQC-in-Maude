@@ -206,8 +206,8 @@ fmod MODEL-CONFIGURATION is
     ---subsort Sample < Content .
     subsort Set{Content} < Sample .
 
-    sorts Identifier Principal Principals .
-    subsort Principal < Principals .
+    sorts Identifier Participant Participants .
+    subsort Participant < Participants .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
 
@@ -278,15 +278,15 @@ fmod MODEL-CONFIGURATION is
     *** Operator to mark the current participant to whom the key exchange is happening
     op peer : Identifier -> Attribute .
 
-    *** Definition of the components of a Principal
+    *** Definition of the components of a Participant
     *** (idenifier [keys] content)
-    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Principal [ctor] .
+    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Participant [ctor] .
 
-    *** Group of principals
-    op __ : Principals Principals -> Principals [assoc comm format (d n d)] .
+    *** Group of Participants
+    op __ : Participants Participants -> Participants [assoc comm format (d n d)] .
 
-    *** Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : SamplePool Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+    *** Global state composed by Samples, Participants and a Network with messages
+    op {_}<_>net(_) : SamplePool Participants Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
 *** SIGNATURE scheme behaviour
@@ -359,7 +359,7 @@ mod FALCON is
     ***
 
     vars ID1 ID2 ID3 : Identifier .
-    var PS : Principals .
+    var PS : Participants .
     vars MSGS MSGS' : Msgs .
     var MSG : Msg .
     vars K1 K2 : Polynomial .
