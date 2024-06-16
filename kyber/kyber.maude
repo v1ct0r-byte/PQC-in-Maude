@@ -200,10 +200,10 @@ fmod MODEL-CONFIGURATION is
     *** SORTS
     ***
 
-    sorts Identifier Content Principal Principals . 
+    sorts Identifier Content Participant Participants . 
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
-    subsort Principal < Principals .
+    subsort Participant < Participants .
 
     sorts Key Keys .
     subsort Key < Keys .
@@ -291,15 +291,15 @@ fmod MODEL-CONFIGURATION is
     *** Operator to mark the current participant to whom the key exchange is happening
     op peer : Identifier -> Content .
 
-    *** Definition of the components of a Principal
+    *** Definition of the components of a Participant
     *** (idenifier [keys] content)
-    op _[_]_ : Identifier Keys Content -> Principal [ctor] .
+    op _[_]_ : Identifier Keys Content -> Participant [ctor] .
 
-    *** Group of principals
-    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
+    *** Group of participants
+    op __ : Participant Participant -> Participants [assoc comm format (d n d)] .
 
-    *** Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+    *** Global state composed by Samples, Participants and a Network with messages
+    op {_}<_>net(_) : Content Participants Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
 *** CRYSTALS-KYBER
@@ -351,9 +351,8 @@ mod KYBER is
     *** RULES
     ***
     
-    vars P1 P2 : Principal .
     vars ID1 ID2 ID3 : Identifier .
-    var PS : Principals .
+    var PS : Participants .
     var MSGS : Msgs .
     vars K1 K2 SK : SKey .
     vars PK PK' : PKey .

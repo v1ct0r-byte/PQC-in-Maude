@@ -10,12 +10,12 @@ load ./kyber.maude
 ***
 
 *** Agreement search on init1
-search init1 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
+search [4] init1 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
 *** MITM Attack search on init1
-search init1 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1) (ID2[sharedKey(ID1,K1:SKey) ; sharedKey(ID3,K2:SKey) ; KS2]CONT2) (ID3[sharedKey(ID1,K2:SKey) ; KS3]CONT3) >net(MSGS) .
+search [4] init1 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1) (ID2[sharedKey(ID1,K1:SKey) ; sharedKey(ID3,K2:SKey) ; KS2]CONT2) (ID3[sharedKey(ID1,K2:SKey) ; KS3]CONT3) >net(MSGS) .
 
 *** Agreement search on init2
-search init2 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
+search [4] init2 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
 *** MITM Attack search on init2
 search [1] init2 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1) (ID2[sharedKey(ID1,K1:SKey) ; sharedKey(ID3,K2:SKey) ; KS2]CONT2) (ID3[sharedKey(ID1,K2:SKey) ; KS3]CONT3) >net(MSGS) .
 
