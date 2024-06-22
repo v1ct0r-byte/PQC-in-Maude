@@ -467,7 +467,7 @@ mod FALCON is
 
     crl [Intruder-Intercept-SIG] :   {SSS}< (Eve[KS1](ATTS, mI(Eve, STR'), sig(STR', R, P), knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]sig(STR,Sig)}) MSGS') 
                                     =>
-                                    {SSS}< (Eve[KS1](ATTS, mI(ID1, STR), sig(STR, first(Sig), second(Sig)), knowledge(insert(sig(STR,Sig), KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]sig(STR',[R,P])}) MSGS') 
+                                    {SSS}< (Eve[KS1](ATTS,mI(Eve, STR'), mI(ID1, STR), sig(STR, first(Sig), second(Sig)), knowledge(insert(sig(STR,Sig), KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]sig(STR',[R,P])}) MSGS') 
                                     if  (not (sig(STR,Sig) in KNG)) /\
                                         STR =/= STR' /\ 
                                         ID1 =/= Eve /\
