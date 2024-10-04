@@ -17,7 +17,7 @@ fmod DATA-TYPES is
     subsort Nat < Polynomial .
 
     vars P0 P1 P2 : Polynomial .
-
+    
     *** Operator addition of polynomials
     op _p+_ : Polynomial Polynomial -> Polynomial [assoc comm prec 33] .
     *** Identity axiom as an equation to avoid colapsing
