@@ -100,5 +100,5 @@ mod DSA is
     rl [RecvSIG] : < B : ATTS > (from A to B : (m ; (r ; s))) => < B : (sig(m, r, s), ATTS) > .
 
     *** Conditional rule to verify a signature
-    crl [Verification] : < B : (sig(m, r, s), pk(y), ATTS) > => < B : ms(m) > if v == r .
+    crl [Verification] : < B : (sig(m, r, s), pk(y), ATTS) > => < B : ms(m) > if (v == r) = true .
 endm
