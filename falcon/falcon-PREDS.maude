@@ -15,7 +15,7 @@ mod FALCON-PREDS is
 
     *** Variables for the equations
     vars ID1 ID2 : Identifier .
-    var PS : Principals .
+    var PS : Participants .
     var MSGS : Msgs .
     vars KS1 KS2 : Set{Key} .
     vars ATTS ATTS' : Set{Attribute} .

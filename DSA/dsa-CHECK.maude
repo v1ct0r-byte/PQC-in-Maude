@@ -1,0 +1,13 @@
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+mod DSA-CHECK is
+    protecting DSA-PREDS .
+    including MODEL-CHECKER .
+    including LTL-SIMPLIFIER .
+
+    *** GlobalState constants
+    ops init : -> GlobalState .
+
+    *** 2 participants and the necessary samples for 1 key exchange
+    eq init =  < A : (param(p, q, g), ms(m)) > < B : emptyA > .
+endm

@@ -1,38 +1,43 @@
---- Commands to reproduce the experiments over the Classic McEliece KEM.
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Commands to reproduce the experiments over the Classic McEliece KEM.
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
---- Loading modules
+***
+*** LOADING MODULES
+***
 
 load ./cm.maude
 
---- SEARCH
+***
+*** SEARCH
+***
 
---- Agreement search on init1
-search init1 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
---- MITM Attack search on init1
-search init1 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1) (ID2[sharedKey(ID1,K1:SKey) ; sharedKey(ID3,K2:SKey) ; KS2]CONT2) (ID3[sharedKey(ID1,K2:SKey) ; KS3]CONT3) >net(MSGS) .
+*** Agreement search on init1
+search [4] init1 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
+*** MITM Attack search on init1
+search [4] init1 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1) (ID2[sharedKey(ID1,K1:SKey) ; sharedKey(ID3,K2:SKey) ; KS2]CONT2) (ID3[sharedKey(ID1,K2:SKey) ; KS3]CONT3) >net(MSGS) .
 
---- Agreement search on init2
-search init2 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
---- MITM Attack search on init2
+*** Agreement search on init2
+search [4] init2 =>! { CONT4:Content } < (Alice[sharedKey(Bob,K1:SKey) ; KS1]CONT1) (Bob[sharedKey(Alice,K1:SKey) ; KS2]CONT2) PS >net(MSGS) .
+*** MITM Attack search on init2
 search [1] init2 =>! { CONT4:Content } < (ID1[sharedKey(ID3,K1:SKey) ; KS1]CONT1) (ID2[sharedKey(ID1,K1:SKey) ; sharedKey(ID3,K2:SKey) ; KS2]CONT2) (ID3[sharedKey(ID1,K2:SKey) ; KS3]CONT3) >net(MSGS) .
 
-
---- MODEL CHECKING
+***
+*** MODEL CHECKING
+***
 
 load model-checker.maude
 load ./cm-PREDS.maude
 load ./cm-CHECK.maude
 
---- KEY SHARING
+*** KEY SHARING
 red modelCheck(init1, [](wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
 red modelCheck(init2, [](wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
 
---- FAIRNESS
+*** FAIRNESS
 red modelCheck(init1, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
 red modelCheck(init2, []<> (wantsToShareKey(Alice,Bob) -> <> sharedAKeyWith(Alice,Bob))) .
 
---- SECRECY
+*** SECRECY
 red modelCheck(init1, ([] ~ stolenSharedKey(Alice,Eve))) .
 red modelCheck(init1, ([] ~ stolenSharedKey(Bob,Eve))) .
 red modelCheck(init2, ([] ~ stolenSharedKey(Alice,Eve))) .

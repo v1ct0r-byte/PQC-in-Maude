@@ -206,8 +206,8 @@ fmod MODEL-CONFIGURATION is
     ---subsort Sample < Content .
     subsort Set{Content} < Sample .
 
-    sorts Identifier Principal Principals .
-    subsort Principal < Principals .
+    sorts Identifier Participant Participants .
+    subsort Participant < Participants .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
 
@@ -278,15 +278,15 @@ fmod MODEL-CONFIGURATION is
     *** Operator to mark the current participant to whom the key exchange is happening
     op peer : Identifier -> Attribute .
 
-    *** Definition of the components of a Principal
+    *** Definition of the components of a Participant
     *** (idenifier [keys] content)
-    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Principal [ctor] .
+    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Participant [ctor] .
 
-    *** Group of principals
-    op __ : Principals Principals -> Principals [assoc comm format (d n d)] .
+    *** Group of Participants
+    op __ : Participants Participants -> Participants [assoc comm format (d n d)] .
 
-    *** Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : SamplePool Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+    *** Global state composed by Samples, Participants and a Network with messages
+    op {_}<_>net(_) : SamplePool Participants Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
 *** SIGNATURE scheme behaviour
@@ -344,13 +344,13 @@ mod FALCON is
     
     eq init1 =  {phis(phi), qs(q), ms(m), rs(r)}
                 <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA)))
-                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
+                    (Eve[emptyK](peer(Bob), sigRecord(Eve, emptyA), knowledge(emptyC))) 
                     (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
     eq init2 = {phis((phi, phi')), qs((q, q')), ms((m, m')), rs((r, r'))}
                 <   (Alice[emptyK](peer(Bob), sigRecord(Alice, emptyA))) 
-                    (Eve[emptyK](peer(none), sigRecord(Eve, emptyA), knowledge(emptyC))) 
+                    (Eve[emptyK](peer(Bob), sigRecord(Eve, emptyA), knowledge(emptyC))) 
                     (Bob[emptyK](peer(none), sigRecord(Bob, emptyA))) 
                 >net(emptyM) .
 
@@ -359,17 +359,17 @@ mod FALCON is
     ***
 
     vars ID1 ID2 ID3 : Identifier .
-    var PS : Principals .
+    var PS : Participants .
     vars MSGS MSGS' : Msgs .
     var MSG : Msg .
     vars K1 K2 : Polynomial .
     vars PK PK' : Polynomial .
-    vars Ss Sig SK : Pair .
+    vars Ss Sig Sig' SK : Pair .
     vars KS1 KS2 KS3 : Set{Key} .
     var L : List{Data} .
     vars p h c t z s P S1 S2 : Polynomial .
     vars SAM1 SAM2 : Data .
-    var STR : StringMSG .
+    vars STR STR' : StringMSG .
     vars Q R : Nat .
     var ATTS ATTS' ATTS'' : Set{Attribute} .
     vars SS1 SS2 : Set{Sample} .
@@ -379,22 +379,21 @@ mod FALCON is
     var CONT : Content .
 
     ***
-    *** HONEST PARTICIPANT BEHAVIOUR
+    *** PARTICIPANT BEHAVIOUR
     ***
 
     *** Generation of pair of keys by a participant
     crl [KeyGen] :  {phis((SAM1, SS1)), qs((SAM2, SS2)), SSS}< (ID1[emptyK](peer(ID2), ATTS)) PS >net(MSGS)
                     =>
-                    {phis(SS1), qs(SS2), SSS}< (ID1[publicKey(ID1,PK), secretKey(ID1,SK)](qI(ID1,SAM2), phiI(ID1,SAM1), peer(ID2), ATTS)) PS >net(MSGS)
+                    {phis(SS1), qs(SS2), SSS}< (ID1[publicKey(ID1, PK), secretKey(ID1, SK)](qI(ID1, SAM2), phiI(ID1, SAM1), peer(ID2), ATTS)) PS >net(MSGS)
                     if  L := NTRUGen(SAM1,SAM2) /\
-                        SK := ([FFT(mat(L)),ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
-                        PK := (elem(2,L) p* inv(elem(1,L))) mod SAM2 /\
+                        SK := ([FFT(mat(L)), ffLDL(FFT(mat(L)) x FFT(mat(L)))]) /\
+                        PK := (elem(2, L) p* inv(elem(1, L))) mod SAM2 /\
                         ID1 =/= ID2 /\
-                        ID1 =/= Eve /\
                         ID2 =/= none .
     
     *** Sending the public key to the peer
-    crl [sendPK] :  {SSS}< (ID1[publicKey(ID1,PK), KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS)
+    crl [sendPK] :  {SSS}< (ID1[publicKey(ID1, PK), KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS)
                     =>
                     {SSS}< (ID1[KS1](peer(ID2), ATTS)) (ID2[KS2]ATTS') PS >net(MSGS MSG)
                     if  MSG := msg{(ID1,ID2)[sent](PK)} /\ 
@@ -425,12 +424,12 @@ mod FALCON is
     *** Receiving the message from the peer
     rl [recvMsg] :  {SSS}< (ID1[KS1]ATTS) PS >net(MSGS msg{(ID2,ID1)[sent]sig(STR, Sig)} MSGS')
                     =>
-                    {SSS}< (ID1[KS1](mI(ID2,STR), sig(STR,first(Sig),second(Sig)), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)} MSGS') .
+                    {SSS}< (ID1[KS1](mI(ID2, STR), sig(STR, first(Sig), second(Sig)), ATTS)) PS >net(MSGS msg{(ID2,ID1)[received]sig(STR, Sig)} MSGS') .
 
     *** Verification process of a message signature received from a participant
-    crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2,STR), sig(STR,R,P), ATTS)) PS >net(MSGS)
+    crl [Verify] :  {SSS}< (ID1[publicKey(ID2, p mod Q), KS1](mI(ID2, STR), sig(STR, R, P), ATTS)) PS >net(MSGS)
                     =>
-                    {SSS}< (ID1[KS1](mIvS(ID2,STR,[R,P]), ATTS)) PS >net(MSGS) 
+                    {SSS}< (ID1[KS1](mIvS(ID2, STR, [R,P]), ATTS)) PS >net(MSGS) 
                     if  c := HashToPoint(R || STR, Q, n) /\
                         S2 := Decompress(P, SBYTELEN) /\
                         h := p mod Q /\
@@ -444,16 +443,33 @@ mod FALCON is
     ***
 
     *** The intruder stores any message it sees on the network if it has not been already stored
-    crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
+    crl [Intruder-Collect-Sent] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
                                     =>
-                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
-                                    if  not (CONT in KNG) /\
+                                    {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]CONT}) MSGS') 
+                                    if  (not (CONT in KNG)) /\
                                         ID1 =/= Eve /\
                                         ID2 =/= Eve .
+
     crl [Intruder-Collect-Received] :   {SSS}< (Eve[KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
                                         =>
                                         {SSS}< (Eve[KS1](ATTS, knowledge(insert(CONT, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[received]CONT}) MSGS') 
                                         if  (not (CONT in KNG)) /\
                                             ID1 =/= Eve /\
                                             ID2 =/= Eve .
+
+    crl [Intruder-Intercept-PK] :   {SSS}< (Eve[publicKey(Eve, PK'), KS1](ATTS, knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]PK}) MSGS') 
+                                    =>
+                                    {SSS}< (Eve[publicKey(ID1, PK), KS1](ATTS, knowledge(insert(PK, KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]PK'}) MSGS') 
+                                    if  (not (PK in KNG)) /\
+                                        PK' =/= PK /\
+                                        ID1 =/= Eve /\
+                                        ID2 =/= Eve .
+
+    crl [Intruder-Intercept-SIG] :   {SSS}< (Eve[KS1](ATTS, mI(Eve, STR'), sig(STR', R, P), knowledge(KNG))) PS >net(MSGS (msg{(ID1,ID2)[sent]sig(STR,Sig)}) MSGS') 
+                                    =>
+                                    {SSS}< (Eve[KS1](ATTS,mI(Eve, STR'), mI(ID1, STR), sig(STR, first(Sig), second(Sig)), knowledge(insert(sig(STR,Sig), KNG)))) PS >net(MSGS (msg{(ID1,ID2)[sent]sig(STR',[R,P])}) MSGS') 
+                                    if  (not (sig(STR,Sig) in KNG)) /\
+                                        STR =/= STR' /\ 
+                                        ID1 =/= Eve /\
+                                        ID2 =/= Eve .
 endm

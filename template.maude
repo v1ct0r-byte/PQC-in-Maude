@@ -1,143 +1,160 @@
---- Tempalte for the specification of protocols with post-quantum capabilities
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Tempalte for the specification of protocols with post-quantum capabilities
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
---- Module specifying basic datatypes and the operations
+*** Module specifying basic datatypes and the operations
 fmod DATA-TYPES is
      
 endfm
 
---- Module to specify all the hash functions used during the protocol
+*** Module to specify all the hash functions used during the protocol
 fmod PROTOCOL-HASH-OPERATIONS is
     protecting DATA-TYPES .
 
 endfm
 
---- Module to represent the operations and data handled during KEYGEN step
+*** Module to represent the operations and data handled in KEYGEN
 fmod PROTOCOL-KEYGEN is
     protecting DATA-TYPES .
 
 endfm
 
---- Module to represent the operations and data handled during ENC
+*** Module to represent the operations and data handled in ENC/SIGNING
 fmod PROTOCOL-ENC is
     protecting DATA-TYPES .
 
 endfm
 
---- Module to represent the operations and data handled during DEC
+*** Module to represent the operations and data handled in DEC/VERIFY
 fmod PROTOCOL-DEC is
     protecting DATA-TYPES .
 
 endfm
 
---- Module to set the foundations of our symbolic model
+fmod MODEL-CONFIGURATION-BASE is
+    sorts Sample Key Attribute Content .
+endfm
+
+view Sample from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Sample .
+endv
+
+view Key from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Key .
+endv
+
+view Attribute from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Attribute .
+endv
+
+view Content from TRIV to MODEL-CONFIGURATION-BASE is
+    sort Elt to Content .
+endv
+
+*** Module to set the foundations of our symbolic model
 fmod MODEL-CONFIGURATION is
     protecting DATA-TYPES .
+    including MODEL-CONFIGURATION-BASE .
+    protecting SET{Sample} * (op empty to emptyS) .
+    protecting SET{Key} * (op empty to emptyK) .
+    protecting SET{Attribute} * (op empty to emptyA) .
+    protecting SET{Content} * (op empty to emptyC) .
 
-    --- SORTS---------------------------------
-    sorts Identifier Content Principal Principals . 
+    ***
+    *** SORTS
+    ***
+
+    *** This subsort relation only changes the pregularity tuple.
+    subsort Set{Content} < Sample .
+
+    sorts Identifier Principal Principals .
+    subsort Principal < Principals .
     sorts MsgState Msg Msgs .
     subsort Msg < Msgs .
-    subsort Principal < Principals .
 
-    sorts Key Keys .
-    subsort Key < Keys .
+    sort SamplePool .
+    subsort Set{Sample} < SamplePool .
 
-    --- We distinguish between public and secret keys, both being keys in the end
+    op _,_ : SamplePool SamplePool -> SamplePool [ditto] .
+
+    *** We distinguish between public and secret keys
     sorts PKey SKey .
 
-    ---We define keys as a type of content
-    subsorts Polynomial < PKey SKey < Key < Content .
+    *** We define Public and Secret keys to be Keys 
+    subsorts PKey SKey < Key .
 
-    --- We also declare that a pair is content
-    subsort Pair < Content .
+    *** Define polynomials as samples
+    subsort Polynomial < Sample .
 
-    --- Sort for the State of our system
+    *** Define Strings as samples
+    subsort StringMSG < Sample .
+
+    *** Sort for the State of our system
     sort GlobalState .
+    
+    ***
+    *** OPERATORS
+    ***
 
-    --- OPERATORS----------------------------
-    --- Empty group of keys
-    op emptyK : -> Keys .
-    --- Group of keys
-    op _;_ : Keys Keys -> Keys [assoc comm id: emptyK] .
+    *** Operator to represent the relation of a public key and a principal
+    op publicKey : Identifier Polynomial -> PKey .
 
-    var K : Key .
-    vars KS1 KS2 : Keys .
+    *** Operator to represent the relation of a secret key and a principal
+    op secretKey : Identifier Polynomial -> SKey .
 
-    --- Operation to check the precence of a key in a participant
-    op _in_ : Key Keys -> Bool .
-    eq K in (KS1 ; K ; KS2) = true .
-    eq K in (KS1) = false [owise] .
+    *** Operator to represent the shared key with a participant
+    op sharedKey : Identifier Polynomial -> SKey [format (g! o)] .
 
-    --- Operator to represent the relation of a public key and a principal
-    op publicKey : Identifier Key -> PKey .
+    *** Posible states for a message delivering M
+    ops sent received : -> MsgState .
 
-    --- Operator to represent the relation of a secret key and a principal
-    op secretKey : Identifier Key -> SKey .
-
-    --- Operator to represent the shared key with a participant
-    op sharedKey : Identifier Key -> SKey [format (g! o)] .
-
-    --- Posible states for a message delivering PK
-    ops sentPK receivedPK : -> MsgState .
-    --- Posible states for a message delivering C
-    ops sentC receivedC : -> MsgState .
-
-    --- Empty content
-    op emptyC : -> Content .
-    --- Group of contents
-    op __ : Content Content -> Content [assoc comm id: emptyC] .
-
-    vars C CONT1 CONT2 : Content .
-
-    --- Operation to check the contents of a participant
-    op _in_ : Content Content -> Bool .
-    eq C in (CONT1 C CONT2) = true .
-    eq C in (CONT1) = false [owise] .
-
-    --- Structure of a message
-    --- Sender, Receiver, State, Content
+    *** Structure of a message
+    *** Sender, Receiver, State, Content
     op msg{(_,_)[_]_} : Identifier Identifier MsgState Content -> Msg .
 
-    --- Group of messsages
+    subsort Polynomial < Content .
+    subsort StringMSG < Content .
+
+    *** Group of messsages
     op emptyM : -> Msgs .
     op __ : Msgs Msgs -> Msgs [assoc id: emptyM format (d nt d)] .
 
     var M : Msg .
     vars MS1 MS2 : Msgs .
     
-    --- Operation to check the network
+    *** Operation to check the network
     op _in_ : Msg Msgs -> Bool .
 
     eq M in (MS1 M MS2) = true .
     eq M in (MS1) = false [owise] .
 
-    --- Defintion of our three main participants followiing the literature
+    *** Definition of the default participant
+    op none : -> Identifier [ctor] .
+    *** Defintion of our three main participants following the literature
     ops Alice Eve Bob : ->  Identifier [ctor] .
 
-    --- Definition of the default participant
-    op none : -> Identifier [ctor] .
+    *** Operator to assign a Ciphered text to a participant
+    op cI : Identifier Pair -> Attribute .
 
-    --- Operator to assign a Ciphered text to a participant
-    op cI : Identifier Pair -> Content .
+    *** Operator to mark the current participant to whom the key exchange is happening
+    op peer : Identifier -> Attribute .
 
-    --- Operator to mark the current participant to whom the key exchange is happening
-    op peer : Identifier -> Content .
+    *** Definition of the components of a Principal
+    *** (idenifier [keys] content)
+    op _[_]_ : Identifier Set{Key} Set{Attribute} -> Principal [ctor] .
 
-    --- Definition of the components of a Principal
-    --- (idenifier [keys] content)
-    op _[_]_ : Identifier Keys Content -> Principal [ctor] .
+    *** Group of principals
+    op __ : Principals Principals -> Principals [assoc comm format (d n d)] .
 
-    --- Group of principals
-    op __ : Principal Principal -> Principals [assoc comm format (d n d)] .
-
-    --- Global state composed by Samples, Principals and a Network with messages
-    op {_}<_>net(_) : Content Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
+    *** Global state composed by Samples, Principals and a Network with messages
+    op {_}<_>net(_) : SamplePool Principals Msgs -> GlobalState [ctor format (n d d n n n d d d d)] .
 endfm
 
---- KEM behaviour
+*** Protocol behaviour
 mod PROTOCOL is
-    --- IMPORTS -------------------------------
+    ***
+    *** IMPORTS
+    ***
+    
     protecting DATA-TYPES .
     protecting PROTOCOL-HASH-OPERATIONS .
     protecting PROTOCOL-KEYGEN .
@@ -145,14 +162,19 @@ mod PROTOCOL is
     protecting PROTOCOL-DEC .
     protecting MODEL-CONFIGURATION .
 
-    --- Samples ------------------------------------------------
+    ***
+    *** INITIAL STATES
+    ***
 
-    --- Initial states------------------------------------------
+    ***
+    *** RULES
+    ***
 
-    --- RULES --------------------------------------------------
-    
-    --- Honest participant behaviour----------------------------
+    ***
+    *** HONEST PARTICIPANT BEHAVIOUR
+    ***
 
-    --- Intruder behaviour--------------------------------------
-    
+    ***
+    *** INTRUDER BEHAVIOUR
+    ***
 endm

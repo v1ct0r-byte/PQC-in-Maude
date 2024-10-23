@@ -1,4 +1,4 @@
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
 mod BIKE-PREDS is
     protecting BIKE .
@@ -18,7 +18,7 @@ mod BIKE-PREDS is
 
     *** Variables for the equations
     vars ID1 ID2 ID3 : Identifier .
-    var PS : Principals .
+    var PS : Participants .
     var MSGS : Msgs .
     var K : Key .
     vars KS1 KS2 KS3 : Keys .

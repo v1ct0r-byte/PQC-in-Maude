@@ -8,14 +8,14 @@ fmod DATA-DSA is
     *** Declaration of all symbolic values for DSA
 
     *** Key generation
-    ops p q g : -> BitString .
+    ops p q g : -> BitString [ctor] .
 
     *** Signing
-    ops k r s : -> BitString .
-    op m : -> BitString .
+    ops k r s : -> BitString [ctor] .
+    op m : -> BitString [ctor] .
 
     *** Verification
-    op v : -> BitString .
+    op v : -> BitString [ctor] .
     eq v = r .
 endfm
 
@@ -29,49 +29,49 @@ mod CONF-DSA is
     sort Id .
     ops A B : -> Id .
 
-    sorts Actor Msg GlobalState .
+    sorts Participant Msg GlobalState .
     
     sorts Attribute AttributeSet .
     subsort Attribute < AttributeSet .
-    op emptyA : -> AttributeSet .
-    op _,_ : AttributeSet AttributeSet -> AttributeSet [comm assoc id: emptyA] .
+    op emptyA : -> AttributeSet [ctor] .
+    op _,_ : AttributeSet AttributeSet -> AttributeSet [ctor comm assoc id: emptyA] .
 
     *** Attribute to hold a set of parameters
-    op param : BitString BitString BitString -> Attribute .
+    op param : BitString BitString BitString -> Attribute [ctor] .
 
     *** Attribute to hold a signature for a given message
-    op sig : BitString BitString BitString -> Attribute .
+    op sig : BitString BitString BitString -> Attribute [ctor] .
 
     *** Attribute to hold a message string
-    op ms : BitString -> Attribute .
+    op ms : BitString -> Attribute [ctor] .
 
-    *** Actor syntax
-    op <_:_> : Id AttributeSet -> Actor .
+    *** Participant syntax
+    op <_:_> : Id AttributeSet -> Participant [ctor] .
 
-    *** Attributes of an actors
-    op pk : PubKey -> Attribute .
-    op sk : SecKey -> Attribute .
+    *** Attributes of a participant
+    op pk : PubKey -> Attribute [ctor] .
+    op sk : SecKey -> Attribute [ctor] .
     
     *** Definition of public and secret keys
-    op x : -> SecKey .
-    op y : -> PubKey .
+    op x : -> SecKey [ctor] .
+    op y : -> PubKey [ctor] .
 
     sort Content .
 
     *** Message syntax
-    op from_to_:_ : Id Id Content -> Msg .
+    op from_to_:_ : Id Id Content -> Msg [ctor] .
     
     *** Operator to concatenate natural numbers
-    op _;_ : BitString BitString -> BitString .
+    op _;_ : BitString BitString -> BitString [ctor] .
 
     *** Subsort relation to link natural numbers be content for messsages
     subsort BitString < Content .
     subsorts SecKey PubKey < Content .
 
-    subsorts Actor Msg < GlobalState .
+    subsorts Participant Msg < GlobalState .
 
     *** Global State
-    op __ : GlobalState GlobalState -> GlobalState [assoc comm] .
+    op __ : GlobalState GlobalState -> GlobalState [ctor assoc comm] .
 endm
 
 *** Module representing the actions for participants in DSA
@@ -100,10 +100,5 @@ mod DSA is
     rl [RecvSIG] : < B : ATTS > (from A to B : (m ; (r ; s))) => < B : (sig(m, r, s), ATTS) > .
 
     *** Conditional rule to verify a signature
-    crl [Verification] : < B : (sig(m, r, s), pk(y), ATTS) > => < B : ms(m) > if v == r .
+    crl [Verification] : < B : (sig(m, r, s), pk(y), ATTS) > => < B : ms(m) > if (v == r) = true .
 endm
-
-*** Rewrite
-rew < A : (param(p, q, g), ms(m)) > < B : emptyA > .
-search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(m), ATTS:AttributeSet) > GS:GlobalState .
-search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(M:BitString), ATTS:AttributeSet) > GS:GlobalState such that (M:BitString =/= m) .

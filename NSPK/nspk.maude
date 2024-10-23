@@ -1,5 +1,5 @@
---- Specification example of NSPK in Maude
---- Author: Víctor García Valero <vicgarval@upv.es>
+*** Specification example of NSPK in Maude
+*** Author: Víctor García Valero <vicgarval@upv.es>
 
 mod NSPK is
    sort Key .
@@ -26,22 +26,22 @@ mod NSPK is
    eq C in (C,CS) = true .
    eq C in CS = false [owise] .
 
-   ---Definition of nonces for Alice and Bob
+   *** Definition of nonces for Alice and Bob
    ops Na Nb : -> Nonce [ctor] .
 
-   ---Definition of public keys for Alice, Bob and Server
+   *** Definition of public keys for Alice, Bob and Server
    ops Kpa Kpb Kpe : -> PubKey [ctor] .
-   ---Definition of secret keys for Alice, Bob and Server
+   *** Definition of secret keys for Alice, Bob and Server
    ops Ksa Ksb Kse : -> SecKey [ctor] .
 
-   --- Operators to relate a public key with a participant's identifier
+   *** Operators to relate a public key with a participant's identifier
    op pk : Identifier PubKey -> PubKey .
-   --- Operators to relate a secret key with a participant's identifier
+   *** Operators to relate a secret key with a participant's identifier
    op sk : Identifier SecKey -> SecKey .
 
-   --- Operation to represent encryption
+   *** Operation to represent encryption
    op {_}_ : Content PubKey -> Content .
-   --- Operation to represent signature
+   *** Operation to represent signature
    op {_}_ : Content SecKey -> Content .
 
    sorts Participant Participants .
@@ -118,7 +118,7 @@ mod NSPK is
                p[E](N,CSE) PS | msg(A -> B, {N}PK') .
 endm
 
---- Agreement search
+*** Agreement search
 search init =>* p[A](Na,Nb) p[B](Na,Nb) PS | M:Messages .
---- MITM search
+*** MITM search
 search init =>* p[E](Na,Nb,CSE) PS | M:Messages .

@@ -1,0 +1,35 @@
+*** Commands to reproduce the experiments over the DSA.
+*** Author: Víctor García Valero <vicgarval@upv.es>
+
+***
+*** LOADING MODULES
+***
+
+load ./dsa.maude
+
+***
+*** REWRITING TERM
+***
+
+rew < A : (param(p, q, g), ms(m)) > < B : emptyA > .
+
+***
+*** SEARCH
+***
+
+*** CORRECTNESS: Look for a state where A and B have completed the protocol
+search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(m), ATTS:AttributeSet) > GS:GlobalState .
+
+*** SECURITY: Look for a state where the verified asset by B is not the same A sended
+search < A : (param(p, q, g), ms(m)) > < B : ATTS:AttributeSet > =>! < B : (ms(M:BitString), ATTS:AttributeSet) > GS:GlobalState such that (M:BitString =/= m) .
+
+***
+*** MODEL CHECKING & INVARIANT ANALYSIS
+***
+
+load model-checker.maude
+load ./dsa-PREDS.maude
+load ./dsa-CHECK.maude
+
+*** FAIRNESS
+red modelCheck(init, [] (wantsToSignAndSendTo(A, B) -> <> verifiedSignatureFrom(B, m, A))) .
