@@ -85,7 +85,7 @@ mod DSA is
     rl [KeyGeneration] : < A : (param(p, q, g), ATTS) > => < A : (pk(y), sk(x), ATTS) > .
 
     *** Rule modelling shipment of a public key
-    rl [SendPK] : < A : (pk(y), ATTS) > => < A : (ATTS) > (from A to B : (y)) .
+    rl [SendPK] : < A : (pk(y), ATTS) > => < A : (ATTS) > (from A to B : y) .
 
     *** Rule modelling reception of a public key
     rl [RecvPK] : < B : ATTS > (from A to B : y) => < B : (pk(y), ATTS) > .
