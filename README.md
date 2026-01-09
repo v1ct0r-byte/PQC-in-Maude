@@ -12,7 +12,7 @@ The analyzed DSAs are:
 
 - [Falcon](https://falcon-sign.info/)
 
-Please check the corresponding [publication](https://ceur-ws.org/Vol-3280/paper3.pdf) for further insights on the symbolic specification and verification of Kyber. For a complete detailed explanation of the framework along with three use cases on KEMs, please see the [journal paper](https://peerj.com/articles/cs-1547/) of PeerJ Computer Science.
+Please check the corresponding [publication](https://ceur-ws.org/Vol-3280/paper3.pdf) for further insights on the symbolic specification and verification of Kyber. For a complete detailed explanation of the framework along with three use cases on KEMs, please see the [journal paper](https://peerj.com/articles/cs-1547/) of PeerJ Computer Science. For a detailed explanation on the specificationa and analysis of FALCON, please see this other [journal paper](https://doi.org/10.1016/j.jlamp.2024.101034).
 
 ## Structure
 
