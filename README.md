@@ -24,11 +24,11 @@ The repository is divided into folders, one for each of the specified schemes. E
 
 where `SCH` is either `kyber`, `bike`, `cm` or `falcon`, respectively, for each scheme.
 
-## Reproduction of experiments 
+## Reproducibility of experiments 
 
 In order to perform invariant analysis and model checking one has to:
 
-1. Have Maude 3.5 installed. It can be downloaded from the official [download](http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation) page.
+1. Install Maude 3.5. It can be downloaded from the official [Get Maude](https://maude.cs.illinois.edu/get-maude) webpage.
 2. Download [this](https://github.com/v1ct0r-byte/PQC-in-Maude) repository and extract the contents.
 3. Open a terminal in the parent folder of the downloaded repository.
 4. Start Maude by following the [instructions](https://maude.lcc.uma.es/maude-manual/maude-manualch2.html#x13-220002.2). Maude can be initiated by running the `./maude.darwin64` on macOS.
