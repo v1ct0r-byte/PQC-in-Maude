@@ -31,10 +31,10 @@ IMPORTANT MATHEMATICAL NOTATION (BACKGROUND)
 
 -> There are two hash functions:
     H : B^* -> B^32, is a function that receives as input arbitrary length whole numbers and returns as output a whole number of length 32 (or a vector of such length).
-    G : B^* -> B^32 x B^3, is a function that receives as input arbitrary length whole numbers and returns a matrix of size 32x32.
+    G : B^* -> B^32 x B^32, is a function that receives as input arbitrary length whole numbers and returns a matrix of size 32x32.
 -> KDF (key derivation function) : B^* -> B^32.
 -> Q are the rational numbers (numbers that can be represented and yield from the division of two other numbers).
--> [x] indicates the aproimation to the closest whole number (either by ceiling or floor) when x is from Q.
+-> [x] indicates the approximation to the closest whole number (either by ceiling or floor) when x is from Q.
 -> Let x be a number from the ring of whole numbers till q = 256, and let d < [log2q]:
     Compression function over q receives x and d
     Decrompression function over q receives x and d
